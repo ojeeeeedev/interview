@@ -9,6 +9,7 @@ import Admin from './pages/Admin';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import TopNav from './components/TopNav';
+import Footer from './components/Footer';
 
 const theme = createTheme({
   palette: {
@@ -44,10 +45,58 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 12,
           padding: '10px 24px',
           boxShadow: 'none',
-          '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.5)' },
+          textTransform: 'none',
+          fontWeight: 700,
+          backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          transition: 'all 0.2s ease-in-out',
+          '&:hover': { 
+            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+            transform: 'translateY(-1px)',
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+          },
+        },
+        contained: {
+          backgroundColor: 'rgba(255, 255, 255, 0.08)',
+          color: '#ffffff',
+          '&:hover': {
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+          },
+        },
+        containedPrimary: {
+          backgroundColor: 'rgba(52, 152, 219, 0.15)',
+          borderColor: 'rgba(52, 152, 219, 0.3)',
+          '&:hover': {
+            backgroundColor: 'rgba(52, 152, 219, 0.25)',
+            borderColor: 'rgba(52, 152, 219, 0.4)',
+          },
+        },
+        containedError: {
+          backgroundColor: 'rgba(231, 76, 60, 0.15)',
+          borderColor: 'rgba(231, 76, 60, 0.3)',
+          color: '#e74c3c',
+          '&:hover': {
+            backgroundColor: 'rgba(231, 76, 60, 0.25)',
+          },
+        },
+        outlined: {
+          borderColor: 'rgba(255, 255, 255, 0.2)',
+          backgroundColor: 'transparent',
+          '&:hover': {
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            borderColor: 'rgba(255, 255, 255, 0.4)',
+          },
+        },
+        text: {
+          backgroundColor: 'transparent',
+          border: '1px solid transparent',
+          '&:hover': {
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+          },
         },
       },
     },
@@ -95,20 +144,23 @@ function App() {
         <AuthProvider>
           <CssBaseline />
           <Router>
-            <TopNav />
-            <Box sx={{ pt: 10 }}> 
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/cohort/:slug" element={<Landing />} />
-                <Route 
-                  path="/admin" 
-                  element={
-                    <ProtectedRoute>
-                      <Admin />
-                    </ProtectedRoute>
-                  } 
-                />
-              </Routes>
+            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+              <TopNav />
+              <Box sx={{ pt: 8, flexGrow: 1 }}> 
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/cohort/:slug" element={<Landing />} />
+                  <Route 
+                    path="/admin" 
+                    element={
+                      <ProtectedRoute>
+                        <Admin />
+                      </ProtectedRoute>
+                    } 
+                  />
+                </Routes>
+              </Box>
+              <Footer />
             </Box>
           </Router>
         </AuthProvider>

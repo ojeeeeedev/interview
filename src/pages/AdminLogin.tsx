@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Container, Box, Typography, TextField, Button, Paper, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +10,7 @@ export default function AdminLogin() {
     const [error, setError] = useState<string | null>(null);
     const { login } = useAuth();
     const navigate = useNavigate();
+    const passwordInputRef = useRef<HTMLInputElement>(null);
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
@@ -17,6 +18,7 @@ export default function AdminLogin() {
             navigate('/admin');
         } else {
             setError('Password salah! Silakan coba lagi.');
+            passwordInputRef.current?.focus();
         }
     };
 
@@ -52,6 +54,7 @@ export default function AdminLogin() {
                             type="password"
                             label="Kata Sandi"
                             variant="outlined"
+                            inputRef={passwordInputRef}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             sx={{ mb: 4 }}

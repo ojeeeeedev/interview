@@ -28,10 +28,11 @@ body {
 }
 
 .refined-card {
-  background: #121212 !important; /* Very dark grey for cards */
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 8px !important;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5) !important;
+  background: #1a1a1a !important; /* Lighter than pure black */
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8) !important;
+  overflow: hidden;
 }
 
 .ticket-card {

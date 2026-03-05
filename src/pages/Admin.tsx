@@ -3,9 +3,9 @@ import {
     Container, Typography, Paper, TextField, Button, Grid, Table, TableBody, 
     TableCell, TableHead, TableRow, IconButton, Tabs, Tab, Box, Dialog, 
     DialogTitle, DialogContent, DialogActions, Accordion, AccordionSummary, 
-    AccordionDetails, Checkbox, Divider
+    AccordionDetails, Checkbox, Divider, TableContainer
 } from '@mui/material';
-import { Trash2, Copy, ClipboardList, ChevronDown, UserMinus, Edit2 } from 'lucide-react';
+import { Trash2, Copy, UserPlus, ChevronDown, UserMinus, Edit2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { Cohort, Slot } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,7 +20,29 @@ export default function Admin() {
 
     // Form states
     const [newCohort, setNewCohort] = useState({ title: '', description: '', slug: '', nama_kelompok: '' });
+    
+    // Auto-generate slug
+    useEffect(() => {
+        const generatedSlug = `${newCohort.nama_kelompok} ${newCohort.title}`
+            .toLowerCase()
+            .trim()
+            .replace(/[^\w\s-]/g, '')
+            .replace(/[\s_-]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+        
+        setNewCohort(prev => ({ ...prev, slug: generatedSlug }));
+    }, [newCohort.nama_kelompok, newCohort.title]);
+
     const [newSlot, setNewSlot] = useState({ cohort_id: '', date: '', quota: 10 });
+    const [selectedKelompok, setSelectedKelompok] = useState('');
+
+    const uniqueKelompok = useMemo(() => {
+        return Array.from(new Set(cohorts.map(c => c.nama_kelompok))).sort();
+    }, [cohorts]);
+
+    const filteredCohortsForSlot = useMemo(() => {
+        return cohorts.filter(c => c.nama_kelompok === selectedKelompok);
+    }, [cohorts, selectedKelompok]);
     
     // Paste from Excel states
     const [pasteDialogOpen, setPasteDialogOpen] = useState(false);
@@ -33,9 +55,9 @@ export default function Admin() {
 
     const fetchAll = async () => {
         const { data: c } = await supabase.from('cohorts').select('*');
-        const { data: s } = await supabase.from('slots').select('*, cohorts(title)');
-        const { data: r } = await supabase.from('reservations').select('*, slots(date, cohorts(title))');
-        const { data: an } = await supabase.from('allowed_names').select('*, cohorts(title)');
+        const { data: s } = await supabase.from('slots').select('*, cohorts(title, nama_kelompok)');
+        const { data: r } = await supabase.from('reservations').select('*, slots(date, cohorts(title, nama_kelompok))');
+        const { data: an } = await supabase.from('allowed_names').select('*, cohorts(title, nama_kelompok)');
         
         if (c) setCohorts(c);
         if (s) setSlots(s as any);
@@ -50,7 +72,7 @@ export default function Admin() {
     const groupedNames = useMemo(() => {
         const groups: Record<string, any[]> = {};
         allowedNames.forEach(an => {
-            const cohortTitle = an.cohorts?.title || 'Tanpa Gelombang';
+            const cohortTitle = an.cohorts?.title || 'Tanpa Event';
             if (!groups[cohortTitle]) groups[cohortTitle] = [];
             groups[cohortTitle].push(an);
         });
@@ -70,6 +92,14 @@ export default function Admin() {
             setNewCohort({ title: '', description: '', slug: '', nama_kelompok: '' });
             fetchAll();
         }
+    };
+
+    const handleDeleteCohort = async (id: string) => {
+        if (!confirm('Apakah Anda yakin ingin menghapus event ini? Semua jadwal, reservasi, dan daftar nama terkait akan ikut terhapus.')) return;
+        
+        const { error } = await supabase.from('cohorts').delete().eq('id', id);
+        if (error) alert(error.message);
+        else fetchAll();
     };
 
     const handleCreateSlot = async () => {
@@ -171,12 +201,19 @@ export default function Admin() {
     };
 
     return (
-        <Container maxWidth="lg" sx={{ py: 12 }}>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-                <Box className="refined-card" sx={{ p: 4, mb: 4 }}>
-                    <Typography variant="h4" gutterBottom sx={{ fontWeight: 800 }}>Panel Admin</Typography>
-                    <Tabs value={tab} onChange={(_: any, v: number) => setTab(v)} sx={{ mb: 4 }}>
-                        <Tab label="Gelombang" />
+                <Box className="refined-card" sx={{ p: 3, mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+                    <Typography variant="h5" sx={{ fontWeight: 800 }}>Panel Admin</Typography>
+                    <Tabs 
+                        value={tab} 
+                        onChange={(_: any, v: number) => setTab(v)} 
+                        sx={{ 
+                            minHeight: 40,
+                            '& .MuiTab-root': { py: 1, minHeight: 40, fontWeight: 700, fontSize: '0.85rem' }
+                        }}
+                    >
+                        <Tab label="Event" />
                         <Tab label="Jadwal" />
                         <Tab label="Reservasi" />
                         <Tab label="Daftar Nama" />
@@ -195,7 +232,7 @@ export default function Admin() {
                             <Grid container spacing={4}>
                                 <Grid size={{ xs: 12, md: 4 }}>
                                     <Paper className="refined-card" sx={{ p: 3 }}>
-                                        <Typography variant="h6" gutterBottom>Buat Gelombang</Typography>
+                                        <Typography variant="h6" gutterBottom>Buat Event</Typography>
                                         <TextField 
                                             fullWidth 
                                             label="Nama Kelompok" 
@@ -204,41 +241,85 @@ export default function Admin() {
                                             value={newCohort.nama_kelompok} 
                                             onChange={(e: any) => setNewCohort({...newCohort, nama_kelompok: e.target.value})} 
                                         />
-                                        <TextField fullWidth label="Judul Gelombang" margin="normal" value={newCohort.title} onChange={(e: any) => setNewCohort({...newCohort, title: e.target.value})} />
-                                        <TextField fullWidth label="Deskripsi" margin="normal" multiline rows={2} value={newCohort.description} onChange={(e: any) => setNewCohort({...newCohort, description: e.target.value})} />
-                                        <TextField fullWidth label="Slug Unik" margin="normal" value={newCohort.slug} onChange={(e: any) => setNewCohort({...newCohort, slug: e.target.value})} />
+                                        <TextField fullWidth label="Judul Event" margin="normal" value={newCohort.title} onChange={(e: any) => setNewCohort({...newCohort, title: e.target.value})} />
+                                        <TextField fullWidth label="Deskripsi (Opsional)" margin="normal" multiline rows={2} value={newCohort.description} onChange={(e: any) => setNewCohort({...newCohort, description: e.target.value})} />
+                                        <TextField 
+                                            fullWidth 
+                                            label="Tautan Formulir" 
+                                            margin="normal" 
+                                            value={newCohort.slug} 
+                                            disabled
+                                            slotProps={{ 
+                                                input: { 
+                                                    readOnly: true,
+                                                    sx: { cursor: 'not-allowed' }
+                                                } 
+                                            }} 
+                                            helperText="Dibuat otomatis oleh sistem" 
+                                        />
                                         <Button variant="contained" sx={{ mt: 2 }} onClick={handleCreateCohort} fullWidth>Simpan</Button>
                                     </Paper>
                                 </Grid>
                                 <Grid size={{ xs: 12, md: 8 }}>
-                                    <Table component={Paper} className="refined-card">
-                                        <TableHead>
-                                            <TableRow>
-                                                <TableCell>Kelompok</TableCell>
-                                                <TableCell>Judul</TableCell>
-                                                <TableCell>Aksi</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {cohorts.map(c => (
-                                                <TableRow key={c.id}>
-                                                    <TableCell>{c.nama_kelompok}</TableCell>
-                                                    <TableCell>{c.title}</TableCell>
-                                                    <TableCell>
-                                                        <Box display="flex" gap={1}>
-                                                            <Button size="small" startIcon={<Copy />} onClick={() => copyInviteLink(c.unique_slug)}>Link</Button>
-                                                            <Button size="small" startIcon={<ClipboardList />} variant="outlined" color="primary" onClick={() => {
-                                                                setPasteTargetCohort(c.id);
-                                                                setPasteDialogOpen(true);
-                                                            }}>
-                                                                Excel
-                                                            </Button>
-                                                        </Box>
-                                                    </TableCell>
+                                    <TableContainer component={Paper} className="refined-card" sx={{ overflow: 'hidden' }}>
+                                        <Table>
+                                            <TableHead>
+                                                <TableRow>
+                                                    <TableCell>Nama Kelompok</TableCell>
+                                                    <TableCell>Judul Event</TableCell>
+                                                    <TableCell align="right"></TableCell>
                                                 </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+                                            </TableHead>
+                                            <TableBody>
+                                                {cohorts.map(c => (
+                                                    <TableRow key={c.id}>
+                                                        <TableCell>{c.nama_kelompok}</TableCell>
+                                                        <TableCell>{c.title}</TableCell>
+                                                        <TableCell align="right">
+                                                            <Box display="flex" gap={1} justifyContent="flex-end">
+                                                                <Button 
+                                                                    size="small" 
+                                                                    variant="outlined"
+                                                                    startIcon={<Copy size={14} />} 
+                                                                    onClick={() => copyInviteLink(c.unique_slug)}
+                                                                    sx={{ py: 0.5, px: 1.5, minWidth: 'auto', fontSize: '0.75rem' }}
+                                                                >
+                                                                    Salin Tautan Form
+                                                                </Button>
+                                                                <Button 
+                                                                    size="small" 
+                                                                    startIcon={<UserPlus size={14} />} 
+                                                                    variant="outlined" 
+                                                                    color="primary" 
+                                                                    onClick={() => {
+                                                                        setPasteTargetCohort(c.id);
+                                                                        setPasteDialogOpen(true);
+                                                                    }}
+                                                                    sx={{ py: 0.5, px: 1.5, minWidth: 'auto', fontSize: '0.75rem' }}
+                                                                >
+                                                                    Tambah Peserta
+                                                                </Button>
+                                                                <IconButton 
+                                                                    size="small" 
+                                                                    color="error" 
+                                                                    onClick={() => handleDeleteCohort(c.id)}
+                                                                    sx={{ 
+                                                                        bgcolor: 'rgba(231, 76, 60, 0.15)',
+                                                                        borderRadius: '50%',
+                                                                        width: 32,
+                                                                        height: 32,
+                                                                        '&:hover': { bgcolor: 'rgba(231, 76, 60, 0.25)' }
+                                                                    }}
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                </IconButton>
+                                                            </Box>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
                                 </Grid>
                             </Grid>
                         )}
@@ -251,14 +332,35 @@ export default function Admin() {
                                         <TextField 
                                             select 
                                             fullWidth 
-                                            label="Gelombang" 
+                                            label="Pilih Kelompok" 
                                             margin="normal" 
+                                            slotProps={{ select: { native: true } }}
+                                            value={selectedKelompok}
+                                            onChange={(e: any) => {
+                                                setSelectedKelompok(e.target.value);
+                                                setNewSlot({ ...newSlot, cohort_id: '' });
+                                            }}
+                                        >
+                                            <option value=""></option>
+                                            {uniqueKelompok.map(k => <option key={k} value={k}>{k}</option>)}
+                                        </TextField>
+
+                                        <TextField 
+                                            select 
+                                            fullWidth 
+                                            label="Pilih Event" 
+                                            margin="normal" 
+                                            disabled={!selectedKelompok}
                                             slotProps={{ select: { native: true } }}
                                             value={newSlot.cohort_id}
                                             onChange={(e: any) => setNewSlot({...newSlot, cohort_id: e.target.value})}
                                         >
                                             <option value=""></option>
-                                            {cohorts.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                                            {filteredCohortsForSlot.map(c => (
+                                                <option key={c.id} value={c.id}>
+                                                    {c.title}
+                                                </option>
+                                            ))}
                                         </TextField>
                                         <TextField fullWidth type="date" label="Tanggal" margin="normal" slotProps={{ inputLabel: { shrink: true } }} value={newSlot.date} onChange={(e: any) => setNewSlot({...newSlot, date: e.target.value})} />
                                         <TextField fullWidth type="number" label="Kuota" margin="normal" value={newSlot.quota} onChange={(e: any) => setNewSlot({...newSlot, quota: parseInt(e.target.value)})} />
@@ -266,53 +368,75 @@ export default function Admin() {
                                     </Paper>
                                 </Grid>
                                 <Grid size={{ xs: 12, md: 8 }}>
-                                    <Table component={Paper} className="refined-card">
-                                        <TableHead>
-                                            <TableRow>
-                                                <TableCell>Gelombang</TableCell>
-                                                <TableCell>Tanggal</TableCell>
-                                                <TableCell>Kapasitas</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {slots.map(s => (
-                                                <TableRow key={s.id}>
-                                                    <TableCell>{(s as any).cohorts?.title}</TableCell>
-                                                    <TableCell>{s.date}</TableCell>
-                                                    <TableCell>{s.count} / {s.quota}</TableCell>
+                                    <TableContainer component={Paper} className="refined-card" sx={{ overflow: 'hidden' }}>
+                                        <Table>
+                                            <TableHead>
+                                                <TableRow>
+                                                    <TableCell>Kelompok</TableCell>
+                                                    <TableCell>Event</TableCell>
+                                                    <TableCell>Tanggal</TableCell>
+                                                    <TableCell>Kapasitas</TableCell>
                                                 </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+                                            </TableHead>
+                                            <TableBody>
+                                                {slots.map(s => (
+                                                    <TableRow key={s.id}>
+                                                        <TableCell>
+                                                            <Typography variant="body2" sx={{ color: '#3498db', fontWeight: 600 }}>
+                                                                {(s as any).cohorts?.nama_kelompok}
+                                                            </Typography>
+                                                        </TableCell>
+                                                        <TableCell>{(s as any).cohorts?.title}</TableCell>
+                                                        <TableCell>{s.date}</TableCell>
+                                                        <TableCell>{s.count} / {s.quota}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
                                 </Grid>
                             </Grid>
                         )}
 
                         {tab === 2 && (
-                            <Table component={Paper} className="refined-card">
-                                <TableHead>
-                                            <TableRow>
-                                                <TableCell>Nama</TableCell>
-                                                <TableCell>Gelombang</TableCell>
-                                                <TableCell>Tanggal</TableCell>
-                                                <TableCell>Kode</TableCell>
-                                                <TableCell>Aksi</TableCell>
-                                            </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {reservations.map(r => (
-                                        <TableRow key={r.id}>
-                                            <TableCell>{r.user_name}</TableCell>
-                                            <TableCell>{r.slots?.cohorts?.title}</TableCell>
-                                            <TableCell>{r.slots?.date}</TableCell>
-                                            <TableCell><code>{r.access_code}</code></TableCell>
-                                            <TableCell>
-                                                <IconButton color="error" onClick={() => handleDeleteReservation(r.id, r.slot_id)}><Trash2 size={20} /></IconButton>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                            <TableContainer component={Paper} className="refined-card" sx={{ overflow: 'hidden' }}>
+                                <Table>
+                                    <TableHead>
+                                                <TableRow>
+                                                    <TableCell>Nama</TableCell>
+                                                    <TableCell>Event</TableCell>
+                                                    <TableCell>Tanggal</TableCell>
+                                                    <TableCell>Kode</TableCell>
+                                                    <TableCell align="right"></TableCell>
+                                                </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {reservations.map(r => (
+                                            <TableRow key={r.id}>
+                                                <TableCell>{r.user_name}</TableCell>
+                                                <TableCell>{r.slots?.cohorts?.title}</TableCell>
+                                                <TableCell>{r.slots?.date}</TableCell>
+                                                <TableCell><code>{r.access_code}</code></TableCell>
+                                                <TableCell align="right">
+                                                    <IconButton 
+                                                        size="small" 
+                                                        color="error" 
+                                                        onClick={() => handleDeleteReservation(r.id, r.slot_id)}
+                                                        sx={{ 
+                                                            bgcolor: 'rgba(231, 76, 60, 0.15)',
+                                                            borderRadius: '50%',
+                                                            width: 32,
+                                                            height: 32,
+                                                            '&:hover': { bgcolor: 'rgba(231, 76, 60, 0.25)' }
+                                                        }}
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </IconButton>
+                                                </TableCell>                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
                         )}
 
                         {tab === 3 && (
@@ -336,53 +460,90 @@ export default function Admin() {
                                     <Typography textAlign="center" color="textSecondary" py={4}>Belum ada daftar nama.</Typography>
                                 )}
 
-                                {Object.entries(groupedNames).map(([cohortTitle, names]) => (
-                                    <Accordion key={cohortTitle} className="refined-card" sx={{ mb: 2 }}>
-                                        <AccordionSummary expandIcon={<ChevronDown />}>
-                                            <Box display="flex" alignItems="center" width="100%">
-                                                <Checkbox 
-                                                    size="small"
-                                                    checked={names.every(n => selectedNameIds.includes(n.id))}
-                                                    indeterminate={names.some(n => selectedNameIds.includes(n.id)) && !names.every(n => selectedNameIds.includes(n.id))}
-                                                    onChange={(e) => toggleCohortSelection(cohortTitle, e.target.checked)}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                />
-                                                <Typography sx={{ fontWeight: 700, ml: 1 }}>{cohortTitle}</Typography>
-                                                <Typography variant="body2" color="textSecondary" sx={{ ml: 2 }}>({names.length} Nama)</Typography>
-                                            </Box>
-                                        </AccordionSummary>
-                                        <AccordionDetails sx={{ px: 0, pt: 0 }}>
-                                            <Divider sx={{ mb: 1 }} />
-                                            <Table size="small">
-                                                <TableBody>
-                                                    {names.map(an => (
-                                                        <TableRow key={an.id} sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.02)' } }}>
-                                                            <TableCell padding="checkbox">
-                                                                <Checkbox 
-                                                                    size="small" 
-                                                                    checked={selectedNameIds.includes(an.id)}
-                                                                    onChange={() => toggleNameSelection(an.id)}
-                                                                />
-                                                            </TableCell>
-                                                            <TableCell>{an.full_name}</TableCell>
-                                                            <TableCell align="right">
-                                                                <IconButton size="small" color="primary" sx={{ mr: 1 }} onClick={() => {
-                                                                    setEditingName({ id: an.id, full_name: an.full_name });
-                                                                    setEditNameDialogOpen(true);
-                                                                }}>
-                                                                    <Edit2 size={16} />
-                                                                </IconButton>
-                                                                <IconButton size="small" color="error" onClick={() => handleDeleteAllowedName(an.id)}>
-                                                                    <Trash2 size={16} />
-                                                                </IconButton>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
-                                        </AccordionDetails>
-                                    </Accordion>
-                                ))}
+                                {Object.entries(groupedNames).map(([cohortTitle, names]) => {
+                                    const namaKelompok = names[0]?.cohorts?.nama_kelompok || '';
+                                    return (
+                                        <Accordion key={cohortTitle} className="refined-card" sx={{ mb: 2 }}>
+                                            <AccordionSummary expandIcon={<ChevronDown />}>
+                                                <Box display="flex" alignItems="center" width="100%">
+                                                    <Checkbox 
+                                                        size="small"
+                                                        checked={names.every(n => selectedNameIds.includes(n.id))}
+                                                        indeterminate={names.some(n => selectedNameIds.includes(n.id)) && !names.every(n => selectedNameIds.includes(n.id))}
+                                                        onChange={(e) => toggleCohortSelection(cohortTitle, e.target.checked)}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    />
+                                                    <Box sx={{ ml: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                                        <Typography sx={{ fontWeight: 900, color: '#3498db', fontSize: '0.85rem', letterSpacing: '1px' }}>
+                                                            {namaKelompok.toUpperCase()}
+                                                        </Typography>
+                                                        <Typography sx={{ opacity: 0.3, fontWeight: 300 }}>|</Typography>
+                                                        <Typography sx={{ fontWeight: 700 }}>{cohortTitle}</Typography>
+                                                        <Typography variant="body2" color="textSecondary" sx={{ opacity: 0.7 }}>
+                                                            ({names.length} Nama)
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            </AccordionSummary>
+                                            <AccordionDetails sx={{ px: 0, pt: 0 }}>
+                                                <Divider sx={{ mb: 1 }} />
+                                                <Table size="small">
+                                                    <TableHead>
+                                                        <TableRow>
+                                                            <TableCell padding="checkbox"></TableCell>
+                                                            <TableCell sx={{ fontWeight: 700 }}>Nama Lengkap</TableCell>
+                                                            <TableCell align="right" sx={{ fontWeight: 700 }}></TableCell>
+                                                        </TableRow>                                                    </TableHead>
+                                                    <TableBody>
+                                                        {names.map(an => (
+                                                            <TableRow key={an.id} sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.02)' } }}>
+                                                                <TableCell padding="checkbox">
+                                                                    <Checkbox 
+                                                                        size="small" 
+                                                                        checked={selectedNameIds.includes(an.id)}
+                                                                        onChange={() => toggleNameSelection(an.id)}
+                                                                    />
+                                                                </TableCell>
+                                                                <TableCell>{an.full_name}</TableCell>
+                                                                <TableCell align="right">
+                                                                    <Box display="flex" gap={1} justifyContent="flex-end">
+                                                                        <Button 
+                                                                            size="small" 
+                                                                            color="primary" 
+                                                                            variant="outlined"
+                                                                            startIcon={<Edit2 size={12} />}
+                                                                            onClick={() => {
+                                                                                setEditingName({ id: an.id, full_name: an.full_name });
+                                                                                setEditNameDialogOpen(true);
+                                                                            }}
+                                                                            sx={{ py: 0.3, px: 1.2, minWidth: 'auto', fontSize: '0.7rem' }}
+                                                                        >
+                                                                            Ubah
+                                                                        </Button>
+                                                                        <IconButton 
+                                                                            size="small" 
+                                                                            color="error" 
+                                                                            onClick={() => handleDeleteAllowedName(an.id)}
+                                                                            sx={{ 
+                                                                                bgcolor: 'rgba(231, 76, 60, 0.15)',
+                                                                                borderRadius: '50%',
+                                                                                width: 32,
+                                                                                height: 32,
+                                                                                '&:hover': { bgcolor: 'rgba(231, 76, 60, 0.25)' }
+                                                                            }}
+                                                                        >
+                                                                            <Trash2 size={16} />
+                                                                        </IconButton>
+                                                                    </Box>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </AccordionDetails>
+                                        </Accordion>
+                                    );
+                                })}
                             </Box>
                         )}
                     </motion.div>
@@ -397,17 +558,21 @@ export default function Admin() {
                 maxWidth="sm"
                 PaperProps={{ className: 'refined-card' }}
             >
-                <DialogTitle sx={{ fontWeight: 800 }}>Paste Nama dari Excel</DialogTitle>
+                <DialogTitle sx={{ fontWeight: 800 }}>Tambah Daftar Nama</DialogTitle>
                 <DialogContent>
                     <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                        Copy kolom nama di Excel, lalu paste di bawah ini.
+                        Masukkan satu nama atau tempel daftar nama dari Excel. 
+                        Pemisah antar nama adalah <strong>baris baru (Enter)</strong>.
                     </Typography>
                     <TextField
                         fullWidth
                         multiline
                         rows={10}
                         variant="outlined"
-                        placeholder="Paste di sini..."
+                        placeholder="Contoh:
+Nama Lengkap 1
+Nama Lengkap 2
+Nama Lengkap 3"
                         value={pasteData}
                         onChange={(e) => setPasteData(e.target.value)}
                         autoFocus
@@ -420,7 +585,7 @@ export default function Admin() {
                         variant="contained" 
                         disabled={!pasteData.trim()}
                     >
-                        Tambah Nama
+                        Simpan Daftar Nama
                     </Button>
                 </DialogActions>
             </Dialog>

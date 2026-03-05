@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Box, Typography, Button, Paper, Fade, Snackbar, Alert, Stack } from '@mui/material';
-import { Download, CheckCircle, Copy, Image as ImageIcon, FileText } from 'lucide-react';
+import { CheckCircle, Copy, Image as ImageIcon, FileText } from 'lucide-react';
 import { toPng } from 'html-to-image';
 
 interface Props {

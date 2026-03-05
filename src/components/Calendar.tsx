@@ -94,16 +94,18 @@ export default function Calendar({ slots, onSelect, selected }: Props) {
     };
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
             <ThemeProvider theme={lightCalendarTheme}>
                 <Paper elevation={0} sx={{ 
-                    p: 2,
-                    borderRadius: '8px',
+                    p: 1,
+                    borderRadius: '12px',
                     background: '#ffffff', // Solid white
                     border: '1px solid #bdc3c7',
-                    display: 'inline-block',
+                    width: '100%', // Match namefield container
+                    display: 'flex',
+                    justifyContent: 'center',
                     overflow: 'hidden',
-                    boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
                     // Force all text to be dark inside this specific container
                     '& *': { color: '#2c3e50 !important' },
                     // Exception for white text on selected blue background
@@ -121,9 +123,38 @@ export default function Calendar({ slots, onSelect, selected }: Props) {
                         maxDate={maxDate}
                         sx={{
                             bgcolor: 'transparent',
-                            '& .MuiPickersLayout-root': { bgcolor: 'transparent', minWidth: 'auto' },
-                            '& .MuiPickersLayout-contentWrapper': { bgcolor: 'transparent' },
-                            '& .MuiDateCalendar-root': { bgcolor: 'transparent', width: '320px' },
+                            width: '100%',
+                            '& .MuiPickersLayout-root': { 
+                                bgcolor: 'transparent', 
+                                minWidth: 'auto',
+                                width: '100%',
+                                maxWidth: '100%' 
+                            },
+                            '& .MuiPickersLayout-contentWrapper': { 
+                                bgcolor: 'transparent',
+                                width: '100%',
+                                maxWidth: '100%',
+                                display: 'flex',
+                                justifyContent: 'center'
+                            },
+                            '& .MuiDateCalendar-root': { 
+                                bgcolor: 'transparent', 
+                                width: '100%',
+                                maxWidth: { xs: '280px', sm: '320px' }, // Keep ratio
+                                height: 'auto',
+                                minHeight: { xs: '280px', sm: '320px' }
+                            },
+                            '& .MuiPickersDay-root': {
+                                width: { xs: 32, sm: 40 },
+                                height: { xs: 32, sm: 40 },
+                                fontSize: '0.8rem'
+                            },
+                            '& .MuiDayCalendar-header': {
+                                '& .MuiTypography-root': {
+                                    width: { xs: 32, sm: 40 },
+                                    fontSize: '0.75rem'
+                                }
+                            },
                             '& .MuiPickersLayout-actionBar': { display: 'none' },
                             '& .MuiPickersToolbar-root': { display: 'none' }
                         }}
@@ -132,26 +163,26 @@ export default function Calendar({ slots, onSelect, selected }: Props) {
             </ThemeProvider>
 
             {/* Selection Prompt remains white for the black background */}
-            <Box sx={{ minHeight: '32px' }}>
+            <Box sx={{ minHeight: '28px' }}>
                 {selectionInfo && (
                     <Box sx={{ 
                         display: 'flex', 
                         alignItems: 'center', 
-                        gap: 1.5,
+                        gap: 1,
                         bgcolor: 'rgba(255,255,255,0.05)', 
-                        px: 3, 
-                        py: 1, 
+                        px: 2, 
+                        py: 0.5, 
                         borderRadius: '50px',
                         border: `1px solid ${getStatusColor(selectionInfo)}80` 
                     }}>
                         <Box sx={{ 
-                            width: 10, 
-                            height: 10, 
+                            width: 8, 
+                            height: 8, 
                             borderRadius: '50%', 
                             bgcolor: getStatusColor(selectionInfo),
-                            boxShadow: `0 0 10px ${getStatusColor(selectionInfo)}`
+                            boxShadow: `0 0 8px ${getStatusColor(selectionInfo)}`
                         }} />
-                        <Typography variant="body2" sx={{ color: '#ffffff', fontWeight: 700, letterSpacing: '0.5px' }}>
+                        <Typography variant="caption" sx={{ color: '#ffffff', fontWeight: 700, letterSpacing: '0.5px' }}>
                             Tersedia: {selectionInfo.quota - selectionInfo.count} slot tersisa
                         </Typography>
                     </Box>

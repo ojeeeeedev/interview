@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import {
   Container,
   Typography,
   Box,
   Paper,
-  TextField,
-  Button,
   Alert,
   CircularProgress,
+  Divider,
 } from "@mui/material";
 import { supabase } from "../lib/supabase";
 import type { Cohort, Slot } from "../types";
@@ -19,12 +18,12 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function Landing() {
   const { slug } = useParams<{ slug: string }>();
+  const location = useLocation();
   const [cohort, setCohort] = useState<Cohort | null>(null);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successCode, setSuccessCode] = useState<string | null>(null);
-  const [searchCode, setSearchCode] = useState("");
   const [editingReservation, setEditingReservation] = useState<any>(null);
 
   const fetchData = async () => {
@@ -36,7 +35,7 @@ export default function Landing() {
       .single();
 
     if (cohortError || !cohortData) {
-      setError("Gelombang tidak ditemukan");
+      setError("Event tidak ditemukan");
       setLoading(false);
       return;
     }
@@ -54,23 +53,27 @@ export default function Landing() {
       setSlots(slotsData);
     }
     setLoading(false);
+
+    // Check for edit code in query params
+    const queryParams = new URLSearchParams(location.search);
+    const editCode = queryParams.get("edit");
+    if (editCode) {
+      handleSearchCode(editCode);
+    }
   };
 
   useEffect(() => {
     fetchData();
-  }, [slug]);
+  }, [slug, location.search]);
 
-  const handleSearchCode = async () => {
-    if (!searchCode) return;
+  const handleSearchCode = async (codeToSearch: string) => {
     const { data, error } = await supabase
       .from("reservations")
       .select("*, slots(*)")
-      .eq("access_code", searchCode.toUpperCase())
+      .eq("access_code", codeToSearch.toUpperCase())
       .single();
 
-    if (error || !data) {
-      alert("Kode Akses tidak valid");
-    } else {
+    if (!error && data) {
       setEditingReservation(data);
     }
   };
@@ -134,78 +137,45 @@ export default function Landing() {
   return (
     <Container
       maxWidth="md"
-      sx={{ py: 12, minHeight: "100vh", display: "flex", alignItems: "center" }}
+      sx={{ py: { xs: 2, md: 4 }, minHeight: "calc(100vh - 64px)", display: "flex", flexDirection: 'column', justifyContent: 'flex-start' }}
     >
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        style={{ width: "100%" }}
+        style={{ width: "100%", display: 'flex', flexDirection: 'column', alignItems: 'center' }}
       >
         <Paper
           className="refined-card"
-          sx={{ p: { xs: 4, md: 8 }, width: "100%" }}
+          sx={{ 
+            p: { xs: 2, sm: 3, md: 4 }, 
+            width: "100%", 
+            maxWidth: '450px', // Constraining width to match compact calendar
+            bgcolor: 'rgba(255,255,255,0.02) !important', 
+            position: 'relative' 
+          }}
         >
-          <Typography variant="h3" gutterBottom sx={{ fontWeight: 800 }}>
-            {cohort?.title}
-          </Typography>
-          <Typography
-            variant="h6"
-            color="textSecondary"
-            paragraph
-            sx={{ mb: 6, fontWeight: 500, opacity: 0.8 }}
-          >
-            {cohort?.description}
-          </Typography>
-
-          <Box
-            mb={8}
-            p={4}
-            sx={{
-              background: "rgba(0, 0, 0, 0.15)",
-              borderRadius: 2,
-              border: "1px solid rgba(255, 255, 255, 0.05)",
-            }}
-          >
+          <Box sx={{ mb: 2, textAlign: 'right' }}>
             <Typography
-              variant="subtitle1"
-              gutterBottom
-              sx={{ fontWeight: 700 }}
+              variant="overline"
+              sx={{
+                fontWeight: 900,
+                color: "#3498db",
+                letterSpacing: "1.5px",
+                display: 'block',
+                lineHeight: 1,
+                mb: 0.5
+              }}
             >
-              Ingin mengubah jadwal?
+              KELOMPOK {cohort?.nama_kelompok.toUpperCase()}
             </Typography>
-            <Box
-              display="flex"
-              gap={2}
-              mt={2}
-              sx={{ flexDirection: { xs: "column", sm: "row" } }}
-            >
-              <TextField
-                label="Masukkan Kode Akses anda..."
-                variant="outlined"
-                value={searchCode}
-                onChange={(e: any) => setSearchCode(e.target.value)}
-                sx={{ flexGrow: 1 }}
-              />
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleSearchCode}
-                  sx={{ px: 4, height: "100%" }}
-                >
-                  Ubah
-                </Button>
-              </motion.div>
-            </Box>
+            <Typography variant="h5" sx={{ fontWeight: 800, fontSize: { xs: '1.2rem', sm: '1.5rem' }, lineHeight: 1.1 }}>
+              {cohort?.title}
+            </Typography>
           </Box>
 
-          <Typography variant="h4" gutterBottom sx={{ mb: 4, fontWeight: 700 }}>
-            Jadwalkan Wawancara
-          </Typography>
+          <Divider sx={{ mb: 2, opacity: 0.1 }} />
+
           <BookingForm
             cohortId={cohort!.id}
             slots={slots}
