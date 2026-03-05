@@ -51,20 +51,19 @@ export default function Admin() {
 
   // Snackbar state
   const [snackbar, setSnackbar] = useState({
-      open: false,
-      message: '',
-      severity: 'success' as 'success' | 'error' | 'info' | 'warning'
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error" | "info" | "warning",
   });
 
   const [showErrors, setShowErrors] = useState(false);
 
   const showToast = (
-      message: string,
-      severity: "success" | "error" | "info" | "warning" = "success",
+    message: string,
+    severity: "success" | "error" | "info" | "warning" = "success",
   ) => {
-      setSnackbar({ open: true, message, severity });
+    setSnackbar({ open: true, message, severity });
   };
-
 
   const handleCloseSnackbar = () => {
     setSnackbar((prev) => ({ ...prev, open: false }));
@@ -168,57 +167,80 @@ export default function Admin() {
     return groups;
   }, [allowedNames]);
 
-    const handleCreateCohort = async () => {
-        if (!newCohort.title || !newCohort.slug || !newCohort.nama_kelompok) {
-            setShowErrors(true);
-            showToast('Mohon lengkapi semua field wajib', 'error');
-            return;
-        }
-        const { error } = await supabase.from('cohorts').insert([{
-            title: newCohort.title,
-            description: newCohort.description,
-            unique_slug: newCohort.slug,
-            nama_kelompok: newCohort.nama_kelompok,
-            start_at: newCohort.start_at ? new Date(newCohort.start_at).toISOString() : null
-        }]);
-        if (error) {
-            showToast(error.message, 'error');
-        } else {
-            setNewCohort({ title: '', description: '', slug: '', nama_kelompok: '', start_at: '' });
-            setShowErrors(false);
-            showToast('Event berhasil dibuat');
-            fetchAll();
-        }
-    };
+  const handleCreateCohort = async () => {
+    if (!newCohort.title || !newCohort.slug || !newCohort.nama_kelompok) {
+      setShowErrors(true);
+      showToast("Mohon lengkapi semua field wajib", "error");
+      return;
+    }
+    const { error } = await supabase.from("cohorts").insert([
+      {
+        title: newCohort.title,
+        description: newCohort.description,
+        unique_slug: newCohort.slug,
+        nama_kelompok: newCohort.nama_kelompok,
+        start_at: newCohort.start_at
+          ? new Date(newCohort.start_at).toISOString()
+          : null,
+      },
+    ]);
+    if (error) {
+      showToast(error.message, "error");
+    } else {
+      setNewCohort({
+        title: "",
+        description: "",
+        slug: "",
+        nama_kelompok: "",
+        start_at: "",
+      });
+      setShowErrors(false);
+      showToast("Event berhasil dibuat");
+      fetchAll();
+    }
+  };
 
-    const handleUpdateCohort = async () => {
-        if (!editingCohortId || !newCohort.title || !newCohort.slug || !newCohort.nama_kelompok) {
-            setShowErrors(true);
-            showToast('Mohon lengkapi semua field wajib', 'error');
-            return;
-        }
-        
-        const { error } = await supabase
-            .from('cohorts')
-            .update({
-                title: newCohort.title,
-                description: newCohort.description,
-                unique_slug: newCohort.slug,
-                nama_kelompok: newCohort.nama_kelompok,
-                start_at: newCohort.start_at ? new Date(newCohort.start_at).toISOString() : null
-            })
-            .eq('id', editingCohortId);
+  const handleUpdateCohort = async () => {
+    if (
+      !editingCohortId ||
+      !newCohort.title ||
+      !newCohort.slug ||
+      !newCohort.nama_kelompok
+    ) {
+      setShowErrors(true);
+      showToast("Mohon lengkapi semua field wajib", "error");
+      return;
+    }
 
-        if (error) {
-            showToast(error.message, 'error');
-        } else {
-            setEditingCohortId(null);
-            setNewCohort({ title: '', description: '', slug: '', nama_kelompok: '', start_at: '' });
-            setShowErrors(false);
-            showToast('Perubahan event berhasil disimpan');
-            fetchAll();
-        }
-    };
+    const { error } = await supabase
+      .from("cohorts")
+      .update({
+        title: newCohort.title,
+        description: newCohort.description,
+        unique_slug: newCohort.slug,
+        nama_kelompok: newCohort.nama_kelompok,
+        start_at: newCohort.start_at
+          ? new Date(newCohort.start_at).toISOString()
+          : null,
+      })
+      .eq("id", editingCohortId);
+
+    if (error) {
+      showToast(error.message, "error");
+    } else {
+      setEditingCohortId(null);
+      setNewCohort({
+        title: "",
+        description: "",
+        slug: "",
+        nama_kelompok: "",
+        start_at: "",
+      });
+      setShowErrors(false);
+      showToast("Perubahan event berhasil disimpan");
+      fetchAll();
+    }
+  };
 
   const handleEditCohortClick = (cohort: Cohort) => {
     setEditingCohortId(cohort.id);
@@ -249,26 +271,28 @@ export default function Admin() {
     }
   };
 
-    const handleCreateSlot = async () => {
-        if (!newSlot.cohort_id || !newSlot.date || !selectedKelompok) {
-            setShowErrors(true);
-            showToast('Mohon lengkapi semua field wajib', 'error');
-            return;
-        }
-        const { error } = await supabase.from('slots').insert([{
-            cohort_id: newSlot.cohort_id,
-            date: newSlot.date,
-            quota: newSlot.quota
-        }]);
-        if (error) {
-            showToast(error.message, 'error');
-        } else {
-            setNewSlot({ ...newSlot, date: '' });
-            setShowErrors(false);
-            showToast('Jadwal berhasil ditambahkan');
-            fetchAll();
-        }
-    };
+  const handleCreateSlot = async () => {
+    if (!newSlot.cohort_id || !newSlot.date || !selectedKelompok) {
+      setShowErrors(true);
+      showToast("Mohon lengkapi semua field wajib", "error");
+      return;
+    }
+    const { error } = await supabase.from("slots").insert([
+      {
+        cohort_id: newSlot.cohort_id,
+        date: newSlot.date,
+        quota: newSlot.quota,
+      },
+    ]);
+    if (error) {
+      showToast(error.message, "error");
+    } else {
+      setNewSlot({ ...newSlot, date: "" });
+      setShowErrors(false);
+      showToast("Jadwal berhasil ditambahkan");
+      fetchAll();
+    }
+  };
 
   const handlePasteSubmit = async () => {
     if (!pasteData.trim()) return;
@@ -378,7 +402,7 @@ export default function Admin() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 0 }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -421,7 +445,7 @@ export default function Admin() {
                 py: 1,
                 minHeight: 40,
                 fontWeight: 700,
-                fontSize: "0.85rem",
+                fontSize: "1rem",
                 whiteSpace: "nowrap",
               },
               "& .MuiTabs-scrollButtons": {
@@ -477,7 +501,11 @@ export default function Admin() {
                             placeholder="misal: Kelompok A"
                             value={newCohort.nama_kelompok}
                             error={showErrors && !newCohort.nama_kelompok}
-                            helperText={showErrors && !newCohort.nama_kelompok ? "Nama kelompok wajib diisi" : ""}
+                            helperText={
+                              showErrors && !newCohort.nama_kelompok
+                                ? "Nama kelompok wajib diisi"
+                                : ""
+                            }
                             onChange={(e: any) =>
                               setNewCohort({
                                 ...newCohort,
@@ -491,7 +519,11 @@ export default function Admin() {
                             margin="normal"
                             value={newCohort.title}
                             error={showErrors && !newCohort.title}
-                            helperText={showErrors && !newCohort.title ? "Judul event wajib diisi" : ""}
+                            helperText={
+                              showErrors && !newCohort.title
+                                ? "Judul event wajib diisi"
+                                : ""
+                            }
                             onChange={(e: any) =>
                               setNewCohort({
                                 ...newCohort,
@@ -741,12 +773,12 @@ export default function Admin() {
                             <TableCell sx={{ whiteSpace: "nowrap" }}>
                               {c.start_at
                                 ? new Date(c.start_at).toLocaleString("id-ID", {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                    timeZoneName: 'short'
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    timeZoneName: "short",
                                   })
                                 : "Langsung"}
                             </TableCell>
@@ -856,7 +888,11 @@ export default function Admin() {
                             slotProps={{ select: { native: true } }}
                             value={selectedKelompok}
                             error={showErrors && !selectedKelompok}
-                            helperText={showErrors && !selectedKelompok ? "Wajib pilih kelompok" : ""}
+                            helperText={
+                              showErrors && !selectedKelompok
+                                ? "Wajib pilih kelompok"
+                                : ""
+                            }
                             onChange={(e: any) => {
                               setSelectedKelompok(e.target.value);
                               setNewSlot({ ...newSlot, cohort_id: "" });
@@ -879,7 +915,11 @@ export default function Admin() {
                             slotProps={{ select: { native: true } }}
                             value={newSlot.cohort_id}
                             error={showErrors && !newSlot.cohort_id}
-                            helperText={showErrors && !newSlot.cohort_id ? "Wajib pilih event" : ""}
+                            helperText={
+                              showErrors && !newSlot.cohort_id
+                                ? "Wajib pilih event"
+                                : ""
+                            }
                             onChange={(e: any) =>
                               setNewSlot({
                                 ...newSlot,
@@ -902,7 +942,11 @@ export default function Admin() {
                             slotProps={{ inputLabel: { shrink: true } }}
                             value={newSlot.date}
                             error={showErrors && !newSlot.date}
-                            helperText={showErrors && !newSlot.date ? "Wajib pilih tanggal" : ""}
+                            helperText={
+                              showErrors && !newSlot.date
+                                ? "Wajib pilih tanggal"
+                                : ""
+                            }
                             onChange={(e: any) =>
                               setNewSlot({ ...newSlot, date: e.target.value })
                             }
@@ -913,8 +957,16 @@ export default function Admin() {
                             label="Kuota"
                             margin="normal"
                             value={newSlot.quota}
-                            error={showErrors && (isNaN(newSlot.quota) || newSlot.quota <= 0)}
-                            helperText={showErrors && (isNaN(newSlot.quota) || newSlot.quota <= 0) ? "Kuota minimal 1" : ""}
+                            error={
+                              showErrors &&
+                              (isNaN(newSlot.quota) || newSlot.quota <= 0)
+                            }
+                            helperText={
+                              showErrors &&
+                              (isNaN(newSlot.quota) || newSlot.quota <= 0)
+                                ? "Kuota minimal 1"
+                                : ""
+                            }
                             onChange={(e: any) =>
                               setNewSlot({
                                 ...newSlot,
@@ -948,7 +1000,11 @@ export default function Admin() {
                       slotProps={{ select: { native: true } }}
                       value={selectedKelompok}
                       error={showErrors && !selectedKelompok}
-                      helperText={showErrors && !selectedKelompok ? "Wajib pilih kelompok" : ""}
+                      helperText={
+                        showErrors && !selectedKelompok
+                          ? "Wajib pilih kelompok"
+                          : ""
+                      }
                       onChange={(e: any) => {
                         setSelectedKelompok(e.target.value);
                         setNewSlot({ ...newSlot, cohort_id: "" });
@@ -971,7 +1027,11 @@ export default function Admin() {
                       slotProps={{ select: { native: true } }}
                       value={newSlot.cohort_id}
                       error={showErrors && !newSlot.cohort_id}
-                      helperText={showErrors && !newSlot.cohort_id ? "Wajib pilih event" : ""}
+                      helperText={
+                        showErrors && !newSlot.cohort_id
+                          ? "Wajib pilih event"
+                          : ""
+                      }
                       onChange={(e: any) =>
                         setNewSlot({ ...newSlot, cohort_id: e.target.value })
                       }
@@ -991,7 +1051,9 @@ export default function Admin() {
                       slotProps={{ inputLabel: { shrink: true } }}
                       value={newSlot.date}
                       error={showErrors && !newSlot.date}
-                      helperText={showErrors && !newSlot.date ? "Wajib pilih tanggal" : ""}
+                      helperText={
+                        showErrors && !newSlot.date ? "Wajib pilih tanggal" : ""
+                      }
                       onChange={(e: any) =>
                         setNewSlot({ ...newSlot, date: e.target.value })
                       }
@@ -1002,8 +1064,16 @@ export default function Admin() {
                       label="Kuota"
                       margin="normal"
                       value={newSlot.quota}
-                      error={showErrors && (isNaN(newSlot.quota) || newSlot.quota <= 0)}
-                      helperText={showErrors && (isNaN(newSlot.quota) || newSlot.quota <= 0) ? "Kuota minimal 1" : ""}
+                      error={
+                        showErrors &&
+                        (isNaN(newSlot.quota) || newSlot.quota <= 0)
+                      }
+                      helperText={
+                        showErrors &&
+                        (isNaN(newSlot.quota) || newSlot.quota <= 0)
+                          ? "Kuota minimal 1"
+                          : ""
+                      }
                       onChange={(e: any) =>
                         setNewSlot({
                           ...newSlot,

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useLocation, Link } from "react-router-dom";
+import { useParams, useLocation, Link, useNavigate } from "react-router-dom";
 import {
   Container,
   Typography,
@@ -9,6 +9,7 @@ import {
   CircularProgress,
   Divider,
   Button,
+  Stack,
 } from "@mui/material";
 import { supabase } from "../lib/supabase";
 import type { Cohort, Slot } from "../types";
@@ -23,6 +24,7 @@ import CountdownTimer from "../components/CountdownTimer";
 export default function Landing() {
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const [cohort, setCohort] = useState<Cohort | null>(null);
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -172,32 +174,10 @@ export default function Landing() {
       </AnimatePresence>
     );
 
-  if (editingReservation)
-    return (
-      <Container maxWidth="md" sx={{ py: 12 }}>
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Box className="refined-card">
-            <EditBooking
-              reservation={editingReservation}
-              slots={slots}
-              onDone={() => {
-                setEditingReservation(null);
-                fetchData();
-              }}
-            />
-          </Box>
-        </motion.div>
-      </Container>
-    );
-
   return (
     <Container
       maxWidth="md"
-      sx={{ py: { xs: 2, md: 4 }, minHeight: "calc(100vh - 64px)", display: "flex", flexDirection: 'column', justifyContent: 'flex-start' }}
+      sx={{ pt: 0, pb: { xs: 2, md: 4 }, minHeight: "calc(100vh - 64px)", display: "flex", flexDirection: 'column', justifyContent: 'flex-start' }}
     >
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -210,41 +190,54 @@ export default function Landing() {
           sx={{ 
             p: { xs: 2, sm: 3, md: 4 }, 
             width: "100%", 
-            maxWidth: '450px', // Constraining width to match compact calendar
+            maxWidth: '450px',
             bgcolor: 'rgba(255,255,255,0.02) !important', 
             position: 'relative' 
           }}
         >
-          <Box sx={{ mb: 2, textAlign: 'right' }}>
-            <Typography
-              variant="overline"
-              sx={{
-                fontWeight: 900,
-                color: "#3498db",
-                letterSpacing: "1.5px",
-                display: 'block',
-                lineHeight: 1,
-                mb: 0.5
+          {editingReservation ? (
+            <EditBooking
+              reservation={editingReservation}
+              slots={slots}
+              onDone={() => {
+                setEditingReservation(null);
+                navigate("/"); // Return to homepage
               }}
-            >
-              KELOMPOK {cohort?.nama_kelompok?.toUpperCase()}
-            </Typography>
-            <Typography variant="h5" sx={{ fontWeight: 800, fontSize: { xs: '1.2rem', sm: '1.5rem' }, lineHeight: 1.1 }}>
-              {cohort?.title}
-            </Typography>
-          </Box>
+            />
+          ) : (
+            <Stack spacing={2}>
+              <Box sx={{ textAlign: 'right' }}>
+                <Typography
+                  variant="overline"
+                  sx={{
+                    fontWeight: 900,
+                    color: "#3498db",
+                    letterSpacing: "1.5px",
+                    display: 'block',
+                    lineHeight: 1,
+                    mb: 0.5
+                  }}
+                >
+                  KELOMPOK {cohort?.nama_kelompok?.toUpperCase()}
+                </Typography>
+                <Typography variant="h5" sx={{ fontWeight: 800, fontSize: { xs: '1.2rem', sm: '1.5rem' }, lineHeight: 1.1 }}>
+                  {cohort?.title}
+                </Typography>
+              </Box>
 
-          <Divider sx={{ mb: 2, opacity: 0.1 }} />
+              <Divider sx={{ opacity: 0.1 }} />
 
-          <BookingForm
-            cohortId={cohort!.id}
-            slots={slots}
-            onSuccess={(code, name, date) => {
-                setSuccessCode(code);
-                setSuccessName(name);
-                setSuccessDate(date);
-            }}
-          />
+              <BookingForm
+                cohortId={cohort!.id}
+                slots={slots}
+                onSuccess={(code, name, date) => {
+                    setSuccessCode(code);
+                    setSuccessName(name);
+                    setSuccessDate(date);
+                }}
+              />
+            </Stack>
+          )}
         </Paper>
       </motion.div>
     </Container>

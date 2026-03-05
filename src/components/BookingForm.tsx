@@ -62,20 +62,22 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
 
     // 1. Check for double booking in this cohort
     const { data: existing, error: checkError } = await supabase
-        .from('reservations')
-        .select('id, slots!inner(cohort_id)')
-        .ilike('user_name', name.trim())
-        .eq('slots.cohort_id', cohortId)
-        .maybeSingle();
+      .from("reservations")
+      .select("id, slots!inner(cohort_id)")
+      .ilike("user_name", name.trim())
+      .eq("slots.cohort_id", cohortId)
+      .maybeSingle();
 
     if (checkError) {
-        console.error(checkError);
+      console.error(checkError);
     }
 
     if (existing) {
-        setError("Anda sudah terdaftar untuk event ini. Mohon gunakan Kode Akses Anda pada menu 'Cari Reservasi' di atas jika ingin mengubah jadwal.");
-        setLoading(false);
-        return;
+      setError(
+        "Anda sudah terdaftar untuk event ini. Mohon gunakan Kode Akses Anda pada menu 'Cari Reservasi' di atas jika ingin mengubah jadwal.",
+      );
+      setLoading(false);
+      return;
     }
 
     // 2. Validate name in allowed_names
@@ -111,7 +113,9 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
     if (bookError) {
       setError(bookError.message);
     } else {
-      const formattedDate = format(selectedDate!, "EEEE, d MMMM yyyy", { locale: id });
+      const formattedDate = format(selectedDate!, "EEEE, d MMMM yyyy", {
+        locale: id,
+      });
       onSuccess(code, name.trim(), formattedDate);
     }
     setLoading(false);
@@ -120,7 +124,10 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
   return (
     <Stack spacing={2.5}>
       {error && (
-        <Alert severity="error" sx={{ borderRadius: 2, border: '1px solid rgba(231, 76, 60, 0.3)' }}>
+        <Alert
+          severity="error"
+          sx={{ borderRadius: 2, border: "1px solid rgba(231, 76, 60, 0.3)" }}
+        >
           {error}
         </Alert>
       )}
@@ -128,7 +135,13 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
       <Stack spacing={1}>
         <Typography
           variant="subtitle2"
-          sx={{ fontWeight: 800, color: "rgba(255,255,255,0.6)", textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px' }}
+          sx={{
+            fontWeight: 800,
+            color: "rgba(255,255,255,0.6)",
+            textTransform: "uppercase",
+            fontSize: "0.75rem",
+            letterSpacing: "1px",
+          }}
         >
           Nama Peserta
         </Typography>
@@ -176,8 +189,8 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
               slotProps={{
                 input: {
                   ...params.InputProps,
-                  sx: { bgcolor: 'rgba(255,255,255,0.03)' }
-                }
+                  sx: { bgcolor: "rgba(255,255,255,0.03)" },
+                },
               }}
             />
           )}
@@ -187,7 +200,13 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
       <Stack spacing={1}>
         <Typography
           variant="subtitle2"
-          sx={{ fontWeight: 800, color: "rgba(255,255,255,0.6)", textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px' }}
+          sx={{
+            fontWeight: 800,
+            color: "rgba(255,255,255,0.6)",
+            textTransform: "uppercase",
+            fontSize: "0.75rem",
+            letterSpacing: "1px",
+          }}
         >
           Pilih Tanggal
         </Typography>
@@ -206,12 +225,12 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
             onClick={() => setConfirmOpen(true)}
             disabled={loading || !selectedDate || !name}
             fullWidth
-            sx={{ 
-                maxWidth: { sm: 400 },
-                py: 1.5, 
-                bgcolor: "#3498db",
-                fontWeight: 800,
-                fontSize: '0.9rem'
+            sx={{
+              maxWidth: { sm: 400 },
+              py: 1.5,
+              bgcolor: "#3498db",
+              fontWeight: 800,
+              fontSize: "0.9rem",
             }}
           >
             {loading ? "Memproses..." : "Jadwalkan Wawancara"}
@@ -224,33 +243,47 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         PaperProps={{
-          className: 'refined-card',
-          sx: { p: 1 }
+          className: "refined-card",
+          sx: { p: 1 },
         }}
       >
-        <DialogTitle sx={{ fontWeight: 800, color: '#ffffff' }}>
+        <DialogTitle sx={{ fontWeight: 800, color: "#ffffff" }}>
           Konfirmasi Jadwal
         </DialogTitle>
         <DialogContent>
-          <DialogContentText sx={{ color: 'rgba(255,255,255,0.7)', mb: 2 }}>
+          <DialogContentText sx={{ color: "rgba(255,255,255,0.7)", mb: 2 }}>
             Apakah Anda yakin ingin menjadwalkan wawancara pada:
           </DialogContentText>
-          <Box sx={{ bgcolor: 'rgba(52, 152, 219, 0.1)', p: 2, borderRadius: 2, border: '1px solid rgba(52, 152, 219, 0.3)' }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, color: '#3498db' }}>
-              {selectedDate && format(selectedDate, "EEEE, d MMMM yyyy", { locale: id })}
+          <Box
+            sx={{
+              bgcolor: "rgba(52, 152, 219, 0.1)",
+              p: 2,
+              borderRadius: 2,
+              border: "1px solid rgba(52, 152, 219, 0.3)",
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 800, color: "#3498db" }}>
+              {selectedDate &&
+                format(selectedDate, "EEEE, d MMMM yyyy", { locale: id })}
             </Typography>
-            <Typography variant="body2" sx={{ fontWeight: 600, mt: 0.5, color: '#ffffff' }}>
+            <Typography
+              variant="body2"
+              sx={{ fontWeight: 600, mt: 0.5, color: "#ffffff" }}
+            >
               Atas Nama: {name}
             </Typography>
           </Box>
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 1 }}>
-          <Button onClick={() => setConfirmOpen(false)} sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>
+          <Button
+            onClick={() => setConfirmOpen(false)}
+            sx={{ color: "rgba(255,255,255,0.5)", fontWeight: 700 }}
+          >
             Batal
           </Button>
-          <Button 
-            onClick={handleBooking} 
-            variant="contained" 
+          <Button
+            onClick={handleBooking}
+            variant="contained"
             color="primary"
             sx={{ fontWeight: 800, px: 3 }}
           >
