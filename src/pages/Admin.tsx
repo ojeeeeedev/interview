@@ -1,626 +1,1497 @@
-import { useState, useEffect, useMemo } from 'react';
-import { 
-    Container, Typography, Paper, TextField, Button, Grid, Table, TableBody, 
-    TableCell, TableHead, TableRow, IconButton, Tabs, Tab, Box, Dialog, 
-    DialogTitle, DialogContent, DialogActions, Accordion, AccordionSummary, 
-    AccordionDetails, Checkbox, Divider, TableContainer
-} from '@mui/material';
-import { Trash2, Copy, UserPlus, ChevronDown, UserMinus, Edit2 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import type { Cohort, Slot } from '../types';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useMemo } from "react";
+import {
+  Container,
+  Typography,
+  Paper,
+  TextField,
+  Button,
+  Grid,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  IconButton,
+  Tabs,
+  Tab,
+  Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Checkbox,
+  Divider,
+  TableContainer,
+  Stack,
+  Snackbar,
+  Alert,
+} from "@mui/material";
+import {
+  Trash2,
+  Copy,
+  UserPlus,
+  ChevronDown,
+  UserMinus,
+  Edit2,
+} from "lucide-react";
+import { supabase } from "../lib/supabase";
+import type { Cohort, Slot } from "../types";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Admin() {
-    const [tab, setTab] = useState(0);
-    const [cohorts, setCohorts] = useState<Cohort[]>([]);
-    const [slots, setSlots] = useState<Slot[]>([]);
-    const [reservations, setReservations] = useState<any[]>([]);
-    const [allowedNames, setAllowedNames] = useState<any[]>([]);
-    const [selectedNameIds, setSelectedNameIds] = useState<string[]>([]);
+  const [tab, setTab] = useState(0);
+  const [cohorts, setCohorts] = useState<Cohort[]>([]);
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [reservations, setReservations] = useState<any[]>([]);
+  const [allowedNames, setAllowedNames] = useState<any[]>([]);
+  const [selectedNameIds, setSelectedNameIds] = useState<string[]>([]);
 
-    // Form states
-    const [newCohort, setNewCohort] = useState({ title: '', description: '', slug: '', nama_kelompok: '' });
-    
-    // Auto-generate slug
-    useEffect(() => {
-        const generatedSlug = `${newCohort.nama_kelompok} ${newCohort.title}`
-            .toLowerCase()
-            .trim()
-            .replace(/[^\w\s-]/g, '')
-            .replace(/[\s_-]+/g, '-')
-            .replace(/^-+|-+$/g, '');
-        
-        setNewCohort(prev => ({ ...prev, slug: generatedSlug }));
-    }, [newCohort.nama_kelompok, newCohort.title]);
+  // Snackbar state
+  const [snackbar, setSnackbar] = useState({
+      open: false,
+      message: '',
+      severity: 'success' as 'success' | 'error' | 'info' | 'warning'
+  });
 
-    const [newSlot, setNewSlot] = useState({ cohort_id: '', date: '', quota: 10 });
-    const [selectedKelompok, setSelectedKelompok] = useState('');
+  const [showErrors, setShowErrors] = useState(false);
 
-    const uniqueKelompok = useMemo(() => {
-        return Array.from(new Set(cohorts.map(c => c.nama_kelompok))).sort();
-    }, [cohorts]);
+  const showToast = (
+      message: string,
+      severity: "success" | "error" | "info" | "warning" = "success",
+  ) => {
+      setSnackbar({ open: true, message, severity });
+  };
 
-    const filteredCohortsForSlot = useMemo(() => {
-        return cohorts.filter(c => c.nama_kelompok === selectedKelompok);
-    }, [cohorts, selectedKelompok]);
-    
-    // Paste from Excel states
-    const [pasteDialogOpen, setPasteDialogOpen] = useState(false);
-    const [pasteTargetCohort, setPasteTargetCohort] = useState<string>('');
-    const [pasteData, setPasteData] = useState('');
 
-    // Edit Name states
-    const [editNameDialogOpen, setEditNameDialogOpen] = useState(false);
-    const [editingName, setEditingName] = useState<{ id: string, full_name: string } | null>(null);
+  const handleCloseSnackbar = () => {
+    setSnackbar((prev) => ({ ...prev, open: false }));
+  };
 
-    const fetchAll = async () => {
-        const { data: c } = await supabase.from('cohorts').select('*');
-        const { data: s } = await supabase.from('slots').select('*, cohorts(title, nama_kelompok)');
-        const { data: r } = await supabase.from('reservations').select('*, slots(date, cohorts(title, nama_kelompok))');
-        const { data: an } = await supabase.from('allowed_names').select('*, cohorts(title, nama_kelompok)');
-        
-        if (c) setCohorts(c);
-        if (s) setSlots(s as any);
-        if (r) setReservations(r as any);
-        if (an) setAllowedNames(an as any);
-    };
+  // Helper to format date for datetime-local input (YYYY-MM-DDThh:mm)
+  const formatDateForInput = (dateString: string | null) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
 
-    useEffect(() => {
-        fetchAll();
-    }, []);
+  // Form states
+  const [newCohort, setNewCohort] = useState({
+    title: "",
+    description: "",
+    slug: "",
+    nama_kelompok: "",
+    start_at: "",
+  });
+  const [editingCohortId, setEditingCohortId] = useState<string | null>(null);
 
-    const groupedNames = useMemo(() => {
-        const groups: Record<string, any[]> = {};
-        allowedNames.forEach(an => {
-            const cohortTitle = an.cohorts?.title || 'Tanpa Event';
-            if (!groups[cohortTitle]) groups[cohortTitle] = [];
-            groups[cohortTitle].push(an);
-        });
-        return groups;
-    }, [allowedNames]);
+  // Auto-generate slug (only when not editing)
+  useEffect(() => {
+    if (editingCohortId) return;
+
+    const generatedSlug = `${newCohort.nama_kelompok} ${newCohort.title}`
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/[\s_-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+    setNewCohort((prev) => ({ ...prev, slug: generatedSlug }));
+  }, [newCohort.nama_kelompok, newCohort.title, editingCohortId]);
+
+  const [newSlot, setNewSlot] = useState({
+    cohort_id: "",
+    date: "",
+    quota: 10,
+  });
+  const [selectedKelompok, setSelectedKelompok] = useState("");
+
+  const uniqueKelompok = useMemo(() => {
+    return Array.from(new Set(cohorts.map((c) => c.nama_kelompok))).sort();
+  }, [cohorts]);
+
+  const filteredCohortsForSlot = useMemo(() => {
+    return cohorts.filter((c) => c.nama_kelompok === selectedKelompok);
+  }, [cohorts, selectedKelompok]);
+
+  // Paste from Excel states
+  const [pasteDialogOpen, setPasteDialogOpen] = useState(false);
+  const [pasteTargetCohort, setPasteTargetCohort] = useState<string>("");
+  const [pasteData, setPasteData] = useState("");
+
+  // Edit Name states
+  const [editNameDialogOpen, setEditNameDialogOpen] = useState(false);
+  const [editingName, setEditingName] = useState<{
+    id: string;
+    full_name: string;
+  } | null>(null);
+
+  const fetchAll = async () => {
+    const { data: c } = await supabase
+      .from("cohorts")
+      .select("*")
+      .order("created_at", { ascending: false });
+    const { data: s } = await supabase
+      .from("slots")
+      .select("*, cohorts(title, nama_kelompok)");
+    const { data: r } = await supabase
+      .from("reservations")
+      .select("*, slots(date, cohorts(title, nama_kelompok))");
+    const { data: an } = await supabase
+      .from("allowed_names")
+      .select("*, cohorts(title, nama_kelompok)");
+
+    if (c) setCohorts(c);
+    if (s) setSlots(s as any);
+    if (r) setReservations(r as any);
+    if (an) setAllowedNames(an as any);
+  };
+
+  useEffect(() => {
+    fetchAll();
+  }, []);
+
+  const groupedNames = useMemo(() => {
+    const groups: Record<string, any[]> = {};
+    allowedNames.forEach((an) => {
+      const cohortTitle = an.cohorts?.title || "Tanpa Event";
+      if (!groups[cohortTitle]) groups[cohortTitle] = [];
+      groups[cohortTitle].push(an);
+    });
+    return groups;
+  }, [allowedNames]);
 
     const handleCreateCohort = async () => {
-        if (!newCohort.title || !newCohort.slug || !newCohort.nama_kelompok) return;
+        if (!newCohort.title || !newCohort.slug || !newCohort.nama_kelompok) {
+            setShowErrors(true);
+            showToast('Mohon lengkapi semua field wajib', 'error');
+            return;
+        }
         const { error } = await supabase.from('cohorts').insert([{
             title: newCohort.title,
             description: newCohort.description,
             unique_slug: newCohort.slug,
-            nama_kelompok: newCohort.nama_kelompok
+            nama_kelompok: newCohort.nama_kelompok,
+            start_at: newCohort.start_at ? new Date(newCohort.start_at).toISOString() : null
         }]);
-        if (error) alert(error.message);
-        else {
-            setNewCohort({ title: '', description: '', slug: '', nama_kelompok: '' });
+        if (error) {
+            showToast(error.message, 'error');
+        } else {
+            setNewCohort({ title: '', description: '', slug: '', nama_kelompok: '', start_at: '' });
+            setShowErrors(false);
+            showToast('Event berhasil dibuat');
             fetchAll();
         }
     };
 
-    const handleDeleteCohort = async (id: string) => {
-        if (!confirm('Apakah Anda yakin ingin menghapus event ini? Semua jadwal, reservasi, dan daftar nama terkait akan ikut terhapus.')) return;
+    const handleUpdateCohort = async () => {
+        if (!editingCohortId || !newCohort.title || !newCohort.slug || !newCohort.nama_kelompok) {
+            setShowErrors(true);
+            showToast('Mohon lengkapi semua field wajib', 'error');
+            return;
+        }
         
-        const { error } = await supabase.from('cohorts').delete().eq('id', id);
-        if (error) alert(error.message);
-        else fetchAll();
+        const { error } = await supabase
+            .from('cohorts')
+            .update({
+                title: newCohort.title,
+                description: newCohort.description,
+                unique_slug: newCohort.slug,
+                nama_kelompok: newCohort.nama_kelompok,
+                start_at: newCohort.start_at ? new Date(newCohort.start_at).toISOString() : null
+            })
+            .eq('id', editingCohortId);
+
+        if (error) {
+            showToast(error.message, 'error');
+        } else {
+            setEditingCohortId(null);
+            setNewCohort({ title: '', description: '', slug: '', nama_kelompok: '', start_at: '' });
+            setShowErrors(false);
+            showToast('Perubahan event berhasil disimpan');
+            fetchAll();
+        }
     };
 
+  const handleEditCohortClick = (cohort: Cohort) => {
+    setEditingCohortId(cohort.id);
+    setNewCohort({
+      title: cohort.title,
+      description: cohort.description || "",
+      slug: cohort.unique_slug,
+      nama_kelompok: cohort.nama_kelompok,
+      start_at: formatDateForInput(cohort.start_at),
+    });
+    showToast("Mode ubah aktif", "info");
+  };
+
+  const handleDeleteCohort = async (id: string) => {
+    if (
+      !confirm(
+        "Apakah Anda yakin ingin menghapus event ini? Semua jadwal, reservasi, dan daftar nama terkait akan ikut terhapus.",
+      )
+    )
+      return;
+
+    const { error } = await supabase.from("cohorts").delete().eq("id", id);
+    if (error) {
+      showToast(error.message, "error");
+    } else {
+      showToast("Event berhasil dihapus");
+      fetchAll();
+    }
+  };
+
     const handleCreateSlot = async () => {
-        if (!newSlot.cohort_id || !newSlot.date) return;
+        if (!newSlot.cohort_id || !newSlot.date || !selectedKelompok) {
+            setShowErrors(true);
+            showToast('Mohon lengkapi semua field wajib', 'error');
+            return;
+        }
         const { error } = await supabase.from('slots').insert([{
             cohort_id: newSlot.cohort_id,
             date: newSlot.date,
             quota: newSlot.quota
         }]);
-        if (error) alert(error.message);
-        else {
-            setNewSlot({ ...newSlot, date: '' });
-            fetchAll();
-        }
-    };
-
-    const handlePasteSubmit = async () => {
-        if (!pasteData.trim()) return;
-        
-        const rows = pasteData.split(/\r?\n/).filter(row => !!row.trim());
-        const names = rows.map(row => ({
-            cohort_id: pasteTargetCohort,
-            full_name: row.split('\t')[0].trim()
-        })).filter(n => !!n.full_name);
-
-        const { error } = await supabase.from('allowed_names').insert(names);
-        if (error) alert(error.message);
-        else {
-            alert(`Berhasil menambahkan ${names.length} nama!`);
-            setPasteDialogOpen(false);
-            setPasteData('');
-            fetchAll();
-        }
-    };
-
-    const handleUpdateName = async () => {
-        if (!editingName || !editingName.full_name.trim()) return;
-        
-        const { error } = await supabase
-            .from('allowed_names')
-            .update({ full_name: editingName.full_name.trim() })
-            .eq('id', editingName.id);
-
-        if (error) alert(error.message);
-        else {
-            setEditNameDialogOpen(false);
-            setEditingName(null);
-            fetchAll();
-        }
-    };
-
-    const handleDeleteReservation = async (id: string, slotId: string) => {
-        if (!confirm('Apakah Anda yakin ingin menghapus reservasi ini?')) return;
-        
-        const { error } = await supabase.from('reservations').delete().eq('id', id);
-        if (!error) {
-            await supabase.rpc('decrement_slot_count', { p_slot_id: slotId });
-            fetchAll();
-        }
-    };
-
-    const handleDeleteAllowedName = async (id: string) => {
-        if (!confirm('Hapus nama ini?')) return;
-        const { error } = await supabase.from('allowed_names').delete().eq('id', id);
-        if (!error) fetchAll();
-    };
-
-    const handleBulkDeleteNames = async () => {
-        if (selectedNameIds.length === 0) return;
-        if (!confirm(`Hapus ${selectedNameIds.length} nama terpilih?`)) return;
-
-        const { error } = await supabase.from('allowed_names').delete().in('id', selectedNameIds);
-        if (error) alert(error.message);
-        else {
-            setSelectedNameIds([]);
-            fetchAll();
-        }
-    };
-
-    const toggleNameSelection = (id: string) => {
-        setSelectedNameIds(prev => 
-            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-        );
-    };
-
-    const toggleCohortSelection = (cohortTitle: string, checked: boolean) => {
-        const idsInCohort = groupedNames[cohortTitle].map(an => an.id);
-        if (checked) {
-            setSelectedNameIds(prev => [...new Set([...prev, ...idsInCohort])]);
+        if (error) {
+            showToast(error.message, 'error');
         } else {
-            setSelectedNameIds(prev => prev.filter(id => !idsInCohort.includes(id)));
+            setNewSlot({ ...newSlot, date: '' });
+            setShowErrors(false);
+            showToast('Jadwal berhasil ditambahkan');
+            fetchAll();
         }
     };
 
-    const copyInviteLink = (slug: string) => {
-        const url = `${window.location.origin}/cohort/${slug}`;
-        navigator.clipboard.writeText(url);
-        alert('Link undangan berhasil disalin!');
-    };
+  const handlePasteSubmit = async () => {
+    if (!pasteData.trim()) return;
 
-    return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-                <Box className="refined-card" sx={{ p: 3, mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-                    <Typography variant="h5" sx={{ fontWeight: 800 }}>Panel Admin</Typography>
-                    <Tabs 
-                        value={tab} 
-                        onChange={(_: any, v: number) => setTab(v)} 
-                        sx={{ 
-                            minHeight: 40,
-                            '& .MuiTab-root': { py: 1, minHeight: 40, fontWeight: 700, fontSize: '0.85rem' }
-                        }}
+    const rows = pasteData.split(/\r?\n/).filter((row) => !!row.trim());
+    const names = rows
+      .map((row) => ({
+        cohort_id: pasteTargetCohort,
+        full_name: row.split("\t")[0].trim(),
+      }))
+      .filter((n) => !!n.full_name);
+
+    const { error } = await supabase.from("allowed_names").insert(names);
+    if (error) {
+      showToast(error.message, "error");
+    } else {
+      showToast(`${names.length} nama berhasil ditambahkan`);
+      setPasteDialogOpen(false);
+      setPasteData("");
+      fetchAll();
+    }
+  };
+
+  const handleUpdateName = async () => {
+    if (!editingName || !editingName.full_name.trim()) return;
+
+    const { error } = await supabase
+      .from("allowed_names")
+      .update({ full_name: editingName.full_name.trim() })
+      .eq("id", editingName.id);
+
+    if (error) {
+      showToast(error.message, "error");
+    } else {
+      setEditNameDialogOpen(false);
+      setEditingName(null);
+      showToast("Nama berhasil diubah");
+      fetchAll();
+    }
+  };
+
+  const handleDeleteReservation = async (id: string, slotId: string) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus reservasi ini?")) return;
+
+    const { error } = await supabase.from("reservations").delete().eq("id", id);
+    if (error) {
+      showToast(error.message, "error");
+    } else {
+      await supabase.rpc("decrement_slot_count", { p_slot_id: slotId });
+      showToast("Reservasi berhasil dihapus");
+      fetchAll();
+    }
+  };
+
+  const handleDeleteAllowedName = async (id: string) => {
+    if (!confirm("Hapus nama ini?")) return;
+    const { error } = await supabase
+      .from("allowed_names")
+      .delete()
+      .eq("id", id);
+    if (error) {
+      showToast(error.message, "error");
+    } else {
+      showToast("Nama berhasil dihapus");
+      fetchAll();
+    }
+  };
+
+  const handleBulkDeleteNames = async () => {
+    if (selectedNameIds.length === 0) return;
+    if (!confirm(`Hapus ${selectedNameIds.length} nama terpilih?`)) return;
+
+    const { error } = await supabase
+      .from("allowed_names")
+      .delete()
+      .in("id", selectedNameIds);
+    if (error) {
+      showToast(error.message, "error");
+    } else {
+      setSelectedNameIds([]);
+      showToast("Daftar nama berhasil dihapus");
+      fetchAll();
+    }
+  };
+
+  const toggleNameSelection = (id: string) => {
+    setSelectedNameIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
+    );
+  };
+
+  const toggleCohortSelection = (cohortTitle: string, checked: boolean) => {
+    const idsInCohort = groupedNames[cohortTitle].map((an) => an.id);
+    if (checked) {
+      setSelectedNameIds((prev) => [...new Set([...prev, ...idsInCohort])]);
+    } else {
+      setSelectedNameIds((prev) =>
+        prev.filter((id) => !idsInCohort.includes(id)),
+      );
+    }
+  };
+
+  const copyInviteLink = (slug: string) => {
+    const url = `${window.location.origin}/cohort/${slug}`;
+    navigator.clipboard.writeText(url);
+    showToast("Tautan berhasil disalin ke clipboard");
+  };
+
+  return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Box
+          className="refined-card"
+          sx={{
+            p: { xs: 1, sm: 3 },
+            mb: 3,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: { xs: "nowrap", md: "wrap" },
+            gap: 2,
+            overflow: "hidden",
+          }}
+        >
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 800,
+              display: { xs: "none", sm: "block" },
+              whiteSpace: "nowrap",
+            }}
+          >
+            Panel Admin
+          </Typography>
+          <Tabs
+            value={tab}
+            onChange={(_: any, v: number) => setTab(v)}
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
+            sx={{
+              minHeight: 40,
+              flexGrow: 1,
+              maxWidth: "100%",
+              "& .MuiTab-root": {
+                py: 1,
+                minHeight: 40,
+                fontWeight: 700,
+                fontSize: "0.85rem",
+                whiteSpace: "nowrap",
+              },
+              "& .MuiTabs-scrollButtons": {
+                "&.Mui-disabled": { opacity: 0.3 },
+                color: "#3498db",
+              },
+            }}
+          >
+            <Tab label="Event" />
+            <Tab label="Jadwal" />
+            <Tab label="Reservasi" />
+            <Tab label="Daftar Nama" />
+          </Tabs>
+        </Box>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={tab}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            {tab === 0 && (
+              <Grid container spacing={3}>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <Box sx={{ mb: 2, px: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                      {editingCohortId
+                        ? "Ubah Event"
+                        : "Tambah Event/Wawancara"}
+                    </Typography>
+                  </Box>
+                  {/* Mobile Collapsible Form */}
+                  <Box sx={{ display: { xs: "block", md: "none" } }}>
+                    <Accordion
+                      className="refined-card"
+                      defaultExpanded={!!editingCohortId}
                     >
-                        <Tab label="Event" />
-                        <Tab label="Jadwal" />
-                        <Tab label="Reservasi" />
-                        <Tab label="Daftar Nama" />
-                    </Tabs>
+                      <AccordionSummary expandIcon={<ChevronDown />}>
+                        <Typography sx={{ fontWeight: 700 }}>
+                          {editingCohortId
+                            ? "Form Perubahan"
+                            : "Form Tambah Event"}
+                        </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails sx={{ pt: 0 }}>
+                        <Box sx={{ display: "flex", flexDirection: "column" }}>
+                          <TextField
+                            fullWidth
+                            label="Nama Kelompok"
+                            margin="normal"
+                            placeholder="misal: Kelompok A"
+                            value={newCohort.nama_kelompok}
+                            error={showErrors && !newCohort.nama_kelompok}
+                            helperText={showErrors && !newCohort.nama_kelompok ? "Nama kelompok wajib diisi" : ""}
+                            onChange={(e: any) =>
+                              setNewCohort({
+                                ...newCohort,
+                                nama_kelompok: e.target.value,
+                              })
+                            }
+                          />
+                          <TextField
+                            fullWidth
+                            label="Judul Event/Wawancara"
+                            margin="normal"
+                            value={newCohort.title}
+                            error={showErrors && !newCohort.title}
+                            helperText={showErrors && !newCohort.title ? "Judul event wajib diisi" : ""}
+                            onChange={(e: any) =>
+                              setNewCohort({
+                                ...newCohort,
+                                title: e.target.value,
+                              })
+                            }
+                          />
+                          <TextField
+                            fullWidth
+                            label="Deskripsi (Opsional)"
+                            margin="normal"
+                            multiline
+                            rows={2}
+                            value={newCohort.description}
+                            onChange={(e: any) =>
+                              setNewCohort({
+                                ...newCohort,
+                                description: e.target.value,
+                              })
+                            }
+                          />
+                          <TextField
+                            fullWidth
+                            label="Tautan Formulir"
+                            margin="normal"
+                            value={newCohort.slug}
+                            disabled={!!editingCohortId}
+                            slotProps={{
+                              input: {
+                                readOnly: !!editingCohortId,
+                                sx: {
+                                  cursor: editingCohortId
+                                    ? "not-allowed"
+                                    : "text",
+                                },
+                              },
+                            }}
+                            onChange={(e: any) =>
+                              editingCohortId &&
+                              setNewCohort({
+                                ...newCohort,
+                                slug: e.target.value,
+                              })
+                            }
+                            helperText={
+                              editingCohortId
+                                ? "Hati-hati mengubah tautan yang sudah disebar"
+                                : "Dibuat otomatis oleh sistem"
+                            }
+                          />
+                          <TextField
+                            fullWidth
+                            type="datetime-local"
+                            label="Waktu Mulai Pendaftaran"
+                            margin="normal"
+                            slotProps={{ inputLabel: { shrink: true } }}
+                            value={newCohort.start_at}
+                            onChange={(e: any) =>
+                              setNewCohort({
+                                ...newCohort,
+                                start_at: e.target.value,
+                              })
+                            }
+                            helperText="Opsional: Kosongkan jika ingin langsung dibuka"
+                          />
+                          <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                            {editingCohortId && (
+                              <Button
+                                variant="outlined"
+                                color="inherit"
+                                onClick={() => {
+                                  setEditingCohortId(null);
+                                  setNewCohort({
+                                    title: "",
+                                    description: "",
+                                    slug: "",
+                                    nama_kelompok: "",
+                                    start_at: "",
+                                  });
+                                }}
+                                fullWidth
+                              >
+                                Batal
+                              </Button>
+                            )}
+                            <Button
+                              variant="contained"
+                              onClick={
+                                editingCohortId
+                                  ? handleUpdateCohort
+                                  : handleCreateCohort
+                              }
+                              fullWidth
+                            >
+                              {editingCohortId ? "Simpan Perubahan" : "Simpan"}
+                            </Button>
+                          </Stack>
+                        </Box>
+                      </AccordionDetails>
+                    </Accordion>
+                  </Box>
+
+                  {/* Desktop Standard Form */}
+                  <Paper
+                    className="refined-card"
+                    sx={{ p: 3, display: { xs: "none", md: "block" } }}
+                  >
+                    <TextField
+                      fullWidth
+                      label="Nama Kelompok"
+                      margin="normal"
+                      placeholder="misal: Kelompok A"
+                      value={newCohort.nama_kelompok}
+                      onChange={(e: any) =>
+                        setNewCohort({
+                          ...newCohort,
+                          nama_kelompok: e.target.value,
+                        })
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      label="Judul Event/Wawancara"
+                      margin="normal"
+                      value={newCohort.title}
+                      onChange={(e: any) =>
+                        setNewCohort({ ...newCohort, title: e.target.value })
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      label="Deskripsi (Opsional)"
+                      margin="normal"
+                      multiline
+                      rows={2}
+                      value={newCohort.description}
+                      onChange={(e: any) =>
+                        setNewCohort({
+                          ...newCohort,
+                          description: e.target.value,
+                        })
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      label="Tautan Formulir"
+                      margin="normal"
+                      value={newCohort.slug}
+                      disabled={!!editingCohortId}
+                      slotProps={{
+                        input: {
+                          readOnly: !!editingCohortId,
+                          sx: {
+                            cursor: editingCohortId ? "not-allowed" : "text",
+                          },
+                        },
+                      }}
+                      onChange={(e: any) =>
+                        editingCohortId &&
+                        setNewCohort({ ...newCohort, slug: e.target.value })
+                      }
+                      helperText={
+                        editingCohortId
+                          ? "Hati-hati mengubah tautan yang sudah disebar"
+                          : "Dibuat otomatis oleh sistem"
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      type="datetime-local"
+                      label="Waktu Mulai Pendaftaran"
+                      margin="normal"
+                      slotProps={{ inputLabel: { shrink: true } }}
+                      value={newCohort.start_at}
+                      onChange={(e: any) =>
+                        setNewCohort({ ...newCohort, start_at: e.target.value })
+                      }
+                      helperText="Opsional: Kosongkan jika ingin langsung dibuka"
+                    />
+                    <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                      {editingCohortId && (
+                        <Button
+                          variant="outlined"
+                          color="inherit"
+                          onClick={() => {
+                            setEditingCohortId(null);
+                            setNewCohort({
+                              title: "",
+                              description: "",
+                              slug: "",
+                              nama_kelompok: "",
+                              start_at: "",
+                            });
+                          }}
+                          fullWidth
+                        >
+                          Batal
+                        </Button>
+                      )}
+                      <Button
+                        variant="contained"
+                        onClick={
+                          editingCohortId
+                            ? handleUpdateCohort
+                            : handleCreateCohort
+                        }
+                        fullWidth
+                      >
+                        {editingCohortId ? "Simpan Perubahan" : "Simpan"}
+                      </Button>
+                    </Stack>
+                  </Paper>
+                </Grid>
+                <Grid size={{ xs: 12, md: 8 }}>
+                  <Box sx={{ mb: 2, px: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                      Daftar Event/Wawancara
+                    </Typography>
+                  </Box>
+                  <TableContainer
+                    component={Paper}
+                    className="refined-card"
+                    sx={{
+                      overflowX: "auto",
+                      maxWidth: "100%",
+                      display: "block",
+                    }}
+                  >
+                    <Table sx={{ minWidth: { xs: 600, md: "100%" } }}>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Nama Kelompok</TableCell>
+                          <TableCell>Event/Wawancara</TableCell>
+                          <TableCell>Dibuka</TableCell>
+                          <TableCell align="right"></TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {cohorts.map((c) => (
+                          <TableRow key={c.id}>
+                            <TableCell sx={{ whiteSpace: "nowrap" }}>
+                              {c.nama_kelompok}
+                            </TableCell>
+                            <TableCell sx={{ whiteSpace: "nowrap" }}>
+                              {c.title}
+                            </TableCell>
+                            <TableCell sx={{ whiteSpace: "nowrap" }}>
+                              {c.start_at
+                                ? new Date(c.start_at).toLocaleString("id-ID", {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    timeZoneName: 'short'
+                                  })
+                                : "Langsung"}
+                            </TableCell>
+                            <TableCell align="right">
+                              <Box
+                                display="flex"
+                                gap={1}
+                                justifyContent="flex-end"
+                              >
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  startIcon={<Copy size={14} />}
+                                  onClick={() => copyInviteLink(c.unique_slug)}
+                                  sx={{
+                                    py: 0.3,
+                                    px: 1.5,
+                                    minWidth: "auto",
+                                    fontSize: "0.75rem",
+                                  }}
+                                >
+                                  Link
+                                </Button>
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  color="primary"
+                                  startIcon={<Edit2 size={14} />}
+                                  onClick={() => handleEditCohortClick(c)}
+                                  sx={{
+                                    py: 0.3,
+                                    px: 1.5,
+                                    minWidth: "auto",
+                                    fontSize: "0.75rem",
+                                  }}
+                                >
+                                  Ubah
+                                </Button>
+                                <Button
+                                  size="small"
+                                  startIcon={<UserPlus size={14} />}
+                                  variant="outlined"
+                                  color="primary"
+                                  onClick={() => {
+                                    setPasteTargetCohort(c.id);
+                                    setPasteDialogOpen(true);
+                                  }}
+                                  sx={{
+                                    py: 0.3,
+                                    px: 1.5,
+                                    minWidth: "auto",
+                                    fontSize: "0.75rem",
+                                  }}
+                                >
+                                  Peserta
+                                </Button>
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={() => handleDeleteCohort(c.id)}
+                                  sx={{
+                                    bgcolor: "rgba(231, 76, 60, 0.15)",
+                                    borderRadius: "50%",
+                                    width: 32,
+                                    height: 32,
+                                    "&:hover": {
+                                      bgcolor: "rgba(231, 76, 60, 0.25)",
+                                    },
+                                  }}
+                                >
+                                  <Trash2 size={16} />
+                                </IconButton>
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Grid>
+              </Grid>
+            )}
+
+            {tab === 1 && (
+              <Grid container spacing={3}>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <Box sx={{ mb: 2, px: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                      Tambah Jadwal Event/Wawancara
+                    </Typography>
+                  </Box>
+                  {/* Mobile Collapsible Form */}
+                  <Box sx={{ display: { xs: "block", md: "none" } }}>
+                    <Accordion className="refined-card">
+                      <AccordionSummary expandIcon={<ChevronDown />}>
+                        <Typography sx={{ fontWeight: 700 }}>
+                          Form Input Jadwal
+                        </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails sx={{ pt: 0 }}>
+                        <Box sx={{ display: "flex", flexDirection: "column" }}>
+                          <TextField
+                            select
+                            fullWidth
+                            label="Pilih Kelompok"
+                            margin="normal"
+                            slotProps={{ select: { native: true } }}
+                            value={selectedKelompok}
+                            error={showErrors && !selectedKelompok}
+                            helperText={showErrors && !selectedKelompok ? "Wajib pilih kelompok" : ""}
+                            onChange={(e: any) => {
+                              setSelectedKelompok(e.target.value);
+                              setNewSlot({ ...newSlot, cohort_id: "" });
+                            }}
+                          >
+                            <option value=""></option>
+                            {uniqueKelompok.map((k) => (
+                              <option key={k} value={k}>
+                                {k}
+                              </option>
+                            ))}
+                          </TextField>
+
+                          <TextField
+                            select
+                            fullWidth
+                            label="Pilih Event"
+                            margin="normal"
+                            disabled={!selectedKelompok}
+                            slotProps={{ select: { native: true } }}
+                            value={newSlot.cohort_id}
+                            error={showErrors && !newSlot.cohort_id}
+                            helperText={showErrors && !newSlot.cohort_id ? "Wajib pilih event" : ""}
+                            onChange={(e: any) =>
+                              setNewSlot({
+                                ...newSlot,
+                                cohort_id: e.target.value,
+                              })
+                            }
+                          >
+                            <option value=""></option>
+                            {filteredCohortsForSlot.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.title}
+                              </option>
+                            ))}
+                          </TextField>
+                          <TextField
+                            fullWidth
+                            type="date"
+                            label="Tanggal"
+                            margin="normal"
+                            slotProps={{ inputLabel: { shrink: true } }}
+                            value={newSlot.date}
+                            error={showErrors && !newSlot.date}
+                            helperText={showErrors && !newSlot.date ? "Wajib pilih tanggal" : ""}
+                            onChange={(e: any) =>
+                              setNewSlot({ ...newSlot, date: e.target.value })
+                            }
+                          />
+                          <TextField
+                            fullWidth
+                            type="number"
+                            label="Kuota"
+                            margin="normal"
+                            value={newSlot.quota}
+                            error={showErrors && (isNaN(newSlot.quota) || newSlot.quota <= 0)}
+                            helperText={showErrors && (isNaN(newSlot.quota) || newSlot.quota <= 0) ? "Kuota minimal 1" : ""}
+                            onChange={(e: any) =>
+                              setNewSlot({
+                                ...newSlot,
+                                quota: parseInt(e.target.value),
+                              })
+                            }
+                          />
+                          <Button
+                            variant="contained"
+                            sx={{ mt: 2 }}
+                            onClick={handleCreateSlot}
+                            fullWidth
+                          >
+                            Tambah
+                          </Button>
+                        </Box>
+                      </AccordionDetails>
+                    </Accordion>
+                  </Box>
+
+                  {/* Desktop Standard Form */}
+                  <Paper
+                    className="refined-card"
+                    sx={{ p: 3, display: { xs: "none", md: "block" } }}
+                  >
+                    <TextField
+                      select
+                      fullWidth
+                      label="Pilih Kelompok"
+                      margin="normal"
+                      slotProps={{ select: { native: true } }}
+                      value={selectedKelompok}
+                      error={showErrors && !selectedKelompok}
+                      helperText={showErrors && !selectedKelompok ? "Wajib pilih kelompok" : ""}
+                      onChange={(e: any) => {
+                        setSelectedKelompok(e.target.value);
+                        setNewSlot({ ...newSlot, cohort_id: "" });
+                      }}
+                    >
+                      <option value=""></option>
+                      {uniqueKelompok.map((k) => (
+                        <option key={k} value={k}>
+                          {k}
+                        </option>
+                      ))}
+                    </TextField>
+
+                    <TextField
+                      select
+                      fullWidth
+                      label="Pilih Event"
+                      margin="normal"
+                      disabled={!selectedKelompok}
+                      slotProps={{ select: { native: true } }}
+                      value={newSlot.cohort_id}
+                      error={showErrors && !newSlot.cohort_id}
+                      helperText={showErrors && !newSlot.cohort_id ? "Wajib pilih event" : ""}
+                      onChange={(e: any) =>
+                        setNewSlot({ ...newSlot, cohort_id: e.target.value })
+                      }
+                    >
+                      <option value=""></option>
+                      {filteredCohortsForSlot.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.title}
+                        </option>
+                      ))}
+                    </TextField>
+                    <TextField
+                      fullWidth
+                      type="date"
+                      label="Tanggal"
+                      margin="normal"
+                      slotProps={{ inputLabel: { shrink: true } }}
+                      value={newSlot.date}
+                      error={showErrors && !newSlot.date}
+                      helperText={showErrors && !newSlot.date ? "Wajib pilih tanggal" : ""}
+                      onChange={(e: any) =>
+                        setNewSlot({ ...newSlot, date: e.target.value })
+                      }
+                    />
+                    <TextField
+                      fullWidth
+                      type="number"
+                      label="Kuota"
+                      margin="normal"
+                      value={newSlot.quota}
+                      error={showErrors && (isNaN(newSlot.quota) || newSlot.quota <= 0)}
+                      helperText={showErrors && (isNaN(newSlot.quota) || newSlot.quota <= 0) ? "Kuota minimal 1" : ""}
+                      onChange={(e: any) =>
+                        setNewSlot({
+                          ...newSlot,
+                          quota: parseInt(e.target.value),
+                        })
+                      }
+                    />
+                    <Button
+                      variant="contained"
+                      sx={{ mt: 2 }}
+                      onClick={handleCreateSlot}
+                      fullWidth
+                    >
+                      Tambah
+                    </Button>
+                  </Paper>
+                </Grid>
+                <Grid size={{ xs: 12, md: 8 }}>
+                  <Box sx={{ mb: 2, px: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                      Jadwal Event/Wawancara
+                    </Typography>
+                  </Box>
+                  <TableContainer
+                    component={Paper}
+                    className="refined-card"
+                    sx={{
+                      overflowX: "auto",
+                      maxWidth: "100%",
+                      display: "block",
+                    }}
+                  >
+                    <Table sx={{ minWidth: { xs: 600, md: "100%" } }}>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Kelompok</TableCell>
+                          <TableCell>Event</TableCell>
+                          <TableCell>Tanggal</TableCell>
+                          <TableCell>Kapasitas</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {slots.map((s) => (
+                          <TableRow key={s.id}>
+                            <TableCell sx={{ whiteSpace: "nowrap" }}>
+                              <Typography
+                                variant="body2"
+                                sx={{ color: "#3498db", fontWeight: 600 }}
+                              >
+                                {(s as any).cohorts?.nama_kelompok}
+                              </Typography>
+                            </TableCell>
+                            <TableCell sx={{ whiteSpace: "nowrap" }}>
+                              {(s as any).cohorts?.title}
+                            </TableCell>
+                            <TableCell sx={{ whiteSpace: "nowrap" }}>
+                              {s.date}
+                            </TableCell>
+                            <TableCell sx={{ whiteSpace: "nowrap" }}>
+                              {s.count} / {s.quota}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Grid>
+              </Grid>
+            )}
+
+            {tab === 2 && (
+              <TableContainer
+                component={Paper}
+                className="refined-card"
+                sx={{ overflowX: "auto", maxWidth: "100%", display: "block" }}
+              >
+                <Table sx={{ minWidth: { xs: 700, md: "100%" } }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Nama</TableCell>
+                      <TableCell>Event</TableCell>
+                      <TableCell>Tanggal</TableCell>
+                      <TableCell>Kode</TableCell>
+                      <TableCell align="right"></TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {reservations.map((r) => (
+                      <TableRow key={r.id}>
+                        <TableCell>{r.user_name}</TableCell>
+                        <TableCell>{r.slots?.cohorts?.title}</TableCell>
+                        <TableCell>{r.slots?.date}</TableCell>
+                        <TableCell>
+                          <code>{r.access_code}</code>
+                        </TableCell>
+                        <TableCell align="right">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() =>
+                              handleDeleteReservation(r.id, r.slot_id)
+                            }
+                            sx={{
+                              bgcolor: "rgba(231, 76, 60, 0.15)",
+                              borderRadius: "50%",
+                              width: 32,
+                              height: 32,
+                              "&:hover": { bgcolor: "rgba(231, 76, 60, 0.25)" },
+                            }}
+                          >
+                            <Trash2 size={16} />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+
+            {tab === 3 && (
+              <Box>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  mb={2}
+                  px={1}
+                >
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: { xs: "0.9rem", sm: "1.25rem" },
+                    }}
+                  >
+                    {selectedNameIds.length > 0
+                      ? `${selectedNameIds.length} Dipilih`
+                      : "Kelola Daftar Nama"}
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    color="error"
+                    size="small"
+                    startIcon={<UserMinus size={16} />}
+                    disabled={selectedNameIds.length === 0}
+                    onClick={handleBulkDeleteNames}
+                    sx={{
+                      py: { xs: 0.5, sm: 1 },
+                      px: { xs: 1.5, sm: 2 },
+                      fontSize: { xs: "0.7rem", sm: "0.875rem" },
+                    }}
+                  >
+                    Hapus Terpilih
+                  </Button>
                 </Box>
 
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={tab}
-                        initial={{ opacity: 0, x: 10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        transition={{ duration: 0.2 }}
+                {Object.keys(groupedNames).length === 0 && (
+                  <Typography
+                    textAlign="center"
+                    color="textSecondary"
+                    py={4}
+                    sx={{ fontSize: "0.85rem" }}
+                  >
+                    Belum ada daftar nama.
+                  </Typography>
+                )}
+
+                {Object.entries(groupedNames).map(([cohortTitle, names]) => {
+                  const namaKelompok = names[0]?.cohorts?.nama_kelompok || "";
+                  return (
+                    <Accordion
+                      key={cohortTitle}
+                      className="refined-card"
+                      sx={{ mb: 1.5 }}
                     >
-                        {tab === 0 && (
-                            <Grid container spacing={4}>
-                                <Grid size={{ xs: 12, md: 4 }}>
-                                    <Paper className="refined-card" sx={{ p: 3 }}>
-                                        <Typography variant="h6" gutterBottom>Buat Event</Typography>
-                                        <TextField 
-                                            fullWidth 
-                                            label="Nama Kelompok" 
-                                            margin="normal" 
-                                            placeholder="misal: Kelompok A"
-                                            value={newCohort.nama_kelompok} 
-                                            onChange={(e: any) => setNewCohort({...newCohort, nama_kelompok: e.target.value})} 
-                                        />
-                                        <TextField fullWidth label="Judul Event" margin="normal" value={newCohort.title} onChange={(e: any) => setNewCohort({...newCohort, title: e.target.value})} />
-                                        <TextField fullWidth label="Deskripsi (Opsional)" margin="normal" multiline rows={2} value={newCohort.description} onChange={(e: any) => setNewCohort({...newCohort, description: e.target.value})} />
-                                        <TextField 
-                                            fullWidth 
-                                            label="Tautan Formulir" 
-                                            margin="normal" 
-                                            value={newCohort.slug} 
-                                            disabled
-                                            slotProps={{ 
-                                                input: { 
-                                                    readOnly: true,
-                                                    sx: { cursor: 'not-allowed' }
-                                                } 
-                                            }} 
-                                            helperText="Dibuat otomatis oleh sistem" 
-                                        />
-                                        <Button variant="contained" sx={{ mt: 2 }} onClick={handleCreateCohort} fullWidth>Simpan</Button>
-                                    </Paper>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 8 }}>
-                                    <TableContainer component={Paper} className="refined-card" sx={{ overflow: 'hidden' }}>
-                                        <Table>
-                                            <TableHead>
-                                                <TableRow>
-                                                    <TableCell>Nama Kelompok</TableCell>
-                                                    <TableCell>Judul Event</TableCell>
-                                                    <TableCell align="right"></TableCell>
-                                                </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                                {cohorts.map(c => (
-                                                    <TableRow key={c.id}>
-                                                        <TableCell>{c.nama_kelompok}</TableCell>
-                                                        <TableCell>{c.title}</TableCell>
-                                                        <TableCell align="right">
-                                                            <Box display="flex" gap={1} justifyContent="flex-end">
-                                                                <Button 
-                                                                    size="small" 
-                                                                    variant="outlined"
-                                                                    startIcon={<Copy size={14} />} 
-                                                                    onClick={() => copyInviteLink(c.unique_slug)}
-                                                                    sx={{ py: 0.5, px: 1.5, minWidth: 'auto', fontSize: '0.75rem' }}
-                                                                >
-                                                                    Salin Tautan Form
-                                                                </Button>
-                                                                <Button 
-                                                                    size="small" 
-                                                                    startIcon={<UserPlus size={14} />} 
-                                                                    variant="outlined" 
-                                                                    color="primary" 
-                                                                    onClick={() => {
-                                                                        setPasteTargetCohort(c.id);
-                                                                        setPasteDialogOpen(true);
-                                                                    }}
-                                                                    sx={{ py: 0.5, px: 1.5, minWidth: 'auto', fontSize: '0.75rem' }}
-                                                                >
-                                                                    Tambah Peserta
-                                                                </Button>
-                                                                <IconButton 
-                                                                    size="small" 
-                                                                    color="error" 
-                                                                    onClick={() => handleDeleteCohort(c.id)}
-                                                                    sx={{ 
-                                                                        bgcolor: 'rgba(231, 76, 60, 0.15)',
-                                                                        borderRadius: '50%',
-                                                                        width: 32,
-                                                                        height: 32,
-                                                                        '&:hover': { bgcolor: 'rgba(231, 76, 60, 0.25)' }
-                                                                    }}
-                                                                >
-                                                                    <Trash2 size={16} />
-                                                                </IconButton>
-                                                            </Box>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </TableContainer>
-                                </Grid>
-                            </Grid>
-                        )}
+                      <AccordionSummary
+                        expandIcon={<ChevronDown size={18} />}
+                        sx={{ minHeight: { xs: 48, sm: 64 } }}
+                      >
+                        <Box display="flex" alignItems="center" width="100%">
+                          <Checkbox
+                            size="small"
+                            checked={names.every((n) =>
+                              selectedNameIds.includes(n.id),
+                            )}
+                            indeterminate={
+                              names.some((n) =>
+                                selectedNameIds.includes(n.id),
+                              ) &&
+                              !names.every((n) =>
+                                selectedNameIds.includes(n.id),
+                              )
+                            }
+                            onChange={(e) =>
+                              toggleCohortSelection(
+                                cohortTitle,
+                                e.target.checked,
+                              )
+                            }
+                            onClick={(e) => e.stopPropagation()}
+                            sx={{ p: 0.5 }}
+                          />
+                          <Box
+                            sx={{
+                              ml: 1,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: { xs: 1, sm: 1.5 },
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontWeight: 900,
+                                color: "#3498db",
+                                fontSize: { xs: "0.7rem", sm: "0.85rem" },
+                                letterSpacing: "1px",
+                              }}
+                            >
+                              {namaKelompok.toUpperCase()}
+                            </Typography>
+                            <Typography
+                              sx={{
+                                opacity: 0.3,
+                                fontWeight: 300,
+                                fontSize: "0.8rem",
+                              }}
+                            >
+                              |
+                            </Typography>
+                            <Typography
+                              sx={{
+                                fontWeight: 700,
+                                fontSize: { xs: "0.75rem", sm: "1rem" },
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                maxWidth: { xs: "120px", sm: "none" },
+                              }}
+                            >
+                              {cohortTitle}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              color="textSecondary"
+                              sx={{
+                                opacity: 0.7,
+                                fontSize: { xs: "0.65rem", sm: "0.8rem" },
+                              }}
+                            >
+                              ({names.length})
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </AccordionSummary>
+                      <AccordionDetails sx={{ px: 0, pt: 0 }}>
+                        <Divider sx={{ mb: 1 }} />
+                        <TableContainer
+                          sx={{
+                            overflowX: "auto",
+                            maxWidth: "100%",
+                            display: "block",
+                          }}
+                        >
+                          <Table size="small" sx={{ minWidth: 400 }}>
+                            <TableHead>
+                              <TableRow>
+                                <TableCell
+                                  padding="checkbox"
+                                  sx={{ width: 40 }}
+                                ></TableCell>
+                                <TableCell
+                                  sx={{
+                                    fontWeight: 700,
+                                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                                    width: "100%",
+                                  }}
+                                >
+                                  Nama Lengkap
+                                </TableCell>
+                                <TableCell
+                                  align="right"
+                                  sx={{
+                                    fontWeight: 700,
+                                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                                    width: 100,
+                                  }}
+                                ></TableCell>
+                              </TableRow>
+                            </TableHead>
 
-                        {tab === 1 && (
-                            <Grid container spacing={4}>
-                                <Grid size={{ xs: 12, md: 4 }}>
-                                    <Paper className="refined-card" sx={{ p: 3 }}>
-                                        <Typography variant="h6" gutterBottom>Tambah Jadwal</Typography>
-                                        <TextField 
-                                            select 
-                                            fullWidth 
-                                            label="Pilih Kelompok" 
-                                            margin="normal" 
-                                            slotProps={{ select: { native: true } }}
-                                            value={selectedKelompok}
-                                            onChange={(e: any) => {
-                                                setSelectedKelompok(e.target.value);
-                                                setNewSlot({ ...newSlot, cohort_id: '' });
-                                            }}
-                                        >
-                                            <option value=""></option>
-                                            {uniqueKelompok.map(k => <option key={k} value={k}>{k}</option>)}
-                                        </TextField>
+                            <TableBody>
+                              {names.map((an) => (
+                                <TableRow
+                                  key={an.id}
+                                  sx={{
+                                    "&:hover": {
+                                      bgcolor: "rgba(255,255,255,0.02)",
+                                    },
+                                  }}
+                                >
+                                  <TableCell padding="checkbox">
+                                    <Checkbox
+                                      size="small"
+                                      checked={selectedNameIds.includes(an.id)}
+                                      onChange={() =>
+                                        toggleNameSelection(an.id)
+                                      }
+                                      sx={{ p: 0.5 }}
+                                    />
+                                  </TableCell>
+                                  <TableCell
+                                    sx={{
+                                      fontSize: {
+                                        xs: "0.75rem",
+                                        sm: "0.85rem",
+                                      },
+                                      py: 0.5,
+                                      maxWidth: { xs: "130px", sm: "180px" },
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      whiteSpace: "nowrap",
+                                      width: "100%",
+                                    }}
+                                  >
+                                    {an.full_name}
+                                  </TableCell>
 
-                                        <TextField 
-                                            select 
-                                            fullWidth 
-                                            label="Pilih Event" 
-                                            margin="normal" 
-                                            disabled={!selectedKelompok}
-                                            slotProps={{ select: { native: true } }}
-                                            value={newSlot.cohort_id}
-                                            onChange={(e: any) => setNewSlot({...newSlot, cohort_id: e.target.value})}
-                                        >
-                                            <option value=""></option>
-                                            {filteredCohortsForSlot.map(c => (
-                                                <option key={c.id} value={c.id}>
-                                                    {c.title}
-                                                </option>
-                                            ))}
-                                        </TextField>
-                                        <TextField fullWidth type="date" label="Tanggal" margin="normal" slotProps={{ inputLabel: { shrink: true } }} value={newSlot.date} onChange={(e: any) => setNewSlot({...newSlot, date: e.target.value})} />
-                                        <TextField fullWidth type="number" label="Kuota" margin="normal" value={newSlot.quota} onChange={(e: any) => setNewSlot({...newSlot, quota: parseInt(e.target.value)})} />
-                                        <Button variant="contained" sx={{ mt: 2 }} onClick={handleCreateSlot} fullWidth>Tambah</Button>
-                                    </Paper>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 8 }}>
-                                    <TableContainer component={Paper} className="refined-card" sx={{ overflow: 'hidden' }}>
-                                        <Table>
-                                            <TableHead>
-                                                <TableRow>
-                                                    <TableCell>Kelompok</TableCell>
-                                                    <TableCell>Event</TableCell>
-                                                    <TableCell>Tanggal</TableCell>
-                                                    <TableCell>Kapasitas</TableCell>
-                                                </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                                {slots.map(s => (
-                                                    <TableRow key={s.id}>
-                                                        <TableCell>
-                                                            <Typography variant="body2" sx={{ color: '#3498db', fontWeight: 600 }}>
-                                                                {(s as any).cohorts?.nama_kelompok}
-                                                            </Typography>
-                                                        </TableCell>
-                                                        <TableCell>{(s as any).cohorts?.title}</TableCell>
-                                                        <TableCell>{s.date}</TableCell>
-                                                        <TableCell>{s.count} / {s.quota}</TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </TableContainer>
-                                </Grid>
-                            </Grid>
-                        )}
-
-                        {tab === 2 && (
-                            <TableContainer component={Paper} className="refined-card" sx={{ overflow: 'hidden' }}>
-                                <Table>
-                                    <TableHead>
-                                                <TableRow>
-                                                    <TableCell>Nama</TableCell>
-                                                    <TableCell>Event</TableCell>
-                                                    <TableCell>Tanggal</TableCell>
-                                                    <TableCell>Kode</TableCell>
-                                                    <TableCell align="right"></TableCell>
-                                                </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {reservations.map(r => (
-                                            <TableRow key={r.id}>
-                                                <TableCell>{r.user_name}</TableCell>
-                                                <TableCell>{r.slots?.cohorts?.title}</TableCell>
-                                                <TableCell>{r.slots?.date}</TableCell>
-                                                <TableCell><code>{r.access_code}</code></TableCell>
-                                                <TableCell align="right">
-                                                    <IconButton 
-                                                        size="small" 
-                                                        color="error" 
-                                                        onClick={() => handleDeleteReservation(r.id, r.slot_id)}
-                                                        sx={{ 
-                                                            bgcolor: 'rgba(231, 76, 60, 0.15)',
-                                                            borderRadius: '50%',
-                                                            width: 32,
-                                                            height: 32,
-                                                            '&:hover': { bgcolor: 'rgba(231, 76, 60, 0.25)' }
-                                                        }}
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </IconButton>
-                                                </TableCell>                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        )}
-
-                        {tab === 3 && (
-                            <Box>
-                                <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} px={2}>
-                                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                                        {selectedNameIds.length > 0 ? `${selectedNameIds.length} Nama Dipilih` : 'Kelola Daftar Nama'}
-                                    </Typography>
-                                    <Button 
-                                        variant="contained" 
-                                        color="error" 
-                                        startIcon={<UserMinus size={18} />}
-                                        disabled={selectedNameIds.length === 0}
-                                        onClick={handleBulkDeleteNames}
+                                  <TableCell
+                                    align="right"
+                                    sx={{ py: 0.5, width: 100 }}
+                                  >
+                                    <Box
+                                      display="flex"
+                                      gap={0.5}
+                                      justifyContent="flex-end"
                                     >
-                                        Hapus Terpilih
-                                    </Button>
-                                </Box>
+                                      <Button
+                                        size="small"
+                                        color="primary"
+                                        variant="outlined"
+                                        startIcon={<Edit2 size={10} />}
+                                        onClick={() => {
+                                          setEditingName({
+                                            id: an.id,
+                                            full_name: an.full_name,
+                                          });
+                                          setEditNameDialogOpen(true);
+                                        }}
+                                        sx={{
+                                          py: 0.2,
+                                          px: 1,
+                                          minWidth: "auto",
+                                          fontSize: "0.65rem",
+                                        }}
+                                      >
+                                        Ubah
+                                      </Button>
+                                      <IconButton
+                                        size="small"
+                                        color="error"
+                                        onClick={() =>
+                                          handleDeleteAllowedName(an.id)
+                                        }
+                                        sx={{
+                                          bgcolor: "rgba(231, 76, 60, 0.1)",
+                                          borderRadius: "50%",
+                                          width: 28,
+                                          height: 28,
+                                          "&:hover": {
+                                            bgcolor: "rgba(231, 76, 60, 0.2)",
+                                          },
+                                        }}
+                                      >
+                                        <Trash2 size={14} />
+                                      </IconButton>
+                                    </Box>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </AccordionDetails>
+                    </Accordion>
+                  );
+                })}
+              </Box>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
 
-                                {Object.keys(groupedNames).length === 0 && (
-                                    <Typography textAlign="center" color="textSecondary" py={4}>Belum ada daftar nama.</Typography>
-                                )}
-
-                                {Object.entries(groupedNames).map(([cohortTitle, names]) => {
-                                    const namaKelompok = names[0]?.cohorts?.nama_kelompok || '';
-                                    return (
-                                        <Accordion key={cohortTitle} className="refined-card" sx={{ mb: 2 }}>
-                                            <AccordionSummary expandIcon={<ChevronDown />}>
-                                                <Box display="flex" alignItems="center" width="100%">
-                                                    <Checkbox 
-                                                        size="small"
-                                                        checked={names.every(n => selectedNameIds.includes(n.id))}
-                                                        indeterminate={names.some(n => selectedNameIds.includes(n.id)) && !names.every(n => selectedNameIds.includes(n.id))}
-                                                        onChange={(e) => toggleCohortSelection(cohortTitle, e.target.checked)}
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    />
-                                                    <Box sx={{ ml: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                                        <Typography sx={{ fontWeight: 900, color: '#3498db', fontSize: '0.85rem', letterSpacing: '1px' }}>
-                                                            {namaKelompok.toUpperCase()}
-                                                        </Typography>
-                                                        <Typography sx={{ opacity: 0.3, fontWeight: 300 }}>|</Typography>
-                                                        <Typography sx={{ fontWeight: 700 }}>{cohortTitle}</Typography>
-                                                        <Typography variant="body2" color="textSecondary" sx={{ opacity: 0.7 }}>
-                                                            ({names.length} Nama)
-                                                        </Typography>
-                                                    </Box>
-                                                </Box>
-                                            </AccordionSummary>
-                                            <AccordionDetails sx={{ px: 0, pt: 0 }}>
-                                                <Divider sx={{ mb: 1 }} />
-                                                <Table size="small">
-                                                    <TableHead>
-                                                        <TableRow>
-                                                            <TableCell padding="checkbox"></TableCell>
-                                                            <TableCell sx={{ fontWeight: 700 }}>Nama Lengkap</TableCell>
-                                                            <TableCell align="right" sx={{ fontWeight: 700 }}></TableCell>
-                                                        </TableRow>                                                    </TableHead>
-                                                    <TableBody>
-                                                        {names.map(an => (
-                                                            <TableRow key={an.id} sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.02)' } }}>
-                                                                <TableCell padding="checkbox">
-                                                                    <Checkbox 
-                                                                        size="small" 
-                                                                        checked={selectedNameIds.includes(an.id)}
-                                                                        onChange={() => toggleNameSelection(an.id)}
-                                                                    />
-                                                                </TableCell>
-                                                                <TableCell>{an.full_name}</TableCell>
-                                                                <TableCell align="right">
-                                                                    <Box display="flex" gap={1} justifyContent="flex-end">
-                                                                        <Button 
-                                                                            size="small" 
-                                                                            color="primary" 
-                                                                            variant="outlined"
-                                                                            startIcon={<Edit2 size={12} />}
-                                                                            onClick={() => {
-                                                                                setEditingName({ id: an.id, full_name: an.full_name });
-                                                                                setEditNameDialogOpen(true);
-                                                                            }}
-                                                                            sx={{ py: 0.3, px: 1.2, minWidth: 'auto', fontSize: '0.7rem' }}
-                                                                        >
-                                                                            Ubah
-                                                                        </Button>
-                                                                        <IconButton 
-                                                                            size="small" 
-                                                                            color="error" 
-                                                                            onClick={() => handleDeleteAllowedName(an.id)}
-                                                                            sx={{ 
-                                                                                bgcolor: 'rgba(231, 76, 60, 0.15)',
-                                                                                borderRadius: '50%',
-                                                                                width: 32,
-                                                                                height: 32,
-                                                                                '&:hover': { bgcolor: 'rgba(231, 76, 60, 0.25)' }
-                                                                            }}
-                                                                        >
-                                                                            <Trash2 size={16} />
-                                                                        </IconButton>
-                                                                    </Box>
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        ))}
-                                                    </TableBody>
-                                                </Table>
-                                            </AccordionDetails>
-                                        </Accordion>
-                                    );
-                                })}
-                            </Box>
-                        )}
-                    </motion.div>
-                </AnimatePresence>
-            </motion.div>
-
-            {/* Paste from Excel Dialog */}
-            <Dialog 
-                open={pasteDialogOpen} 
-                onClose={() => setPasteDialogOpen(false)}
-                fullWidth
-                maxWidth="sm"
-                PaperProps={{ className: 'refined-card' }}
-            >
-                <DialogTitle sx={{ fontWeight: 800 }}>Tambah Daftar Nama</DialogTitle>
-                <DialogContent>
-                    <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                        Masukkan satu nama atau tempel daftar nama dari Excel. 
-                        Pemisah antar nama adalah <strong>baris baru (Enter)</strong>.
-                    </Typography>
-                    <TextField
-                        fullWidth
-                        multiline
-                        rows={10}
-                        variant="outlined"
-                        placeholder="Contoh:
+      {/* Paste from Excel Dialog */}
+      <Dialog
+        open={pasteDialogOpen}
+        onClose={() => setPasteDialogOpen(false)}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{ className: "refined-card" }}
+      >
+        <DialogTitle sx={{ fontWeight: 800 }}>Tambah Daftar Nama</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+            Masukkan satu nama atau tempel daftar nama dari Excel. Pemisah antar
+            nama adalah <strong>baris baru (Enter)</strong>.
+          </Typography>
+          <TextField
+            fullWidth
+            multiline
+            rows={10}
+            variant="outlined"
+            placeholder="Contoh:
 Nama Lengkap 1
 Nama Lengkap 2
 Nama Lengkap 3"
-                        value={pasteData}
-                        onChange={(e) => setPasteData(e.target.value)}
-                        autoFocus
-                    />
-                </DialogContent>
-                <DialogActions sx={{ p: 3 }}>
-                    <Button onClick={() => setPasteDialogOpen(false)} color="inherit">Batal</Button>
-                    <Button 
-                        onClick={handlePasteSubmit} 
-                        variant="contained" 
-                        disabled={!pasteData.trim()}
-                    >
-                        Simpan Daftar Nama
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            value={pasteData}
+            onChange={(e) => setPasteData(e.target.value)}
+            autoFocus
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setPasteDialogOpen(false)} color="inherit">
+            Batal
+          </Button>
+          <Button
+            onClick={handlePasteSubmit}
+            variant="contained"
+            disabled={!pasteData.trim()}
+          >
+            Simpan Daftar Nama
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-            {/* Edit Name Dialog */}
-            <Dialog 
-                open={editNameDialogOpen} 
-                onClose={() => setEditNameDialogOpen(false)}
-                fullWidth
-                maxWidth="xs"
-                PaperProps={{ className: 'refined-card' }}
-            >
-                <DialogTitle sx={{ fontWeight: 800 }}>Ubah Nama</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        fullWidth
-                        label="Nama Lengkap"
-                        variant="outlined"
-                        margin="normal"
-                        value={editingName?.full_name || ''}
-                        onChange={(e) => setEditingName(prev => prev ? { ...prev, full_name: e.target.value } : null)}
-                        autoFocus
-                    />
-                </DialogContent>
-                <DialogActions sx={{ p: 3 }}>
-                    <Button onClick={() => setEditNameDialogOpen(false)} color="inherit">Batal</Button>
-                    <Button 
-                        onClick={handleUpdateName} 
-                        variant="contained" 
-                        disabled={!editingName?.full_name.trim()}
-                    >
-                        Simpan Perubahan
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </Container>
-    );
+      {/* Edit Name Dialog */}
+      <Dialog
+        open={editNameDialogOpen}
+        onClose={() => setEditNameDialogOpen(false)}
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{ className: "refined-card" }}
+      >
+        <DialogTitle sx={{ fontWeight: 800 }}>Ubah Nama</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            label="Nama Lengkap"
+            variant="outlined"
+            margin="normal"
+            value={editingName?.full_name || ""}
+            onChange={(e) =>
+              setEditingName((prev) =>
+                prev ? { ...prev, full_name: e.target.value } : null,
+              )
+            }
+            autoFocus
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setEditNameDialogOpen(false)} color="inherit">
+            Batal
+          </Button>
+          <Button
+            onClick={handleUpdateName}
+            variant="contained"
+            disabled={!editingName?.full_name.trim()}
+          >
+            Simpan Perubahan
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: "100%", fontWeight: 600, borderRadius: 2 }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Container>
+  );
 }

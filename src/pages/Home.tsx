@@ -18,7 +18,9 @@ import type { Cohort, Slot } from "../types";
 import { motion } from "framer-motion";
 import { format, parseISO } from "date-fns";
 import { id } from "date-fns/locale";
-import { Calendar as CalendarIcon, ChevronRight, ChevronDown, Info } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronRight, ChevronDown, Info, Lock } from 'lucide-react';
+import { useAuth } from "../context/AuthContext";
+import CountdownTimer from "../components/CountdownTimer";
 
 const motionContainer = {
   hidden: { opacity: 0 },
@@ -41,6 +43,13 @@ interface CohortWithSlots extends Cohort {
 
 export default function Home() {
   const [cohorts, setCohorts] = useState<CohortWithSlots[]>([]);
+  const { isAdmin } = useAuth();
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000 * 60); // Update every minute
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const fetchCohorts = async () => {
@@ -73,132 +82,161 @@ export default function Home() {
       {/* Main Scheduled Events */}
       <motion.div variants={motionContainer} initial="hidden" animate="show">
         <Grid container spacing={2.5}>
-          {scheduled.map((cohort) => (
-            <Grid size={{ xs: 12 }} key={cohort.id}>
-              <motion.div
-                variants={motionItem}
-                whileHover={{ scale: 1.005, x: 4 }}
-                whileTap={{ scale: 0.995 }}
-              >
-                <Paper
-                  component={Link}
-                  to={`/cohort/${cohort.unique_slug}`}
-                  className="refined-card"
-                  sx={{
-                    cursor: "pointer",
-                    textDecoration: "none",
-                    display: 'block',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&:hover': {
-                      borderColor: 'rgba(52, 152, 219, 0.6) !important',
-                      background: '#222222 !important',
-                      transform: 'translateX(4px)',
-                    }
-                  }}
+          {scheduled.map((cohort) => {
+            const isStarted = !cohort.start_at || now >= new Date(cohort.start_at);
+            const canAccess = isStarted || isAdmin;
+
+            return (
+              <Grid size={{ xs: 12 }} key={cohort.id}>
+                <motion.div
+                  variants={motionItem}
+                  whileHover={canAccess ? { scale: 1.005, x: 4 } : {}}
+                  whileTap={canAccess ? { scale: 0.995 } : {}}
                 >
-                  <CardContent sx={{ p: 3, "&:last-child": { pb: 3 } }}>
-                    <Grid container spacing={3} alignItems="flex-start">
-                      {/* Event Identity */}
-                      <Grid size={{ xs: 12, md: 4 }}>
-                        <Typography
-                          variant="overline"
-                          sx={{
-                            fontWeight: 900,
-                            color: "#3498db",
-                            letterSpacing: "1.5px",
-                            display: 'block',
-                            lineHeight: 1.2,
-                            mb: 0.5
-                          }}
-                        >
-                          Kelompok {cohort.nama_kelompok}
-                        </Typography>
-                        <Typography
-                          variant="h6"
-                          sx={{ color: "#ffffff", fontWeight: 800, lineHeight: 1.2, mb: 1 }}
-                        >
-                          {cohort.title}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', lineHeight: 1.4 }}>
-                          {cohort.description}
-                        </Typography>
-                      </Grid>
+                  <Paper
+                    component={canAccess ? Link : Box}
+                    to={canAccess ? `/cohort/${cohort.unique_slug}` : undefined}
+                    className="refined-card"
+                    sx={{
+                      cursor: canAccess ? "pointer" : "default",
+                      textDecoration: "none",
+                      display: 'block',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      opacity: canAccess ? 1 : 0.8,
+                      '&:hover': canAccess ? {
+                        borderColor: 'rgba(52, 152, 219, 0.6) !important',
+                        background: '#222222 !important',
+                        transform: 'translateX(4px)',
+                      } : {}
+                    }}
+                  >
+                    <CardContent sx={{ p: 3, "&:last-child": { pb: 3 } }}>
+                      <Grid container spacing={3} alignItems="flex-start">
+                        {/* Event Identity */}
+                        <Grid size={{ xs: 12, md: 4 }}>
+                          <Typography
+                            variant="overline"
+                            sx={{
+                              fontWeight: 900,
+                              color: "#3498db",
+                              letterSpacing: "1.5px",
+                              display: 'block',
+                              lineHeight: 1.2,
+                              mb: 0.5
+                            }}
+                          >
+                            Kelompok {cohort.nama_kelompok}
+                          </Typography>
+                          <Typography
+                            variant="h6"
+                            sx={{ color: "#ffffff", fontWeight: 800, lineHeight: 1.2, mb: 1 }}
+                          >
+                            {cohort.title}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', lineHeight: 1.4 }}>
+                            {cohort.description}
+                          </Typography>
+                        </Grid>
 
-                      {/* Vertical Slots List */}
-                      <Grid size={{ xs: 12, md: 5 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5, opacity: 0.7 }}>
-                            <CalendarIcon size={14} color="#3498db" />
-                            <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', color: '#ffffff' }}>
-                              Jadwal Tersedia
-                            </Typography>
-                          </Box>
-                          
-                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-                            {cohort.slots.map((slot) => {
-                              const remaining = slot.quota - slot.count;
-                              const isFull = remaining <= 0;
-                              return (
-                                <Box 
-                                  key={slot.id}
-                                  sx={{ 
-                                    display: 'flex', 
-                                    justifyContent: 'space-between', 
-                                    alignItems: 'center',
-                                    px: 2,
-                                    py: 1,
-                                    borderRadius: 2,
-                                    bgcolor: 'rgba(255,255,255,0.05)',
-                                    border: '1px solid rgba(255,255,255,0.08)',
-                                  }}
-                                >
-                                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#ffffff' }}>
-                                    {format(parseISO(slot.date), "EEEE, d MMMM yyyy", { locale: id })}
-                                  </Typography>
-                                  <Chip
-                                    size="small"
-                                    label={isFull ? 'Penuh' : `${remaining} Slot`}
-                                    color={isFull ? "error" : "success"}
-                                    variant={isFull ? "filled" : "outlined"}
-                                    sx={{ 
-                                      height: 22, 
-                                      fontSize: '0.65rem', 
-                                      fontWeight: 800,
-                                      minWidth: 70
-                                    }}
-                                  />
-                                </Box>
-                              );
-                            })}
-                          </Box>
-                        </Box>
-                      </Grid>
+                        {/* Vertical Slots List */}
+                        <Grid size={{ xs: 12, md: 5 }}>
+                          {!isStarted && !isAdmin ? (
+                            <Box sx={{ 
+                              p: 2, 
+                              borderRadius: 2, 
+                              bgcolor: 'rgba(52, 152, 219, 0.05)', 
+                              border: '1px solid rgba(52, 152, 219, 0.2)',
+                              textAlign: 'center'
+                            }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1, opacity: 0.8 }}>
+                                <Lock size={14} color="#3498db" />
+                                <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', color: '#ffffff' }}>
+                                  Pendaftaran Dibuka Dalam
+                                </Typography>
+                              </Box>
+                              <CountdownTimer 
+                                targetDate={cohort.start_at!} 
+                                onFinish={() => setNow(new Date())} 
+                              />
+                            </Box>
+                          ) : (
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5, opacity: 0.7 }}>
+                                <CalendarIcon size={14} color="#3498db" />
+                                <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', color: '#ffffff' }}>
+                                  Jadwal Tersedia
+                                </Typography>
+                              </Box>
+                              
+                              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                                {cohort.slots.map((slot) => {
+                                  const remaining = slot.quota - slot.count;
+                                  const isFull = remaining <= 0;
+                                  return (
+                                    <Box 
+                                      key={slot.id}
+                                      sx={{ 
+                                        display: 'flex', 
+                                        justifyContent: 'space-between', 
+                                        alignItems: 'center',
+                                        px: 2,
+                                        py: 1,
+                                        borderRadius: 2,
+                                        bgcolor: 'rgba(255,255,255,0.05)',
+                                        border: '1px solid rgba(255,255,255,0.08)',
+                                      }}
+                                    >
+                                      <Typography variant="body2" sx={{ fontWeight: 600, color: '#ffffff' }}>
+                                        {format(parseISO(slot.date), "EEEE, d MMMM yyyy", { locale: id })}
+                                      </Typography>
+                                      <Chip
+                                        size="small"
+                                        label={isFull ? 'Penuh' : `${remaining} Slot`}
+                                        color={isFull ? "error" : "success"}
+                                        variant={isFull ? "filled" : "outlined"}
+                                        sx={{ 
+                                          height: 22, 
+                                          fontSize: '0.65rem', 
+                                          fontWeight: 800,
+                                          minWidth: 70
+                                        }}
+                                      />
+                                    </Box>
+                                  );
+                                })}
+                              </Box>
+                            </Box>
+                          )}
+                        </Grid>
 
-                      {/* Action Button */}
-                      <Grid size={{ xs: 12, md: 3 }} sx={{ alignSelf: 'center', textAlign: 'right' }}>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          fullWidth
-                          endIcon={<ChevronRight size={18} />}
-                          sx={{ 
-                            pointerEvents: "none",
-                            borderRadius: 2.5,
-                            fontWeight: 800,
-                            py: 1.5,
-                            background: 'rgba(52, 152, 219, 0.2)',
-                            border: '1px solid rgba(52, 152, 219, 0.4)',
-                          }}
-                        >
-                          Pilih Jadwal Wawancara
-                        </Button>
+                        {/* Action Button */}
+                        <Grid size={{ xs: 12, md: 3 }} sx={{ alignSelf: 'center', textAlign: 'right' }}>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                            disabled={!canAccess}
+                            endIcon={canAccess ? <ChevronRight size={18} /> : <Lock size={18} />}
+                            sx={{ 
+                              pointerEvents: "none",
+                              borderRadius: 2.5,
+                              fontWeight: 800,
+                              py: 1.5,
+                              background: canAccess ? 'rgba(52, 152, 219, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                              border: canAccess ? '1px solid rgba(52, 152, 219, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+                              color: canAccess ? '#ffffff' : 'rgba(255,255,255,0.3)',
+                            }}
+                          >
+                            {isAdmin && !isStarted ? "Akses Admin" : "Pilih Jadwal Wawancara"}
+                          </Button>
+                        </Grid>
                       </Grid>
-                    </Grid>
-                  </CardContent>
-                </Paper>
-              </motion.div>
-            </Grid>
-          ))}
+                    </CardContent>
+                  </Paper>
+                </motion.div>
+              </Grid>
+            );
+          })}
         </Grid>
 
         {/* Unscheduled Events Accordion */}

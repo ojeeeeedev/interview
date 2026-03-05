@@ -97,7 +97,7 @@ export default function Calendar({ slots, onSelect, selected }: Props) {
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
             <ThemeProvider theme={lightCalendarTheme}>
                 <Paper elevation={0} sx={{ 
-                    p: 1,
+                    p: 0.5,
                     borderRadius: '12px',
                     background: '#ffffff', // Solid white
                     border: '1px solid #bdc3c7',
@@ -140,19 +140,20 @@ export default function Calendar({ slots, onSelect, selected }: Props) {
                             '& .MuiDateCalendar-root': { 
                                 bgcolor: 'transparent', 
                                 width: '100%',
-                                maxWidth: { xs: '280px', sm: '320px' }, // Keep ratio
+                                maxWidth: { xs: '260px', sm: '300px' }, // Slightly smaller to prevent scroll
                                 height: 'auto',
-                                minHeight: { xs: '280px', sm: '320px' }
+                                minHeight: { xs: '260px', sm: '300px' }
                             },
                             '& .MuiPickersDay-root': {
-                                width: { xs: 32, sm: 40 },
-                                height: { xs: 32, sm: 40 },
-                                fontSize: '0.8rem'
+                                width: { xs: 30, sm: 36 },
+                                height: { xs: 30, sm: 36 },
+                                fontSize: '0.75rem',
+                                margin: '1px' // Reduce horizontal gap
                             },
                             '& .MuiDayCalendar-header': {
                                 '& .MuiTypography-root': {
-                                    width: { xs: 32, sm: 40 },
-                                    fontSize: '0.75rem'
+                                    width: { xs: 30, sm: 36 },
+                                    fontSize: '0.7rem'
                                 }
                             },
                             '& .MuiPickersLayout-actionBar': { display: 'none' },

@@ -24,7 +24,7 @@ import { motion } from "framer-motion";
 interface Props {
   cohortId: string;
   slots: Slot[];
-  onSuccess: (code: string) => void;
+  onSuccess: (code: string, userName: string, dateStr: string) => void;
 }
 
 export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
@@ -111,7 +111,8 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
     if (bookError) {
       setError(bookError.message);
     } else {
-      onSuccess(code);
+      const formattedDate = format(selectedDate!, "EEEE, d MMMM yyyy", { locale: id });
+      onSuccess(code, name.trim(), formattedDate);
     }
     setLoading(false);
   };

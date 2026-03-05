@@ -83,6 +83,7 @@ export default function TopNav() {
     e.preventDefault();
     if (login(password)) {
       handleCloseLogin();
+      setDrawerOpen(false); // Close mobile sidebar after login
       navigate("/admin");
     } else {
       setAdminError(true);
@@ -283,6 +284,8 @@ export default function TopNav() {
                               size="small"
                               type="password"
                               label="Admin Password"
+                              inputRef={passwordInputRef}
+                              autoFocus
                               value={password}
                               onChange={(e) => setPassword(e.target.value)}
                               error={adminError}

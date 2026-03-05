@@ -4,6 +4,8 @@ CREATE TABLE cohorts (
     title TEXT NOT NULL,
     description TEXT,
     unique_slug TEXT UNIQUE NOT NULL,
+    nama_kelompok TEXT NOT NULL,
+    start_at TIMESTAMPTZ, -- New field for reservation start time
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

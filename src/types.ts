@@ -3,7 +3,8 @@ export interface Cohort {
     title: string;
     description: string;
     unique_slug: string;
-    nama_kelompok: string; // New field
+    nama_kelompok: string;
+    start_at: string | null; // Added field
     created_at: string;
 }
 

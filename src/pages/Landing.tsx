@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, Link } from "react-router-dom";
 import {
   Container,
   Typography,
@@ -8,6 +8,7 @@ import {
   Alert,
   CircularProgress,
   Divider,
+  Button,
 } from "@mui/material";
 import { supabase } from "../lib/supabase";
 import type { Cohort, Slot } from "../types";
@@ -15,16 +16,23 @@ import BookingForm from "../components/BookingForm";
 import SuccessTicket from "../components/SuccessTicket";
 import EditBooking from "../components/EditBooking";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "../context/AuthContext";
+import { Lock, ArrowLeft } from "lucide-react";
+import CountdownTimer from "../components/CountdownTimer";
 
 export default function Landing() {
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
+  const { isAdmin } = useAuth();
   const [cohort, setCohort] = useState<Cohort | null>(null);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successCode, setSuccessCode] = useState<string | null>(null);
+  const [successName, setSuccessName] = useState<string | null>(null);
+  const [successDate, setSuccessDate] = useState<string | null>(null);
   const [editingReservation, setEditingReservation] = useState<any>(null);
+  const [now, setNow] = useState(new Date());
 
   const fetchData = async () => {
     setLoading(true);
@@ -96,6 +104,51 @@ export default function Landing() {
       </Container>
     );
 
+  const isStarted = !cohort?.start_at || now >= new Date(cohort.start_at);
+  const canAccess = isStarted || isAdmin;
+
+  if (!canAccess && cohort) {
+    return (
+      <Container maxWidth="sm" sx={{ py: 12 }}>
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+          <Paper className="refined-card" sx={{ p: 6, textAlign: 'center', bgcolor: 'rgba(255,255,255,0.02) !important' }}>
+            <Box sx={{ 
+              width: 80, 
+              height: 80, 
+              borderRadius: '50%', 
+              bgcolor: 'rgba(52, 152, 219, 0.1)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              margin: '0 auto 24px',
+              border: '1px solid rgba(52, 152, 219, 0.3)'
+            }}>
+              <Lock size={40} color="#3498db" />
+            </Box>
+            <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>Akses Belum Dibuka</Typography>
+            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mb: 4 }}>
+              Pendaftaran untuk Kelompok {cohort.nama_kelompok} ({cohort.title}) akan dibuka dalam:
+            </Typography>
+            
+            <Box sx={{ mb: 6 }}>
+              <CountdownTimer targetDate={cohort.start_at!} onFinish={() => setNow(new Date())} />
+            </Box>
+
+            <Button 
+              component={Link} 
+              to="/" 
+              variant="outlined" 
+              startIcon={<ArrowLeft size={18} />}
+              sx={{ borderRadius: 3, px: 4 }}
+            >
+              Kembali ke Beranda
+            </Button>
+          </Paper>
+        </motion.div>
+      </Container>
+    );
+  }
+
   if (successCode)
     return (
       <AnimatePresence>
@@ -106,7 +159,14 @@ export default function Landing() {
         >
           <SuccessTicket
             code={successCode}
-            onDone={() => setSuccessCode(null)}
+            userName={successName || ""}
+            cohortName={`Kelompok ${cohort?.nama_kelompok} - ${cohort?.title}`}
+            schedule={successDate || ""}
+            onDone={() => {
+                setSuccessCode(null);
+                setSuccessName(null);
+                setSuccessDate(null);
+            }}
           />
         </motion.div>
       </AnimatePresence>
@@ -167,7 +227,7 @@ export default function Landing() {
                 mb: 0.5
               }}
             >
-              KELOMPOK {cohort?.nama_kelompok.toUpperCase()}
+              KELOMPOK {cohort?.nama_kelompok?.toUpperCase()}
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 800, fontSize: { xs: '1.2rem', sm: '1.5rem' }, lineHeight: 1.1 }}>
               {cohort?.title}
@@ -179,7 +239,11 @@ export default function Landing() {
           <BookingForm
             cohortId={cohort!.id}
             slots={slots}
-            onSuccess={(code) => setSuccessCode(code)}
+            onSuccess={(code, name, date) => {
+                setSuccessCode(code);
+                setSuccessName(name);
+                setSuccessDate(date);
+            }}
           />
         </Paper>
       </motion.div>
