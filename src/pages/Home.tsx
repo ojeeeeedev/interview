@@ -16,7 +16,7 @@ import type { Cohort, Slot } from "../types";
 import { motion } from "framer-motion";
 import { format, parseISO } from "date-fns";
 import { id } from "date-fns/locale";
-import { Calendar as CalendarIcon, Tag } from "lucide-react";
+import { Calendar as CalendarIcon } from 'lucide-react';
 
 const motionContainer = {
   hidden: { opacity: 0 },

@@ -1,7 +1,8 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import React from 'react';
 
-export default function ProtectedRoute({ children }: { children: JSX.Element }) {
+export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const { isAdmin } = useAuth();
     
     if (!isAdmin) {
@@ -9,5 +10,5 @@ export default function ProtectedRoute({ children }: { children: JSX.Element }) 
         return <Navigate to="/" replace />;
     }
 
-    return children;
+    return <>{children}</>;
 }

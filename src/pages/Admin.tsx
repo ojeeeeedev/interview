@@ -5,8 +5,7 @@ import {
     DialogTitle, DialogContent, DialogActions, Accordion, AccordionSummary, 
     AccordionDetails, Checkbox, Divider
 } from '@mui/material';
-import { Trash2, Copy, ArrowLeft, ClipboardList, ChevronDown, UserMinus, Edit2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Trash2, Copy, ClipboardList, ChevronDown, UserMinus, Edit2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { Cohort, Slot } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
