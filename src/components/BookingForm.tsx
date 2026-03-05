@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   TextField,
@@ -33,8 +33,8 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
     const fetchAllowedNames = async () => {
@@ -50,22 +50,6 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
     };
     fetchAllowedNames();
   }, [cohortId]);
-
-  const filteredOptions = useMemo(() => {
-    if (name.length < 2) return [];
-    return allowedNames.filter((option) =>
-      option.toLowerCase().includes(name.toLowerCase())
-    );
-  }, [name, allowedNames]);
-
-  const handleNameChange = (newValue: string) => {
-    setName(newValue);
-    if (newValue.length >= 2) {
-      setOpen(true);
-    } else {
-      setOpen(false);
-    }
-  };
 
   const generateCode = () => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -150,18 +134,13 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
         <Autocomplete
           freeSolo
           disableClearable
-          open={open && filteredOptions.length > 0}
-          onOpen={() => {
-            if (name.length >= 2) setOpen(true);
-          }}
-          onClose={() => setOpen(false)}
-          options={filteredOptions}
+          open={dropdownOpen && name.length >= 2}
+          onOpen={() => setDropdownOpen(true)}
+          onClose={() => setDropdownOpen(false)}
+          options={allowedNames}
           inputValue={name}
-          onInputChange={(_, newValue) => handleNameChange(newValue)}
-          onChange={(_, newValue) => {
-            setName(newValue || "");
-            setOpen(false);
-          }}
+          onInputChange={(_, newValue) => setName(newValue)}
+          onChange={(_, newValue) => setName(newValue || "")}
           slots={{
             paper: (props) => (
               <Paper
@@ -175,7 +154,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
                   backgroundImage: "none",
                   "& .MuiAutocomplete-option": {
                     py: 1.5,
-                    color: "#ffffff",
+                    color: "#ffffff !important",
                     "&:hover": {
                       bgcolor: "rgba(255,255,255,0.1) !important",
                     },
@@ -195,6 +174,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
               placeholder="Ketik nama lengkap Anda..."
               slotProps={{
                 input: {
+                  ...params.InputProps,
                   sx: { bgcolor: 'rgba(255,255,255,0.03)' }
                 }
               }}
