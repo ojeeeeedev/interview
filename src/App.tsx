@@ -1,15 +1,18 @@
+import { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { ThemeProvider, createTheme, CssBaseline, Box } from "@mui/material";
+import { ThemeProvider, createTheme, CssBaseline, Box, CircularProgress } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { id } from "date-fns/locale";
-import Home from "./pages/Home";
-import Landing from "./pages/Landing";
-import Admin from "./pages/Admin";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 import TopNav from "./components/TopNav";
 import Footer from "./components/Footer";
+
+// Lazy load pages
+const Home = lazy(() => import("./pages/Home"));
+const Landing = lazy(() => import("./pages/Landing"));
+const Admin = lazy(() => import("./pages/Admin"));
 
 const theme = createTheme({
   palette: {
@@ -153,18 +156,24 @@ function App() {
             >
               <TopNav />
               <Box sx={{ pt: 3, flexGrow: 1 }}>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/cohort/:slug" element={<Landing />} />
-                  <Route
-                    path="/admin"
-                    element={
-                      <ProtectedRoute>
-                        <Admin />
-                      </ProtectedRoute>
-                    }
-                  />
-                </Routes>
+                <Suspense fallback={
+                  <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+                    <CircularProgress size={40} thickness={4} sx={{ color: '#3498db' }} />
+                  </Box>
+                }>
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/cohort/:slug" element={<Landing />} />
+                    <Route
+                      path="/admin"
+                      element={
+                        <ProtectedRoute>
+                          <Admin />
+                        </ProtectedRoute>
+                      }
+                    />
+                  </Routes>
+                </Suspense>
               </Box>
               <Footer />
             </Box>

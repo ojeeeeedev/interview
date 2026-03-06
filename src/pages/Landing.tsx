@@ -6,10 +6,10 @@ import {
   Box,
   Paper,
   Alert,
-  CircularProgress,
   Divider,
   Button,
   Stack,
+  Skeleton,
 } from "@mui/material";
 import { supabase } from "../lib/supabase";
 import type { Cohort, Slot } from "../types";
@@ -90,15 +90,26 @@ export default function Landing() {
 
   if (loading)
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
-        <CircularProgress />
-      </Box>
+      <Container maxWidth="md" sx={{ py: 4, display: "flex", justifyContent: 'center' }}>
+        <Paper className="refined-card" sx={{ p: { xs: 2, sm: 3, md: 4 }, width: "100%", maxWidth: '450px', bgcolor: 'rgba(255,255,255,0.02) !important' }}>
+          <Stack spacing={2}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <Skeleton variant="text" width={100} height={20} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }} />
+              <Skeleton variant="text" width={200} height={40} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }} />
+            </Box>
+            <Divider sx={{ opacity: 0.1 }} />
+            <Box sx={{ pt: 2 }}>
+              <Skeleton variant="text" width="60%" height={24} sx={{ mb: 1, bgcolor: 'rgba(255,255,255,0.05)' }} />
+              <Skeleton variant="rectangular" width="100%" height={56} sx={{ mb: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.05)' }} />
+              <Skeleton variant="text" width="40%" height={24} sx={{ mb: 1, bgcolor: 'rgba(255,255,255,0.05)' }} />
+              <Skeleton variant="rectangular" width="100%" height={56} sx={{ mb: 3, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.05)' }} />
+              <Skeleton variant="rectangular" width="100%" height={48} sx={{ borderRadius: 3, bgcolor: 'rgba(255,255,255,0.05)' }} />
+            </Box>
+          </Stack>
+        </Paper>
+      </Container>
     );
+
   if (error)
     return (
       <Container sx={{ mt: 5 }}>
