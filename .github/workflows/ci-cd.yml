@@ -5,6 +5,8 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  repository_dispatch:
+    types: [vercel.deployment.ready]
 
 jobs:
   build-and-test:
@@ -13,6 +15,11 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        if: github.event_name != 'repository_dispatch'
+
+      - name: Checkout Vercel Code
+        uses: vercel/repository-dispatch/actions/checkout@v1
+        if: github.event_name == 'repository_dispatch'
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -35,3 +42,9 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_ADMIN_PASSWORD: ${{ secrets.VITE_ADMIN_PASSWORD }}
+
+      - name: Notify Vercel
+        if: always() && github.event_name == 'repository_dispatch'
+        uses: vercel/repository-dispatch/actions/status@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
