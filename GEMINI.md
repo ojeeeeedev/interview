@@ -16,6 +16,7 @@ This is a **Cohort Booking System (Sistem Reservasi Wawancara)** designed to man
 - **Utilities**:
   - `html-to-image`: For generating downloadable PNG tickets upon successful booking.
   - `jspdf` & `jspdf-autotable`: For generating and downloading PDF recap reports in the Admin dashboard.
+  - `src/lib/calendar.ts`: Shared utility for generating cross-platform calendar deep-links and RFC 5545 compliant `.ics` files.
 
 ---
 
@@ -41,10 +42,12 @@ This is a **Cohort Booking System (Sistem Reservasi Wawancara)** designed to man
 - **Event/Landing Page**: 
   - If the event `start_at` time is in the future, displays a live **Countdown Timer**.
   - **Booking Form**: 
-    - Step 1: User inputs their name using an Autocomplete field that verifies against the `allowed_names` whitelist.
+    - Step 1: User inputs their name using an Autocomplete field that verifies against the `allowed_names` whitelist. **Smart Verification**: Checks start after 1 character with a loading spinner; errors are suppressed until 4 characters or a 10-second timeout.
     - Step 2: User selects an available date using a custom, dark-themed Calendar component. Dates that are full are visually disabled.
-  - **Success Ticket**: Upon booking, generates a visual "Ticket" containing the user's name, schedule, and access code. Users can click "Simpan Tiket" to download this as a PNG.
-  - **Edit Booking**: Users can re-schedule their interview by selecting a new available date if they access the form via their access code.
+  - **Success Ticket**: Upon booking, generates a visual "Ticket" containing the user's name, schedule, and access code. 
+    - **Simpan Tiket**: Users can download the ticket as a PNG image.
+    - **Add to Calendar**: Integrated support for Google Calendar, Outlook, and Apple iCal (.ics) to save the schedule directly.
+  - **Edit Booking**: Users can re-schedule their interview by selecting a new available date if they access the form via their access code. Includes a persistent "Add to Calendar" option for existing reservations.
 
 ### Admin Dashboard (Protected)
 - **Authentication**: Simple password-based authentication (`VITE_ADMIN_PASSWORD` in `.env`) managed via React Context and stored in `sessionStorage`.
