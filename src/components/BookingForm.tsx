@@ -25,7 +25,7 @@ import { motion } from "framer-motion";
 interface Props {
   cohortId: string;
   slots: Slot[];
-  onSuccess: (code: string, userName: string, dateStr: string) => void;
+  onSuccess: (code: string, userName: string, dateStr: string, rawDate: Date) => void;
 }
 
 type ActionState = {
@@ -34,6 +34,7 @@ type ActionState = {
   code?: string;
   userName?: string;
   dateStr?: string;
+  rawDate?: Date;
 };
 
 export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
@@ -48,6 +49,19 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
   const [isValidatingName, setIsValidatingName] = useState(false);
   const [isNameVerified, setIsNameVerified] = useState(false);
   const [nameCheckError, setNameCheckError] = useState<string | null>(null);
+  const [forceShowError, setForceShowError] = useState(false);
+
+  // 10 second timeout for showing error if name < 4 chars
+  useEffect(() => {
+    if (name.trim().length > 0 && !isNameVerified && !nameCheckError) {
+      const timer = setTimeout(() => {
+        setForceShowError(true);
+      }, 10000);
+      return () => clearTimeout(timer);
+    } else if (name.trim().length === 0 || isNameVerified) {
+      setForceShowError(false);
+    }
+  }, [name, isNameVerified, nameCheckError]);
 
   useEffect(() => {
     const fetchAllowedNames = async () => {
@@ -66,15 +80,19 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
 
   // Server-side check before allowing click
   useEffect(() => {
-    if (!name.trim() || name.length < 2) {
+    if (!name.trim() || name.length < 1) {
       setIsNameVerified(false);
       setNameCheckError(null);
       return;
     }
 
+    // Clear error immediately when name changes, unless it's a critical error
+    if (nameCheckError !== "Gagal memverifikasi nama") {
+        setNameCheckError(null);
+    }
+
     const timer = setTimeout(async () => {
       setIsValidatingName(true);
-      setNameCheckError(null);
 
       const { data, error } = await supabase
         .from("allowed_names")
@@ -87,7 +105,10 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
         setNameCheckError("Gagal memverifikasi nama");
         setIsNameVerified(false);
       } else if (!data) {
-        setNameCheckError("Nama tidak terdaftar");
+        // Only show error if 4+ chars OR 10s timeout reached
+        if (name.trim().length >= 4 || forceShowError) {
+            setNameCheckError("Nama tidak terdaftar");
+        }
         setIsNameVerified(false);
       } else {
         setIsNameVerified(true);
@@ -97,7 +118,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [name, cohortId]);
+  }, [name, cohortId, forceShowError]);
 
   const generateCode = () => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -161,15 +182,18 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
       error: null,
       code,
       userName: userName.trim(),
-      dateStr: formattedDate
+      dateStr: formattedDate,
+      rawDate: selectedDateObj
     };
   };
 
   const [state, formAction] = useActionState(bookingAction, null);
 
+  const isSearching = name.trim().length > 0 && !isNameVerified && !nameCheckError;
+
   useEffect(() => {
-    if (state?.success && state.code && state.userName && state.dateStr) {
-      onSuccess(state.code, state.userName, state.dateStr);
+    if (state?.success && state.code && state.userName && state.dateStr && state.rawDate) {
+      onSuccess(state.code, state.userName, state.dateStr, state.rawDate);
     }
   }, [state, onSuccess]);
 
@@ -227,8 +251,15 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
               Identitas Peserta
             </Typography>
           </Box>
-          {isValidatingName && <CircularProgress size={16} sx={{ color: '#3498db' }} />}
-          {isNameVerified && !isValidatingName && (
+          {isSearching && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="caption" sx={{ color: '#3498db', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.6rem' }}>
+                Mencari Nama...
+              </Typography>
+              <CircularProgress size={12} sx={{ color: '#3498db' }} />
+            </Box>
+          )}
+          {isNameVerified && !isSearching && (
             <Typography variant="caption" sx={{ color: '#2ecc71', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.6rem' }}>
               Nama Terdaftar ✓
             </Typography>
@@ -237,7 +268,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
         <Autocomplete
           freeSolo
           disableClearable
-          open={dropdownOpen && name.length >= 2}
+          open={dropdownOpen && name.length >= 1}
           onOpen={() => setDropdownOpen(true)}
           onClose={() => setDropdownOpen(false)}
           options={allowedNames}
@@ -283,6 +314,12 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
               slotProps={{
                 input: {
                   ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {isSearching ? <CircularProgress color="inherit" size={20} sx={{ mr: 1, opacity: 0.5 }} /> : null}
+                      {params.InputProps.endAdornment}
+                    </>
+                  ),
                   sx: { 
                     bgcolor: "rgba(0,0,0,0.2)", 
                     borderRadius: 3,

@@ -33,6 +33,7 @@ export default function Landing() {
   const [successCode, setSuccessCode] = useState<string | null>(null);
   const [successName, setSuccessName] = useState<string | null>(null);
   const [successDate, setSuccessDate] = useState<string | null>(null);
+  const [successRawDate, setSuccessRawDate] = useState<Date | null>(null);
   const [editingReservation, setEditingReservation] = useState<any>(null);
   const [now, setNow] = useState(new Date());
 
@@ -221,10 +222,12 @@ export default function Landing() {
             userName={successName || ""}
             cohortName={`Kelompok ${cohort?.nama_kelompok} - ${cohort?.title}`}
             schedule={successDate || ""}
+            rawDate={successRawDate || new Date()}
             onDone={() => {
                 setSuccessCode(null);
                 setSuccessName(null);
                 setSuccessDate(null);
+                setSuccessRawDate(null);
             }}
           />
         </motion.div>
@@ -325,10 +328,11 @@ export default function Landing() {
               <BookingForm
                 cohortId={cohort!.id}
                 slots={slots}
-                onSuccess={(code, name, date) => {
+                onSuccess={(code, name, date, rawDate) => {
                     setSuccessCode(code);
                     setSuccessName(name);
                     setSuccessDate(date);
+                    setSuccessRawDate(rawDate);
                 }}
               />
             </Stack>

@@ -18,7 +18,14 @@ import Calendar from "./Calendar";
 import { format, parseISO } from "date-fns";
 import { id } from "date-fns/locale";
 import { motion } from "framer-motion";
-import { ArrowLeft, RefreshCcw, Trash2 } from "lucide-react";
+import { ArrowLeft, RefreshCcw, Trash2, CalendarDays } from "lucide-react";
+import { Menu, MenuItem, ListItemIcon, ListItemText } from "@mui/material";
+import {
+  getGoogleCalendarUrl,
+  getOutlookCalendarUrl,
+  downloadIcsFile,
+} from "../lib/calendar";
+import type { CalendarEvent } from "../lib/calendar";
 
 interface Props {
   reservation: Reservation & { slots: Slot };
@@ -34,6 +41,42 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const openMenu = Boolean(anchorEl);
+
+  const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
+
+  const getEventData = (): CalendarEvent => {
+    const startDate = parseISO(reservation.slots.date);
+    startDate.setHours(9, 0, 0);
+
+    return {
+      title: `Wawancara: Kelompok ${reservation.slots.cohorts?.nama_kelompok} - ${reservation.slots.cohorts?.title}`,
+      description: `Wawancara for ${reservation.user_name}.\nAccess Code: ${reservation.access_code}\nLocation: (Please check cohort announcement)`,
+      startDate,
+    };
+  };
+
+  const addToGoogleCalendar = () => {
+    window.open(getGoogleCalendarUrl(getEventData()), "_blank");
+    handleCloseMenu();
+  };
+
+  const addToOutlookCalendar = () => {
+    window.open(getOutlookCalendarUrl(getEventData()), "_blank");
+    handleCloseMenu();
+  };
+
+  const downloadIcal = () => {
+    downloadIcsFile(getEventData(), `wawancara-${reservation.access_code}.ics`);
+    handleCloseMenu();
+  };
 
   const handleUpdate = async () => {
     if (!selectedDate) return;
@@ -130,18 +173,36 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
 
       {/* Current Schedule Info */}
       <Stack spacing={1}>
-        <Typography
-          variant="subtitle2"
-          sx={{
-            fontWeight: 800,
-            color: "rgba(255,255,255,0.6)",
-            textTransform: "uppercase",
-            fontSize: "0.75rem",
-            letterSpacing: "1px",
-          }}
-        >
-          Jadwal Anda Saat Ini
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 800,
+              color: "rgba(255,255,255,0.6)",
+              textTransform: "uppercase",
+              fontSize: "0.75rem",
+              letterSpacing: "1px",
+            }}
+          >
+            Jadwal Anda Saat Ini
+          </Typography>
+          <Button
+            size="small"
+            startIcon={<CalendarDays size={14} />}
+            onClick={handleCalendarClick}
+            sx={{
+              color: "#2ecc71",
+              fontSize: "0.7rem",
+              fontWeight: 800,
+              textTransform: "none",
+              py: 0,
+              minWidth: 0,
+              "&:hover": { bgcolor: "rgba(46, 204, 113, 0.1)" },
+            }}
+          >
+            Simpan ke Kalender
+          </Button>
+        </Box>
         <Box
           sx={{
             p: 2,
@@ -157,6 +218,47 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
           </Typography>
         </Box>
       </Stack>
+
+      <Menu
+        anchorEl={anchorEl}
+        open={openMenu}
+        onClose={handleCloseMenu}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        PaperProps={{
+          sx: {
+            mt: 0.5,
+            bgcolor: "#1a1a1a",
+            border: "1px solid rgba(255,255,255,0.1)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+            borderRadius: 3,
+            minWidth: 180,
+            "& .MuiMenuItem-root": {
+              py: 1,
+              px: 1.5,
+              fontSize: '0.85rem',
+              color: "rgba(255,255,255,0.8)",
+              "&:hover": {
+                bgcolor: "rgba(255,255,255,0.05)",
+                color: "#fff",
+              },
+            },
+          },
+        }}
+      >
+        <MenuItem onClick={addToGoogleCalendar}>
+          <ListItemIcon sx={{ color: '#ea4335', minWidth: '32px !important', fontSize: '1rem', fontWeight: 'bold' }}>G</ListItemIcon>
+          <ListItemText primary="Google Calendar" />
+        </MenuItem>
+        <MenuItem onClick={addToOutlookCalendar}>
+          <ListItemIcon sx={{ color: '#0078d4', minWidth: '32px !important', fontSize: '1rem', fontWeight: 'bold' }}>O</ListItemIcon>
+          <ListItemText primary="Outlook / Office 365" />
+        </MenuItem>
+        <MenuItem onClick={downloadIcal}>
+          <ListItemIcon sx={{ color: '#95a5a6', minWidth: '32px !important', fontSize: '1rem', fontWeight: 'bold' }}>I</ListItemIcon>
+          <ListItemText primary="Apple Calendar / iCal" />
+        </MenuItem>
+      </Menu>
 
       {/* Date Selection */}
       <Stack spacing={1}>

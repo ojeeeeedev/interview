@@ -8,15 +8,26 @@ import {
   Snackbar,
   Alert,
   Stack,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
-import { CheckCircle, Image as ImageIcon, ArrowLeft } from "lucide-react";
+import { CheckCircle, Image as ImageIcon, ArrowLeft, CalendarDays } from "lucide-react";
 import { toPng } from "html-to-image";
+import {
+  getGoogleCalendarUrl,
+  getOutlookCalendarUrl,
+  downloadIcsFile,
+} from "../lib/calendar";
+import type { CalendarEvent } from "../lib/calendar";
 
 interface Props {
   code: string;
   userName: string;
   cohortName: string;
   schedule: string;
+  rawDate: Date;
   onDone: () => void;
 }
 
@@ -25,9 +36,13 @@ export default function SuccessTicket({
   userName,
   cohortName,
   schedule,
+  rawDate,
   onDone,
 }: Props) {
   const ticketRef = useRef<HTMLDivElement>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const openMenu = Boolean(anchorEl);
+
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -59,6 +74,40 @@ export default function SuccessTicket({
         severity: "error",
       });
     }
+  };
+
+  const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
+
+  const getEventData = (): CalendarEvent => {
+    const startDate = new Date(rawDate);
+    startDate.setHours(9, 0, 0);
+
+    return {
+      title: `Event: ${cohortName}`,
+      description: `Wawancara untuk ${userName}.\nKode Akses: ${code}\nLokasi: (Silakan cek pengumuman kelompok)`,
+      startDate,
+    };
+  };
+
+  const addToGoogleCalendar = () => {
+    window.open(getGoogleCalendarUrl(getEventData()), "_blank");
+    handleCloseMenu();
+  };
+
+  const addToOutlookCalendar = () => {
+    window.open(getOutlookCalendarUrl(getEventData()), "_blank");
+    handleCloseMenu();
+  };
+
+  const downloadIcal = () => {
+    downloadIcsFile(getEventData(), `wawancara-${code}.ics`);
+    handleCloseMenu();
   };
 
   return (
@@ -207,24 +256,90 @@ export default function SuccessTicket({
 
           {/* Action Buttons */}
           <Stack spacing={2}>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<ImageIcon size={18} />}
-              onClick={handleDownloadImage}
-              fullWidth
-              sx={{
-                py: 1.5,
-                borderRadius: 3,
-                fontWeight: 800,
-                textTransform: "none",
-                fontSize: "1rem",
-                background: "linear-gradient(45deg, #3498db, #2980b9)",
-                boxShadow: "0 4px 14px 0 rgba(52, 152, 219, 0.39)",
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<ImageIcon size={16} />}
+                onClick={handleDownloadImage}
+                fullWidth
+                sx={{
+                  py: 1,
+                  borderRadius: 3,
+                  fontWeight: 800,
+                  textTransform: "none",
+                  fontSize: "0.8rem",
+                  background: "linear-gradient(45deg, #3498db, #2980b9)",
+                  boxShadow: "0 4px 14px 0 rgba(52, 152, 219, 0.39)",
+                }}
+              >
+                Simpan Tiket
+              </Button>
+
+              <Button
+                variant="contained"
+                onClick={handleCalendarClick}
+                startIcon={<CalendarDays size={16} />}
+                fullWidth
+                sx={{
+                  py: 1,
+                  borderRadius: 3,
+                  fontWeight: 800,
+                  textTransform: "none",
+                  fontSize: "0.8rem",
+                  bgcolor: "rgba(46, 204, 113, 0.15)",
+                  color: "#2ecc71",
+                  border: "1px solid rgba(46, 204, 113, 0.3)",
+                  "&:hover": {
+                    bgcolor: "rgba(46, 204, 113, 0.25)",
+                    borderColor: "rgba(46, 204, 113, 0.5)",
+                  },
+                }}
+              >
+                Ke Kalender
+              </Button>
+            </Box>
+
+            <Menu
+              anchorEl={anchorEl}
+              open={openMenu}
+              onClose={handleCloseMenu}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+              PaperProps={{
+                sx: {
+                  mt: 1,
+                  bgcolor: "#1a1a1a",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                  borderRadius: 3,
+                  minWidth: 180,
+                  "& .MuiMenuItem-root": {
+                    py: 1.2,
+                    px: 2,
+                    fontSize: '0.9rem',
+                    color: "rgba(255,255,255,0.8)",
+                    "&:hover": {
+                      bgcolor: "rgba(255,255,255,0.05)",
+                      color: "#fff",
+                    },
+                  },
+                },
               }}
             >
-              Simpan Tiket
-            </Button>
+              <MenuItem onClick={addToGoogleCalendar}>
+                <ListItemIcon sx={{ color: '#ea4335' }}>G</ListItemIcon>
+                <ListItemText primary="Google Calendar" />
+              </MenuItem>
+              <MenuItem onClick={addToOutlookCalendar}>
+                <ListItemIcon sx={{ color: '#0078d4' }}>O</ListItemIcon>
+                <ListItemText primary="Outlook / Office 365" />
+              </MenuItem>
+              <MenuItem onClick={downloadIcal}>
+                <ListItemIcon sx={{ color: '#95a5a6' }}>I</ListItemIcon>
+                <ListItemText primary="Apple Calendar / iCal" />
+              </MenuItem>
+            </Menu>
 
             <Button
               variant="outlined"
@@ -234,13 +349,14 @@ export default function SuccessTicket({
               sx={{
                 py: 1.5,
                 borderRadius: 3,
-                color: "#ffffff",
-                borderColor: "rgba(255,255,255,0.2)",
+                color: "rgba(255,255,255,0.5)",
+                borderColor: "rgba(255,255,255,0.1)",
                 fontWeight: 700,
                 textTransform: "none",
                 "&:hover": {
                   borderColor: "rgba(255,255,255,0.4)",
                   bgcolor: "rgba(255,255,255,0.05)",
+                  color: "#fff",
                 },
               }}
             >
