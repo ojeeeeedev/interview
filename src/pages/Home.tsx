@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Container,
   Typography,
@@ -57,11 +57,303 @@ interface CohortWithSlots extends Cohort {
   slots: Slot[];
 }
 
+function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boolean }) {
+  const [now, setNow] = useState(new Date());
+  
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000 * 60);
+    return () => clearInterval(timer);
+  }, []);
+
+  const isStarted = !cohort.start_at || now >= new Date(cohort.start_at);
+  const isEnded = cohort.end_at && now >= new Date(cohort.end_at);
+  const canAccess = (isStarted && !isEnded) || isAdmin;
+
+  return (
+    <motion.div
+      variants={motionItem}
+      whileHover={canAccess ? { scale: 1.005, x: 4 } : {}}
+      whileTap={canAccess ? { scale: 0.995 } : {}}
+    >
+      <Paper
+        component={canAccess ? Link : Box}
+        to={canAccess ? `/cohort/${cohort.unique_slug}` : undefined}
+        className="refined-card"
+        sx={{
+          cursor: canAccess ? "pointer" : "default",
+          textDecoration: "none",
+          display: "block",
+          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          opacity: canAccess ? 1 : 0.8,
+          position: "relative",
+          overflow: "hidden",
+          "&:hover": canAccess
+            ? {
+                borderColor: "rgba(52, 152, 219, 0.6) !important",
+                background: "#222222 !important",
+                transform: "translateX(4px)",
+              }
+            : {},
+        }}
+      >
+        {isEnded && !isAdmin && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              bgcolor: "rgba(0,0,0,0.6)",
+              zIndex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backdropFilter: "blur(2px)",
+            }}
+          >
+            <Chip
+              icon={<Lock size={14} />}
+              label="PENDAFTARAN DITUTUP"
+              color="error"
+              sx={{ fontWeight: 900, px: 2, py: 2.5, borderRadius: 2 }}
+            />
+          </Box>
+        )}
+        <CardContent sx={{ p: 3, "&:last-child": { pb: 3 } }}>
+          <Grid container spacing={3} alignItems="center">
+            <Grid size={{ xs: 12, md: 4.5 }}>
+              <Typography
+                variant="overline"
+                sx={{
+                  fontWeight: 900,
+                  color: isEnded ? "rgba(255,255,255,0.3)" : "#3498db",
+                  letterSpacing: "2px",
+                  display: "block",
+                  lineHeight: 1,
+                  mb: 0.5,
+                }}
+              >
+                Kelompok {cohort.nama_kelompok}
+              </Typography>
+              <Typography
+                variant="h5"
+                sx={{
+                  color: isEnded ? "rgba(255,255,255,0.3)" : "#ffffff",
+                  fontWeight: 800,
+                  lineHeight: 1.1,
+                  mb: 1.5,
+                }}
+              >
+                {cohort.title}
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "rgba(255,255,255,0.4)",
+                  fontSize: "0.85rem",
+                  lineHeight: 1.4,
+                  display: { xs: 'none', md: 'block' }
+                }}
+              >
+                {cohort.description}
+              </Typography>
+
+              {cohort.end_at && !isEnded && isStarted && (
+                <Box
+                  sx={{
+                    mt: 2,
+                    px: 1.5,
+                    py: 0.8,
+                    borderRadius: 2,
+                    bgcolor: "rgba(231, 76, 60, 0.05)",
+                    border: "1px solid rgba(231, 76, 60, 0.1)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 1.5,
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontWeight: 900,
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                      color: "#e74c3c",
+                      fontSize: '0.65rem'
+                    }}
+                  >
+                    Berakhir:
+                  </Typography>
+                  <CountdownTimer
+                    targetDate={cohort.end_at}
+                    onFinish={() => setNow(new Date())}
+                    small
+                    showTarget
+                    targetLabel="BATAS"
+                  />
+                </Box>
+              )}
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 4.5 }}>
+              {!isStarted && !isAdmin ? (
+                <Box
+                  sx={{
+                    p: 2.5,
+                    borderRadius: 3,
+                    bgcolor: "rgba(52, 152, 219, 0.05)",
+                    border: "1px solid rgba(52, 152, 219, 0.2)",
+                    textAlign: "center",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 1.5,
+                      mb: 1.5,
+                    }}
+                  >
+                    <Lock size={16} color="#3498db" />
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontWeight: 900,
+                        textTransform: "uppercase",
+                        letterSpacing: "1px",
+                        color: "rgba(255,255,255,0.8)",
+                      }}
+                    >
+                      Pendaftaran Dibuka Dalam
+                    </Typography>
+                  </Box>
+                  <CountdownTimer
+                    targetDate={cohort.start_at!}
+                    onFinish={() => setNow(new Date())}
+                    showTarget
+                    targetLabel="DIBUKA"
+                  />
+                </Box>
+              ) : (
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      opacity: 0.6,
+                    }}
+                  >
+                    <CalendarIcon size={14} color="#3498db" />
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontWeight: 900,
+                        textTransform: "uppercase",
+                        letterSpacing: "1px",
+                        color: "#ffffff",
+                      }}
+                    >
+                      Slot Tersedia
+                    </Typography>
+                  </Box>
+
+                  <Stack spacing={1}>
+                    {cohort.slots.map((slot) => {
+                      const remaining = slot.quota - slot.count;
+                      const isFull = remaining <= 0;
+                      return (
+                        <Box
+                          key={slot.id}
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            px: 2,
+                            py: 1.25,
+                            borderRadius: 2.5,
+                            bgcolor: "rgba(255,255,255,0.03)",
+                            border: "1px solid rgba(255,255,255,0.05)",
+                            opacity: isEnded ? 0.3 : 1
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: 700,
+                              color: "#ffffff",
+                              fontSize: '0.8rem'
+                            }}
+                          >
+                            {format(parseISO(slot.date), "EEEE, d MMM yyyy", {
+                              locale: id,
+                            })}
+                          </Typography>
+                          <Chip
+                            size="small"
+                            label={isFull ? "Penuh" : `${remaining} Slot`}
+                            color={isFull ? "error" : "success"}
+                            variant={isFull ? "filled" : "outlined"}
+                            sx={{
+                              height: 22,
+                              fontSize: "0.6rem",
+                              fontWeight: 900,
+                              textTransform: 'uppercase',
+                              minWidth: 70,
+                              borderRadius: 1.5
+                            }}
+                          />
+                        </Box>
+                      );
+                    })}
+                  </Stack>
+                </Box>
+              )}
+            </Grid>
+
+            <Grid
+              size={{ xs: 12, md: 3 }}
+              sx={{ textAlign: "right", mt: { xs: 1, md: 0 } }}
+            >
+              <Button
+                variant="contained"
+                fullWidth
+                disabled={!canAccess}
+                endIcon={
+                  canAccess ? <ChevronRight size={18} /> : <Lock size={18} />
+                }
+                sx={{
+                  pointerEvents: "none",
+                  borderRadius: 3,
+                  fontWeight: 800,
+                  py: 1.8,
+                  fontSize: '0.9rem',
+                  background: canAccess
+                    ? "rgba(52, 152, 219, 0.15)"
+                    : "rgba(255, 255, 255, 0.05)",
+                  border: canAccess
+                    ? "1px solid rgba(52, 152, 219, 0.3)"
+                    : "1px solid rgba(255, 255, 255, 0.1)",
+                  color: canAccess ? "#ffffff" : "rgba(255,255,255,0.2)",
+                  boxShadow: "none",
+                }}
+              >
+                {isAdmin && !isStarted ? "Akses Admin" : isEnded ? "Selesai" : "Daftar Sekarang"}
+              </Button>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Paper>
+    </motion.div>
+  );
+}
+
 export default function Home() {
   const [cohorts, setCohorts] = useState<CohortWithSlots[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const { isAdmin } = useAuth();
-  const [now, setNow] = useState(new Date());
   const navigate = useNavigate();
 
   // Search state
@@ -71,16 +363,7 @@ export default function Home() {
     "idle" | "success" | "error"
   >("idle");
 
-  // Auto-check code when it reaches 6 characters
-  useEffect(() => {
-    if (searchCode.length === 6) {
-      checkCodeExists(searchCode);
-    } else {
-      setSearchStatus("idle");
-    }
-  }, [searchCode]);
-
-  const checkCodeExists = async (code: string) => {
+  const checkCodeExists = useCallback(async (code: string) => {
     setIsSearching(true);
     const { data, error } = await supabase
       .from("reservations")
@@ -94,7 +377,16 @@ export default function Home() {
     } else {
       setSearchStatus("success");
     }
-  };
+  }, []);
+
+  // Auto-check code when it reaches 6 characters
+  useEffect(() => {
+    if (searchCode.length === 6) {
+      checkCodeExists(searchCode);
+    } else {
+      setSearchStatus("idle");
+    }
+  }, [searchCode, checkCodeExists]);
 
   const handleSearchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,36 +401,26 @@ export default function Home() {
 
     setIsSearching(false);
     if (error || !data) {
-      setSearchStatus('error');
+      setSearchStatus("error");
     } else {
-
       const slug = (data.slots as any).cohorts.unique_slug;
       navigate(`/cohort/${slug}?edit=${searchCode.toUpperCase()}`);
     }
   };
 
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000 * 60); // Update every minute
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
     const fetchCohorts = async () => {
-      setLoading(true);
-      const { data: cohortsData } = await supabase.from("cohorts").select("*");
-      const { data: slotsData } = await supabase
-        .from("slots")
-        .select("*")
-        .order("date", { ascending: true });
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from("cohorts")
+        .select("*, slots(*)")
+        .order("date", { foreignTable: "slots", ascending: true });
 
-      if (cohortsData) {
-        const combined = cohortsData.map((c: Cohort) => ({
-          ...c,
-          slots: slotsData?.filter((s: Slot) => s.cohort_id === c.id) || [],
-        }));
-        setCohorts(combined);
+      if (data) {
+        setCohorts(data as CohortWithSlots[]);
       }
-      setLoading(false);
+      if (error) console.error(error);
+      setIsLoading(false);
     };
     fetchCohorts();
   }, []);
@@ -154,15 +436,15 @@ export default function Home() {
     <Container maxWidth="md" sx={{ pt: 0, pb: 4 }}>
       {/* Search Widget */}
       <motion.div
-        initial={{ opacity: 0, y: 0 }} 
+        initial={{ opacity: 0, y: 0 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         <Paper
           className="refined-card"
           sx={{
-            p: 2.5, 
-            mb: 2, 
+            p: 2.5,
+            mb: 2,
             bgcolor: "rgba(255, 255, 255, 0.02) !important",
             border: "1px solid",
             borderColor:
@@ -228,15 +510,15 @@ export default function Home() {
           </Box>
 
           <form onSubmit={handleSearchSubmit}>
-            <Grid container spacing={1.5}>
-              <Grid size={{ xs: 12, sm: 9 }}>
+            <Grid container spacing={1.5} alignItems="flex-start">
+              <Grid size={{ xs: 12, sm: 8, md: 9 }}>
                 <TextField
                   fullWidth
                   size="small"
-                  placeholder="Kode Akses..."
+                  placeholder="Kode Akses (6 digit)..."
                   value={searchCode}
                   onChange={(e) => {
-                    const val = e.target.value.slice(0, 6);
+                    const val = e.target.value.slice(0, 6).toUpperCase();
                     setSearchCode(val);
                   }}
                   error={searchStatus === "error"}
@@ -249,45 +531,30 @@ export default function Home() {
                     input: {
                       endAdornment: (
                         <InputAdornment position="end">
-                          {isSearching && (
-                            <CircularProgress
-                              size={20}
-                              sx={{ color: "rgba(255,255,255,0.3)" }}
-                            />
-                          )}
-                          {!isSearching && searchStatus === "success" && (
-                            <CheckCircle2 size={20} color="#2ecc71" />
-                          )}
-                          {!isSearching && searchStatus === "error" && (
-                            <XCircle size={20} color="#e74c3c" />
-                          )}
+                          {isSearching ? (
+                            <CircularProgress size={18} />
+                          ) : searchStatus === "success" ? (
+                            <CheckCircle2 size={18} color="#2ecc71" />
+                          ) : searchStatus === "error" ? (
+                            <XCircle size={18} color="#e74c3c" />
+                          ) : null}
                         </InputAdornment>
                       ),
                       sx: {
+                        borderRadius: 3,
                         textTransform: "uppercase",
-                        fontWeight: 200,
-                        letterSpacing: 0.5,
-                        bgcolor:
-                          searchStatus === "success"
-                            ? "rgba(46, 204, 113, 0.05)"
-                            : searchStatus === "error"
-                              ? "rgba(231, 76, 60, 0.05)"
-                              : "rgba(0,0,0,0.2)",
-                        fontSize: "0.875rem",
+                        fontWeight: 700,
+                        letterSpacing: 1,
+                        bgcolor: "rgba(0,0,0,0.3)",
                         "& fieldset": {
-                          borderColor:
-                            searchStatus === "success"
-                              ? "rgba(46, 204, 113, 0.5) !important"
-                              : searchStatus === "error"
-                                ? "rgba(231, 76, 60, 0.5) !important"
-                                : undefined,
+                          borderColor: "rgba(255,255,255,0.1) !important",
                         },
                       },
                     },
                   }}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
+              <Grid size={{ xs: 12, sm: 4, md: 3 }}>
                 <Button
                   fullWidth
                   type="submit"
@@ -296,15 +563,10 @@ export default function Home() {
                   startIcon={<Edit2 size={16} />}
                   sx={{
                     height: 40,
-                    borderRadius: 2,
-                    fontWeight: 800,
-                    textTransform: "none",
-                    fontSize: "0.85rem",
-                    bgcolor: searchStatus === "success" ? "#2ecc71" : undefined,
-                    "&:hover": {
-                      bgcolor:
-                        searchStatus === "success" ? "#27ae60" : undefined,
-                    },
+                    borderRadius: 3,
+                    boxShadow: searchStatus === "success" 
+                      ? "0 4px 14px 0 rgba(46, 204, 113, 0.3)" 
+                      : "none",
                   }}
                 >
                   Ubah Jadwal
@@ -320,286 +582,27 @@ export default function Home() {
       {/* Main Scheduled Events */}
       <motion.div variants={motionContainer} initial="hidden" animate="show">
         <Grid container spacing={2.5}>
-          {loading ? (
-            // Skeleton loading state
-            [1, 2, 3].map((n) => (
-              <Grid size={{ xs: 12 }} key={n}>
-                <Paper className="refined-card" sx={{ opacity: 0.6 }}>
-                  <CardContent sx={{ p: 3 }}>
-                    <Grid container spacing={3}>
-                      <Grid size={{ xs: 12, md: 4 }}>
-                        <Skeleton variant="text" width="40%" height={20} sx={{ bgcolor: 'rgba(255,255,255,0.05)', mb: 1 }} />
-                        <Skeleton variant="text" width="80%" height={32} sx={{ bgcolor: 'rgba(255,255,255,0.05)', mb: 1 }} />
-                        <Skeleton variant="text" width="90%" height={20} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }} />
-                      </Grid>
-                      <Grid size={{ xs: 12, md: 5 }}>
-                        <Skeleton variant="text" width="30%" height={20} sx={{ bgcolor: 'rgba(255,255,255,0.05)', mb: 1.5 }} />
-                        <Stack spacing={1}>
-                          <Skeleton variant="rectangular" width="100%" height={40} sx={{ borderRadius: 2, bgcolor: 'rgba(255,255,255,0.05)' }} />
-                          <Skeleton variant="rectangular" width="100%" height={40} sx={{ borderRadius: 2, bgcolor: 'rgba(255,255,255,0.05)' }} />
-                        </Stack>
-                      </Grid>
-                      <Grid size={{ xs: 12, md: 3 }} sx={{ alignSelf: 'center' }}>
-                        <Skeleton variant="rectangular" width="100%" height={48} sx={{ borderRadius: 2.5, bgcolor: 'rgba(255,255,255,0.05)' }} />
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </Paper>
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <Grid size={{ xs: 12 }} key={i}>
+                <Skeleton 
+                  variant="rectangular" 
+                  height={180} 
+                  sx={{ borderRadius: 4, bgcolor: "rgba(255,255,255,0.05)" }} 
+                />
               </Grid>
             ))
           ) : (
-            scheduled.map((cohort) => {
-              const isStarted =
-                !cohort.start_at || now >= new Date(cohort.start_at);
-              const canAccess = isStarted || isAdmin;
-
-              return (
-                <Grid size={{ xs: 12 }} key={cohort.id}>
-                  <motion.div
-                    variants={motionItem}
-                    whileHover={canAccess ? { scale: 1.005, x: 4 } : {}}
-                    whileTap={canAccess ? { scale: 0.995 } : {}}
-                  >
-                    <Paper
-                      component={canAccess ? Link : Box}
-                      to={canAccess ? `/cohort/${cohort.unique_slug}` : undefined}
-                      className="refined-card"
-                      sx={{
-                        cursor: canAccess ? "pointer" : "default",
-                        textDecoration: "none",
-                        display: "block",
-                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                        opacity: canAccess ? 1 : 0.8,
-                        "&:hover": canAccess
-                          ? {
-                              borderColor: "rgba(52, 152, 219, 0.6) !important",
-                              background: "#222222 !important",
-                              transform: "translateX(4px)",
-                            }
-                          : {},
-                      }}
-                    >
-                      <CardContent sx={{ p: 3, "&:last-child": { pb: 3 } }}>
-                        <Grid container spacing={3} alignItems="flex-start">
-                          {/* Event Identity */}
-                          <Grid size={{ xs: 12, md: 4 }}>
-                            <Typography
-                              variant="overline"
-                              sx={{
-                                fontWeight: 900,
-                                color: "#3498db",
-                                letterSpacing: "1.5px",
-                                display: "block",
-                                lineHeight: 1.2,
-                                mb: 0.5,
-                              }}
-                            >
-                              Kelompok {cohort.nama_kelompok}
-                            </Typography>
-                            <Typography
-                              variant="h6"
-                              sx={{
-                                color: "#ffffff",
-                                fontWeight: 800,
-                                lineHeight: 1.2,
-                                mb: 1,
-                              }}
-                            >
-                              {cohort.title}
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                color: "rgba(255,255,255,0.5)",
-                                fontSize: "0.8rem",
-                                lineHeight: 1.4,
-                              }}
-                            >
-                              {cohort.description}
-                            </Typography>
-                          </Grid>
-
-                          {/* Vertical Slots List */}
-                          <Grid size={{ xs: 12, md: 5 }}>
-                            {!isStarted && !isAdmin ? (
-                              <Box
-                                sx={{
-                                  p: 2,
-                                  borderRadius: 2,
-                                  bgcolor: "rgba(52, 152, 219, 0.05)",
-                                  border: "1px solid rgba(52, 152, 219, 0.2)",
-                                  textAlign: "center",
-                                }}
-                              >
-                                <Box
-                                  sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    gap: 1,
-                                    mb: 1,
-                                    opacity: 0.8,
-                                  }}
-                                >
-                                  <Lock size={14} color="#3498db" />
-                                  <Typography
-                                    variant="caption"
-                                    sx={{
-                                      fontWeight: 800,
-                                      textTransform: "uppercase",
-                                      letterSpacing: "1px",
-                                      color: "#ffffff",
-                                    }}
-                                  >
-                                    Pendaftaran Dibuka Dalam
-                                  </Typography>
-                                </Box>
-                                <CountdownTimer
-                                  targetDate={cohort.start_at!}
-                                  onFinish={() => setNow(new Date())}
-                                />
-                              </Box>
-                            ) : (
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  gap: 1,
-                                }}
-                              >
-                                <Box
-                                  sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1,
-                                    mb: 0.5,
-                                    opacity: 0.7,
-                                  }}
-                                >
-                                  <CalendarIcon size={14} color="#3498db" />
-                                  <Typography
-                                    variant="caption"
-                                    sx={{
-                                      fontWeight: 800,
-                                      textTransform: "uppercase",
-                                      letterSpacing: "1px",
-                                      color: "#ffffff",
-                                    }}
-                                  >
-                                    Jadwal Tersedia
-                                  </Typography>
-                                </Box>
-
-                                <Box
-                                  sx={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: 0.75,
-                                  }}
-                                >
-                                  {cohort.slots.map((slot) => {
-                                    const remaining = slot.quota - slot.count;
-                                    const isFull = remaining <= 0;
-                                    return (
-                                      <Box
-                                        key={slot.id}
-                                        sx={{
-                                          display: "flex",
-                                          justifyContent: "space-between",
-                                          alignItems: "center",
-                                          px: 2,
-                                          py: 1,
-                                          borderRadius: 2,
-                                          bgcolor: "rgba(255,255,255,0.05)",
-                                          border:
-                                            "1px solid rgba(255,255,255,0.08)",
-                                        }}
-                                      >
-                                        <Typography
-                                          variant="body2"
-                                          sx={{
-                                            fontWeight: 600,
-                                            color: "#ffffff",
-                                          }}
-                                        >
-                                          {format(
-                                            parseISO(slot.date),
-                                            "EEEE, d MMMM yyyy",
-                                            { locale: id },
-                                          )}
-                                        </Typography>
-                                        <Chip
-                                          size="small"
-                                          label={
-                                            isFull ? "Penuh" : `${remaining} Slot`
-                                          }
-                                          color={isFull ? "error" : "success"}
-                                          variant={isFull ? "filled" : "outlined"}
-                                          sx={{
-                                            height: 22,
-                                            fontSize: "0.65rem",
-                                            fontWeight: 800,
-                                            minWidth: 70,
-                                          }}
-                                        />
-                                      </Box>
-                                    );
-                                  })}
-                                </Box>
-                              </Box>
-                            )}
-                          </Grid>
-
-                          {/* Action Button */}
-                          <Grid
-                            size={{ xs: 12, md: 3 }}
-                            sx={{ alignSelf: "center", textAlign: "right" }}
-                          >
-                            <Button
-                              variant="contained"
-                              color="primary"
-                              fullWidth
-                              disabled={!canAccess}
-                              endIcon={
-                                canAccess ? (
-                                  <ChevronRight size={18} />
-                                ) : (
-                                  <Lock size={18} />
-                                )
-                              }
-                              sx={{
-                                pointerEvents: "none",
-                                borderRadius: 2.5,
-                                fontWeight: 800,
-                                py: 1.5,
-                                background: canAccess
-                                  ? "rgba(52, 152, 219, 0.2)"
-                                  : "rgba(255, 255, 255, 0.05)",
-                                border: canAccess
-                                  ? "1px solid rgba(52, 152, 219, 0.4)"
-                                  : "1px solid rgba(255, 255, 255, 0.1)",
-                                color: canAccess
-                                  ? "#ffffff"
-                                  : "rgba(255,255,255,0.3)",
-                              }}
-                            >
-                              {isAdmin && !isStarted
-                                ? "Akses Admin"
-                                : "Pilih Jadwal Wawancara"}
-                            </Button>
-                          </Grid>
-                        </Grid>
-                      </CardContent>
-                    </Paper>
-                  </motion.div>
-                </Grid>
-              );
-            })
+            scheduled.map((cohort) => (
+              <Grid size={{ xs: 12 }} key={cohort.id}>
+                <CohortCard cohort={cohort} isAdmin={isAdmin} />
+              </Grid>
+            ))
           )}
         </Grid>
 
         {/* Unscheduled Events Accordion */}
-        {!loading && unscheduled.length > 0 && (
+        {!isLoading && unscheduled.length > 0 && (
           <Box sx={{ mt: 6 }}>
             <Accordion
               sx={{

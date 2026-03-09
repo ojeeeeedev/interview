@@ -27,7 +27,7 @@ const theme = createTheme({
     },
     text: {
       primary: "#ffffff", // Crisp White
-      secondary: "#b0b0b0", // Off-White
+      secondary: "rgba(255, 255, 255, 0.7)", // Improved Contrast
     },
     success: { main: "#2ecc71" },
     warning: { main: "#f39c12" },
@@ -35,14 +35,14 @@ const theme = createTheme({
   },
   typography: {
     fontFamily: '"Plus Jakarta Sans", "Inter", sans-serif',
-    h1: { fontWeight: 800, color: "#ffffff" },
-    h2: { fontWeight: 800, color: "#ffffff" },
+    h1: { fontWeight: 800, color: "#ffffff", letterSpacing: "-1px" },
+    h2: { fontWeight: 800, color: "#ffffff", letterSpacing: "-0.5px" },
     h3: { fontWeight: 700, color: "#ffffff" },
     h4: { fontWeight: 700, color: "#ffffff" },
-    button: { fontWeight: 600, textTransform: "none" },
+    button: { fontWeight: 700, textTransform: "none", letterSpacing: "0.2px" },
   },
   shape: {
-    borderRadius: 8,
+    borderRadius: 12,
   },
   components: {
     MuiButton: {

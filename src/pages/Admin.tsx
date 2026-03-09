@@ -94,6 +94,7 @@ export default function Admin() {
     slug: "",
     nama_kelompok: "",
     start_at: "",
+    end_at: "",
   });
   const [editingCohortId, setEditingCohortId] = useState<string | null>(null);
 
@@ -285,6 +286,9 @@ export default function Admin() {
         start_at: newCohort.start_at
           ? new Date(newCohort.start_at).toISOString()
           : null,
+        end_at: newCohort.end_at
+          ? new Date(newCohort.end_at).toISOString()
+          : null,
       },
     ]);
     if (error) {
@@ -296,6 +300,7 @@ export default function Admin() {
         slug: "",
         nama_kelompok: "",
         start_at: "",
+        end_at: "",
       });
       setShowErrors(false);
       showToast("Event berhasil dibuat");
@@ -325,6 +330,9 @@ export default function Admin() {
         start_at: newCohort.start_at
           ? new Date(newCohort.start_at).toISOString()
           : null,
+        end_at: newCohort.end_at
+          ? new Date(newCohort.end_at).toISOString()
+          : null,
       })
       .eq("id", editingCohortId);
 
@@ -338,6 +346,7 @@ export default function Admin() {
         slug: "",
         nama_kelompok: "",
         start_at: "",
+        end_at: "",
       });
       setShowErrors(false);
       showToast("Perubahan event berhasil disimpan");
@@ -353,6 +362,7 @@ export default function Admin() {
       slug: cohort.unique_slug,
       nama_kelompok: cohort.nama_kelompok,
       start_at: formatDateForInput(cohort.start_at),
+      end_at: formatDateForInput(cohort.end_at),
     });
     showToast("Mode ubah aktif", "info");
   };
@@ -393,6 +403,23 @@ export default function Admin() {
       setNewSlot({ ...newSlot, date: "" });
       setShowErrors(false);
       showToast("Jadwal berhasil ditambahkan");
+      fetchAll();
+    }
+  };
+
+  const handleDeleteSlot = async (id: string) => {
+    if (
+      !confirm(
+        "Apakah Anda yakin ingin menghapus jadwal ini? Semua reservasi terkait akan ikut terhapus.",
+      )
+    )
+      return;
+
+    const { error } = await supabase.from("slots").delete().eq("id", id);
+    if (error) {
+      showToast(error.message, "error");
+    } else {
+      showToast("Jadwal berhasil dihapus");
       fetchAll();
     }
   };
@@ -706,6 +733,21 @@ export default function Admin() {
                             }
                             helperText="Opsional: Kosongkan jika ingin langsung dibuka"
                           />
+                          <TextField
+                            fullWidth
+                            type="datetime-local"
+                            label="Waktu Tutup Pendaftaran"
+                            margin="normal"
+                            slotProps={{ inputLabel: { shrink: true } }}
+                            value={newCohort.end_at}
+                            onChange={(e: any) =>
+                              setNewCohort({
+                                ...newCohort,
+                                end_at: e.target.value,
+                              })
+                            }
+                            helperText="Opsional: Kosongkan jika tidak ada batas waktu"
+                          />
                           <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
                             {editingCohortId && (
                               <Button
@@ -719,6 +761,7 @@ export default function Admin() {
                                     slug: "",
                                     nama_kelompok: "",
                                     start_at: "",
+                                    end_at: "",
                                   });
                                 }}
                                 fullWidth
@@ -820,6 +863,18 @@ export default function Admin() {
                       }
                       helperText="Opsional: Kosongkan jika ingin langsung dibuka"
                     />
+                    <TextField
+                      fullWidth
+                      type="datetime-local"
+                      label="Waktu Tutup Pendaftaran"
+                      margin="normal"
+                      slotProps={{ inputLabel: { shrink: true } }}
+                      value={newCohort.end_at}
+                      onChange={(e: any) =>
+                        setNewCohort({ ...newCohort, end_at: e.target.value })
+                      }
+                      helperText="Opsional: Kosongkan jika tidak ada batas waktu"
+                    />
                     <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
                       {editingCohortId && (
                         <Button
@@ -833,6 +888,7 @@ export default function Admin() {
                               slug: "",
                               nama_kelompok: "",
                               start_at: "",
+                              end_at: "",
                             });
                           }}
                           fullWidth
@@ -871,39 +927,49 @@ export default function Admin() {
                   >
                     <Table sx={{ minWidth: { xs: 600, md: "100%" } }}>
                       <TableHead>
-                        <TableRow>
-                          <TableCell>Nama Kelompok</TableCell>
-                          <TableCell>Event/Wawancara</TableCell>
-                          <TableCell>Dibuka</TableCell>
-                          <TableCell align="right"></TableCell>
-                        </TableRow>
+                      <TableRow>
+                      <TableCell>Nama Kelompok</TableCell>
+                      <TableCell>Event/Wawancara</TableCell>
+                      <TableCell>Mulai</TableCell>
+                      <TableCell>Akhir</TableCell>
+                      <TableCell align="right"></TableCell>
+                      </TableRow>
                       </TableHead>
                       {loading ? (
-                        <TableSkeleton cols={4} />
+                      <TableSkeleton cols={5} />
                       ) : (
-                        <TableBody>
-                          {cohorts.map((c) => (
-                            <TableRow key={c.id}>
-                              <TableCell sx={{ whiteSpace: "nowrap" }}>
-                                {c.nama_kelompok}
-                              </TableCell>
-                              <TableCell sx={{ whiteSpace: "nowrap" }}>
-                                {c.title}
-                              </TableCell>
-                              <TableCell sx={{ whiteSpace: "nowrap" }}>
-                                {c.start_at
-                                  ? new Date(c.start_at).toLocaleString("id-ID", {
-                                      year: "numeric",
-                                      month: "short",
-                                      day: "numeric",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                      timeZoneName: "short",
-                                    })
-                                  : "Langsung"}
-                              </TableCell>
-                              <TableCell align="right">
-                                <Box
+                      <TableBody>
+                      {cohorts.map((c) => (
+                        <TableRow key={c.id}>
+                          <TableCell sx={{ whiteSpace: "nowrap" }}>
+                            {c.nama_kelompok}
+                          </TableCell>
+                          <TableCell sx={{ whiteSpace: "nowrap" }}>
+                            {c.title}
+                          </TableCell>
+                          <TableCell sx={{ whiteSpace: "nowrap" }}>
+                            {c.start_at
+                              ? new Date(c.start_at).toLocaleString("id-ID", {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              : "Langsung"}
+                          </TableCell>
+                          <TableCell sx={{ whiteSpace: "nowrap" }}>
+                            {c.end_at
+                              ? new Date(c.end_at).toLocaleString("id-ID", {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              : "Tidak Ada"}
+                          </TableCell>
+                          <TableCell align="right">                                <Box
                                   display="flex"
                                   gap={1}
                                   justifyContent="flex-end"
@@ -1229,41 +1295,59 @@ export default function Admin() {
                   >
                     <Table sx={{ minWidth: { xs: 600, md: "100%" } }}>
                       <TableHead>
-                        <TableRow>
-                          <TableCell>Kelompok</TableCell>
-                          <TableCell>Event</TableCell>
-                          <TableCell>Tanggal</TableCell>
-                          <TableCell>Kapasitas</TableCell>
-                        </TableRow>
+                      <TableRow>
+                      <TableCell>Kelompok</TableCell>
+                      <TableCell>Event</TableCell>
+                      <TableCell>Tanggal</TableCell>
+                      <TableCell>Kapasitas</TableCell>
+                      <TableCell align="right"></TableCell>
+                      </TableRow>
                       </TableHead>
                       {loading ? (
-                        <TableSkeleton cols={4} />
+                      <TableSkeleton cols={5} />
                       ) : (
-                        <TableBody>
-                          {slots.map((s) => (
-                            <TableRow key={s.id}>
-                              <TableCell sx={{ whiteSpace: "nowrap" }}>
-                                <Typography
-                                  variant="body2"
-                                  sx={{ color: "#3498db", fontWeight: 600 }}
-                                >
-                                  {(s as any).cohorts?.nama_kelompok}
-                                </Typography>
-                              </TableCell>
-                              <TableCell sx={{ whiteSpace: "nowrap" }}>
-                                {(s as any).cohorts?.title}
-                              </TableCell>
-                              <TableCell sx={{ whiteSpace: "nowrap" }}>
-                                {s.date}
-                              </TableCell>
-                              <TableCell sx={{ whiteSpace: "nowrap" }}>
-                                {s.count} / {s.quota}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      )}
-                    </Table>
+                      <TableBody>
+                      {slots.map((s) => (
+                        <TableRow key={s.id}>
+                          <TableCell sx={{ whiteSpace: "nowrap" }}>
+                            <Typography
+                              variant="body2"
+                              sx={{ color: "#3498db", fontWeight: 600 }}
+                            >
+                              {(s as any).cohorts?.nama_kelompok}
+                            </Typography>
+                          </TableCell>
+                          <TableCell sx={{ whiteSpace: "nowrap" }}>
+                            {(s as any).cohorts?.title}
+                          </TableCell>
+                          <TableCell sx={{ whiteSpace: "nowrap" }}>
+                            {s.date}
+                          </TableCell>
+                          <TableCell sx={{ whiteSpace: "nowrap" }}>
+                            {s.count} / {s.quota}
+                          </TableCell>
+                          <TableCell align="right">
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => handleDeleteSlot(s.id)}
+                              sx={{
+                                bgcolor: "rgba(231, 76, 60, 0.15)",
+                                borderRadius: "50%",
+                                width: 32,
+                                height: 32,
+                                "&:hover": {
+                                  bgcolor: "rgba(231, 76, 60, 0.25)",
+                                },
+                              }}
+                            >
+                              <Trash2 size={16} />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      </TableBody>
+                      )}                    </Table>
                   </TableContainer>
                 </Grid>
               </Grid>

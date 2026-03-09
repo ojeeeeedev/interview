@@ -118,7 +118,48 @@ export default function Landing() {
     );
 
   const isStarted = !cohort?.start_at || now >= new Date(cohort.start_at);
-  const canAccess = isStarted || isAdmin;
+  const isEnded = cohort?.end_at && now >= new Date(cohort.end_at);
+  const canAccess = (isStarted && !isEnded) || isAdmin;
+
+  if (isEnded && !isAdmin && cohort) {
+    return (
+      <Container maxWidth="sm" sx={{ py: 12 }}>
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+          <Paper className="refined-card" sx={{ p: 6, textAlign: 'center', bgcolor: 'rgba(255,255,255,0.02) !important' }}>
+            <Box sx={{ 
+              width: 80, 
+              height: 80, 
+              borderRadius: '50%', 
+              bgcolor: 'rgba(231, 76, 60, 0.1)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              margin: '0 auto 24px',
+              border: '1px solid rgba(231, 76, 60, 0.3)'
+            }}>
+              <Lock size={40} color="#e74c3c" />
+            </Box>
+            <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>Pendaftaran Ditutup</Typography>
+            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mb: 4 }}>
+              Pendaftaran untuk Kelompok {cohort.nama_kelompok} ({cohort.title}) telah berakhir pada:
+              <br />
+              <strong>{new Date(cohort.end_at!).toLocaleString("id-ID", { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</strong>
+            </Typography>
+
+            <Button 
+              component={Link} 
+              to="/" 
+              variant="outlined" 
+              startIcon={<ArrowLeft size={18} />}
+              sx={{ borderRadius: 3, px: 4 }}
+            >
+              Kembali ke Beranda
+            </Button>
+          </Paper>
+        </motion.div>
+      </Container>
+    );
+  }
 
   if (!canAccess && cohort) {
     return (
@@ -140,11 +181,16 @@ export default function Landing() {
             </Box>
             <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>Akses Belum Dibuka</Typography>
             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mb: 4 }}>
-              Pendaftaran untuk Kelompok {cohort.nama_kelompok} ({cohort.title}) akan dibuka dalam:
+              Pendaftaran untuk Kelompok {cohort.nama_kelompok} ({cohort.title}) segera dibuka:
             </Typography>
             
             <Box sx={{ mb: 6 }}>
-              <CountdownTimer targetDate={cohort.start_at!} onFinish={() => setNow(new Date())} />
+              <CountdownTimer 
+                targetDate={cohort.start_at!} 
+                onFinish={() => setNow(new Date())} 
+                showTarget
+                targetLabel="DIBUKA"
+              />
             </Box>
 
             <Button 
@@ -188,22 +234,22 @@ export default function Landing() {
   return (
     <Container
       maxWidth="md"
-      sx={{ pt: 0, pb: { xs: 2, md: 4 }, minHeight: "calc(100vh - 64px)", display: "flex", flexDirection: 'column', justifyContent: 'flex-start' }}
+      sx={{ pt: 2, pb: { xs: 4, md: 8 }, minHeight: "calc(100vh - 64px)", display: "flex", flexDirection: 'column', alignItems: 'center' }}
     >
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        style={{ width: "100%", display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+        style={{ width: "100%", maxWidth: '500px' }}
       >
         <Paper
           className="refined-card"
           sx={{ 
-            p: { xs: 2, sm: 3, md: 4 }, 
+            p: { xs: 3, sm: 4, md: 5 }, 
             width: "100%", 
-            maxWidth: '450px',
             bgcolor: 'rgba(255,255,255,0.02) !important', 
-            position: 'relative' 
+            position: 'relative',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.5) !important'
           }}
         >
           {editingReservation ? (
@@ -216,27 +262,65 @@ export default function Landing() {
               }}
             />
           ) : (
-            <Stack spacing={2}>
-              <Box sx={{ textAlign: 'right' }}>
+            <Stack spacing={3}>
+              <Box sx={{ textAlign: 'left' }}>
                 <Typography
                   variant="overline"
                   sx={{
                     fontWeight: 900,
                     color: "#3498db",
-                    letterSpacing: "1.5px",
+                    letterSpacing: "2px",
                     display: 'block',
                     lineHeight: 1,
-                    mb: 0.5
+                    mb: 1
                   }}
                 >
                   KELOMPOK {cohort?.nama_kelompok?.toUpperCase()}
                 </Typography>
-                <Typography variant="h5" sx={{ fontWeight: 800, fontSize: { xs: '1.2rem', sm: '1.5rem' }, lineHeight: 1.1 }}>
+                <Typography variant="h4" sx={{ fontWeight: 800, fontSize: { xs: '1.5rem', sm: '2rem' }, lineHeight: 1.1 }}>
                   {cohort?.title}
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 1.5, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
+                  Silakan isi formulir di bawah ini untuk mengonfirmasi kehadiran Anda pada jadwal yang tersedia.
                 </Typography>
               </Box>
 
               <Divider sx={{ opacity: 0.1 }} />
+
+              {cohort?.end_at && !isEnded && (
+                <Box
+                  sx={{
+                    px: 3,
+                    py: 1.5,
+                    borderRadius: 3,
+                    bgcolor: "rgba(231, 76, 60, 0.05)",
+                    border: "1px solid rgba(231, 76, 60, 0.15)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 2,
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontWeight: 900,
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                      color: "#e74c3c",
+                    }}
+                  >
+                    Berakhir Dalam:
+                  </Typography>
+                  <CountdownTimer
+                    targetDate={cohort.end_at}
+                    onFinish={() => setNow(new Date())}
+                    small
+                    showTarget
+                    targetLabel="BATAS PENDAFTARAN"
+                  />
+                </Box>
+              )}
 
               <BookingForm
                 cohortId={cohort!.id}

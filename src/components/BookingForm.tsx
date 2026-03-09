@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useActionState, useTransition } from "react";
 import {
   Box,
   TextField,
@@ -13,6 +13,7 @@ import {
   DialogContentText,
   DialogActions,
   Stack,
+  CircularProgress,
 } from "@mui/material";
 import { supabase } from "../lib/supabase";
 import type { Slot } from "../types";
@@ -27,14 +28,21 @@ interface Props {
   onSuccess: (code: string, userName: string, dateStr: string) => void;
 }
 
+type ActionState = {
+  error: string | null;
+  success: boolean;
+  code?: string;
+  userName?: string;
+  dateStr?: string;
+};
+
 export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
   const [name, setName] = useState("");
   const [allowedNames, setAllowedNames] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     const fetchAllowedNames = async () => {
@@ -55,96 +63,126 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
   };
 
-  const handleBooking = async () => {
-    setConfirmOpen(false);
-    setLoading(true);
-    setError(null);
+  const bookingAction = async (_prevState: ActionState | null, formData: FormData): Promise<ActionState> => {
+    const userName = formData.get("userName") as string;
+    const dateStr = formData.get("dateStr") as string;
+    const selectedDateObj = new Date(dateStr);
 
-    // 1. Check for double booking in this cohort
+    // 1. Check for double booking
     const { data: existing, error: checkError } = await supabase
       .from("reservations")
       .select("id, slots!inner(cohort_id)")
-      .ilike("user_name", name.trim())
+      .ilike("user_name", userName.trim())
       .eq("slots.cohort_id", cohortId)
       .maybeSingle();
 
-    if (checkError) {
-      console.error(checkError);
-    }
-
+    if (checkError) console.error(checkError);
     if (existing) {
-      setError(
-        "Anda sudah terdaftar untuk event ini. Mohon gunakan Kode Akses Anda pada menu 'Cari Reservasi' di atas jika ingin mengubah jadwal.",
-      );
-      setLoading(false);
-      return;
+      return { 
+        error: "Anda sudah terdaftar untuk event ini. Mohon gunakan Kode Akses Anda pada menu 'Cari Reservasi' di atas jika ingin mengubah jadwal.",
+        success: false 
+      };
     }
 
-    // 2. Validate name in allowed_names
+    // 2. Validate name
     const { data: allowed, error: allowedError } = await supabase
       .from("allowed_names")
       .select("*")
       .eq("cohort_id", cohortId)
-      .ilike("full_name", name.trim())
+      .ilike("full_name", userName.trim())
       .single();
 
     if (allowedError || !allowed) {
-      setError("Nama Anda tidak terdaftar untuk event ini.");
-      setLoading(false);
-      return;
+      return { error: "Nama Anda tidak terdaftar untuk event ini.", success: false };
     }
 
-    // 3. Find slot id
-    const dateStr = format(selectedDate!, "yyyy-MM-dd");
-    const slot = slots.find((s) => s.date === dateStr);
+    // 3. Find slot
+    const dateFormatted = format(selectedDateObj, "yyyy-MM-dd");
+    const slot = slots.find((s) => s.date === dateFormatted);
     if (!slot) {
-      setError("Tanggal yang dipilih tidak tersedia.");
-      setLoading(false);
-      return;
+      return { error: "Tanggal yang dipilih tidak tersedia.", success: false };
     }
 
     const code = generateCode();
     const { error: bookError } = await supabase.rpc("book_reservation", {
       p_slot_id: slot.id,
-      p_user_name: name.trim(),
+      p_user_name: userName.trim(),
       p_access_code: code,
     });
 
     if (bookError) {
-      setError(bookError.message);
-    } else {
-      const formattedDate = format(selectedDate!, "EEEE, d MMMM yyyy", {
-        locale: id,
-      });
-      onSuccess(code, name.trim(), formattedDate);
+      return { error: bookError.message, success: false };
     }
-    setLoading(false);
+
+    const formattedDate = format(selectedDateObj, "EEEE, d MMMM yyyy", { locale: id });
+    return {
+      success: true,
+      error: null,
+      code,
+      userName: userName.trim(),
+      dateStr: formattedDate
+    };
+  };
+
+  const [state, formAction] = useActionState(bookingAction, null);
+
+  useEffect(() => {
+    if (state?.success && state.code && state.userName && state.dateStr) {
+      onSuccess(state.code, state.userName, state.dateStr);
+    }
+  }, [state, onSuccess]);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setConfirmOpen(true);
+  };
+
+  const handleConfirm = () => {
+    setConfirmOpen(false);
+    const formData = new FormData();
+    formData.append("userName", name);
+    formData.append("dateStr", selectedDate!.toISOString());
+    
+    startTransition(() => {
+      formAction(formData);
+    });
   };
 
   return (
-    <Stack spacing={2.5}>
-      {error && (
-        <Alert
-          severity="error"
-          sx={{ borderRadius: 2, border: "1px solid rgba(231, 76, 60, 0.3)" }}
-        >
-          {error}
-        </Alert>
+    <Stack spacing={3} component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+      {state?.error && (
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+          <Alert
+            severity="error"
+            sx={{ 
+              borderRadius: 3, 
+              border: "1px solid rgba(231, 76, 60, 0.2)",
+              bgcolor: 'rgba(231, 76, 60, 0.05)',
+              color: '#ff8a80',
+              '& .MuiAlert-icon': { color: '#ff8a80' }
+            }}
+          >
+            {state.error}
+          </Alert>
+        </motion.div>
       )}
 
-      <Stack spacing={1}>
-        <Typography
-          variant="subtitle2"
-          sx={{
-            fontWeight: 800,
-            color: "rgba(255,255,255,0.6)",
-            textTransform: "uppercase",
-            fontSize: "0.75rem",
-            letterSpacing: "1px",
-          }}
-        >
-          Nama Peserta
-        </Typography>
+      <Stack spacing={1.5}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: '#3498db', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900 }}>1</Box>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 900,
+              color: "#ffffff",
+              textTransform: "uppercase",
+              fontSize: "0.8rem",
+              letterSpacing: "1px",
+            }}
+          >
+            Identitas Peserta
+          </Typography>
+        </Box>
         <Autocomplete
           freeSolo
           disableClearable
@@ -163,17 +201,21 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
                   bgcolor: "#1a1a1a !important",
                   border: "1px solid rgba(255,255,255,0.1)",
                   mt: 1,
-                  borderRadius: 2,
+                  borderRadius: 3,
                   boxShadow: "0 12px 40px rgba(0,0,0,0.8)",
                   backgroundImage: "none",
                   "& .MuiAutocomplete-option": {
                     py: 1.5,
-                    color: "#ffffff !important",
+                    px: 2,
+                    fontSize: '0.9rem',
+                    color: "rgba(255,255,255,0.8) !important",
                     "&:hover": {
-                      bgcolor: "rgba(255,255,255,0.1) !important",
+                      bgcolor: "rgba(255,255,255,0.05) !important",
+                      color: "#fff !important"
                     },
                     '&[aria-selected="true"]': {
-                      bgcolor: "rgba(52, 152, 219, 0.3) !important",
+                      bgcolor: "rgba(52, 152, 219, 0.2) !important",
+                      color: "#3498db !important"
                     },
                   },
                 }}
@@ -184,32 +226,46 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
             <TextField
               {...params}
               fullWidth
+              required
               variant="outlined"
-              placeholder="Ketik nama lengkap Anda..."
+              placeholder="Masukkan nama lengkap sesuai pendaftaran..."
               slotProps={{
                 input: {
                   ...params.InputProps,
-                  sx: { bgcolor: "rgba(255,255,255,0.03)" },
+                  sx: { 
+                    bgcolor: "rgba(0,0,0,0.2)", 
+                    borderRadius: 3,
+                    fontSize: '0.95rem',
+                    "& fieldset": { borderColor: 'rgba(255,255,255,0.1) !important' },
+                    "&:hover fieldset": { borderColor: 'rgba(255,255,255,0.2) !important' },
+                    "&.Mui-focused fieldset": { borderColor: '#3498db !important' }
+                  },
                 },
               }}
             />
           )}
         />
+        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', px: 1 }}>
+          * Nama harus sesuai dengan data yang terdaftar di sistem.
+        </Typography>
       </Stack>
 
-      <Stack spacing={1}>
-        <Typography
-          variant="subtitle2"
-          sx={{
-            fontWeight: 800,
-            color: "rgba(255,255,255,0.6)",
-            textTransform: "uppercase",
-            fontSize: "0.75rem",
-            letterSpacing: "1px",
-          }}
-        >
-          Pilih Tanggal
-        </Typography>
+      <Stack spacing={1.5}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: '#3498db', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900 }}>2</Box>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 900,
+              color: "#ffffff",
+              textTransform: "uppercase",
+              fontSize: "0.8rem",
+              letterSpacing: "1px",
+            }}
+          >
+            Pilih Tanggal Wawancara
+          </Typography>
+        </Box>
         <Calendar
           slots={slots}
           onSelect={setSelectedDate}
@@ -217,23 +273,33 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
         />
       </Stack>
 
-      <Box sx={{ pt: 1, textAlign: "center" }}>
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+      <Box sx={{ pt: 2, textAlign: "center" }}>
+        <motion.div 
+          whileHover={!isPending && selectedDate && name ? { scale: 1.02 } : {}} 
+          whileTap={!isPending && selectedDate && name ? { scale: 0.98 } : {}}
+        >
           <Button
+            type="submit"
             variant="contained"
             size="large"
-            onClick={() => setConfirmOpen(true)}
-            disabled={loading || !selectedDate || !name}
+            disabled={isPending || !selectedDate || !name}
             fullWidth
+            startIcon={isPending ? <CircularProgress size={20} color="inherit" /> : null}
             sx={{
-              maxWidth: { sm: 400 },
-              py: 1.5,
+              py: 2,
+              borderRadius: 3,
               bgcolor: "#3498db",
-              fontWeight: 800,
-              fontSize: "0.9rem",
+              fontWeight: 900,
+              fontSize: "1rem",
+              letterSpacing: '0.5px',
+              boxShadow: "0 8px 24px rgba(52, 152, 219, 0.3)",
+              "&.Mui-disabled": {
+                bgcolor: "rgba(255,255,255,0.05)",
+                color: "rgba(255,255,255,0.2)"
+              }
             }}
           >
-            {loading ? "Memproses..." : "Jadwalkan Wawancara"}
+            {isPending ? "Memproses..." : "Konfirmasi Jadwal"}
           </Button>
         </motion.div>
       </Box>
@@ -241,7 +307,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
       {/* Confirmation Dialog */}
       <Dialog
         open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
+        onClose={() => !isPending && setConfirmOpen(false)}
         PaperProps={{
           className: "refined-card",
           sx: { p: 1 },
@@ -277,14 +343,16 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
         <DialogActions sx={{ p: 3, pt: 1 }}>
           <Button
             onClick={() => setConfirmOpen(false)}
+            disabled={isPending}
             sx={{ color: "rgba(255,255,255,0.5)", fontWeight: 700 }}
           >
             Batal
           </Button>
           <Button
-            onClick={handleBooking}
+            onClick={handleConfirm}
             variant="contained"
             color="primary"
+            disabled={isPending}
             sx={{ fontWeight: 800, px: 3 }}
           >
             Ya, Jadwalkan
