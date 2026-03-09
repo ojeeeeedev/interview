@@ -53,6 +53,7 @@ CREATE POLICY "Allow all on allowed_names" ON public.allowed_names FOR ALL USING
 
 -- 3. RPC for Atomic Booking
 CREATE OR REPLACE FUNCTION public.book_reservation(
+    p_cohort_id UUID,
     p_slot_id UUID,
     p_user_name TEXT,
     p_access_code TEXT
@@ -60,19 +61,31 @@ CREATE OR REPLACE FUNCTION public.book_reservation(
 DECLARE
     v_quota INT;
     v_count INT;
+    v_is_allowed BOOLEAN;
 BEGIN
-    -- Select and lock the slot for update
+    -- 1. Verify if the name is allowed for this cohort
+    SELECT EXISTS (
+        SELECT 1 FROM public.allowed_names 
+        WHERE cohort_id = p_cohort_id 
+        AND full_name ILIKE p_user_name
+    ) INTO v_is_allowed;
+
+    IF NOT v_is_allowed THEN
+        RAISE EXCEPTION 'Nama Anda tidak terdaftar untuk event ini.';
+    END IF;
+
+    -- 2. Select and lock the slot for update
     SELECT quota, count INTO v_quota, v_count FROM public.slots WHERE id = p_slot_id FOR UPDATE;
     
     IF v_count >= v_quota THEN
         RAISE EXCEPTION 'This slot is already full.';
     END IF;
 
-    -- Insert reservation
+    -- 3. Insert reservation
     INSERT INTO public.reservations (slot_id, user_name, access_code)
     VALUES (p_slot_id, p_user_name, p_access_code);
 
-    -- Update slot count
+    -- 4. Update slot count
     UPDATE public.slots SET count = count + 1 WHERE id = p_slot_id;
 END;
 $$ LANGUAGE plpgsql;

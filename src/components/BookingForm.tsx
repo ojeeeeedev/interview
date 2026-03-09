@@ -44,6 +44,11 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
+  // Validation states
+  const [isValidatingName, setIsValidatingName] = useState(false);
+  const [isNameVerified, setIsNameVerified] = useState(false);
+  const [nameCheckError, setNameCheckError] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchAllowedNames = async () => {
       const { data, error } = await supabase
@@ -58,6 +63,41 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
     };
     fetchAllowedNames();
   }, [cohortId]);
+
+  // Server-side check before allowing click
+  useEffect(() => {
+    if (!name.trim() || name.length < 2) {
+      setIsNameVerified(false);
+      setNameCheckError(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsValidatingName(true);
+      setNameCheckError(null);
+
+      const { data, error } = await supabase
+        .from("allowed_names")
+        .select("id")
+        .eq("cohort_id", cohortId)
+        .ilike("full_name", name.trim())
+        .maybeSingle();
+
+      if (error) {
+        setNameCheckError("Gagal memverifikasi nama");
+        setIsNameVerified(false);
+      } else if (!data) {
+        setNameCheckError("Nama tidak terdaftar");
+        setIsNameVerified(false);
+      } else {
+        setIsNameVerified(true);
+        setNameCheckError(null);
+      }
+      setIsValidatingName(false);
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [name, cohortId]);
 
   const generateCode = () => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -84,7 +124,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
       };
     }
 
-    // 2. Validate name
+    // 2. Double check on server for final safety
     const { data: allowed, error: allowedError } = await supabase
       .from("allowed_names")
       .select("*")
@@ -105,6 +145,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
 
     const code = generateCode();
     const { error: bookError } = await supabase.rpc("book_reservation", {
+      p_cohort_id: cohortId,
       p_slot_id: slot.id,
       p_user_name: userName.trim(),
       p_access_code: code,
@@ -134,7 +175,9 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setConfirmOpen(true);
+    if (isNameVerified && selectedDate) {
+      setConfirmOpen(true);
+    }
   };
 
   const handleConfirm = () => {
@@ -150,7 +193,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
 
   return (
     <Stack spacing={3} component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-      {state?.error && (
+      {(state?.error || nameCheckError) && (
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
           <Alert
             severity="error"
@@ -162,26 +205,34 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
               '& .MuiAlert-icon': { color: '#ff8a80' }
             }}
           >
-            {state.error}
+            {state?.error || nameCheckError}
           </Alert>
         </motion.div>
       )}
 
       <Stack spacing={1.5}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: '#3498db', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900 }}>1</Box>
-          <Typography
-            variant="subtitle2"
-            sx={{
-              fontWeight: 900,
-              color: "#ffffff",
-              textTransform: "uppercase",
-              fontSize: "0.8rem",
-              letterSpacing: "1px",
-            }}
-          >
-            Identitas Peserta
-          </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: isNameVerified ? '#2ecc71' : '#3498db', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900, transition: 'all 0.3s' }}>1</Box>
+            <Typography
+              variant="subtitle2"
+              sx={{
+                fontWeight: 900,
+                color: "#ffffff",
+                textTransform: "uppercase",
+                fontSize: "0.8rem",
+                letterSpacing: "1px",
+              }}
+            >
+              Identitas Peserta
+            </Typography>
+          </Box>
+          {isValidatingName && <CircularProgress size={16} sx={{ color: '#3498db' }} />}
+          {isNameVerified && !isValidatingName && (
+            <Typography variant="caption" sx={{ color: '#2ecc71', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.6rem' }}>
+              Nama Terdaftar ✓
+            </Typography>
+          )}
         </Box>
         <Autocomplete
           freeSolo
@@ -236,9 +287,11 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
                     bgcolor: "rgba(0,0,0,0.2)", 
                     borderRadius: 3,
                     fontSize: '0.95rem',
-                    "& fieldset": { borderColor: 'rgba(255,255,255,0.1) !important' },
-                    "&:hover fieldset": { borderColor: 'rgba(255,255,255,0.2) !important' },
-                    "&.Mui-focused fieldset": { borderColor: '#3498db !important' }
+                    border: isNameVerified ? "1px solid rgba(46, 204, 113, 0.3)" : "1px solid rgba(255,255,255,0.1)",
+                    "& fieldset": { border: 'none' },
+                    "&.Mui-focused": {
+                       bgcolor: "rgba(0,0,0,0.4)",
+                    }
                   },
                 },
               }}
@@ -275,14 +328,14 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
 
       <Box sx={{ pt: 2, textAlign: "center" }}>
         <motion.div 
-          whileHover={!isPending && selectedDate && name ? { scale: 1.02 } : {}} 
-          whileTap={!isPending && selectedDate && name ? { scale: 0.98 } : {}}
+          whileHover={!isPending && selectedDate && isNameVerified ? { scale: 1.02 } : {}} 
+          whileTap={!isPending && selectedDate && isNameVerified ? { scale: 0.98 } : {}}
         >
           <Button
             type="submit"
             variant="contained"
             size="large"
-            disabled={isPending || !selectedDate || !name}
+            disabled={isPending || !selectedDate || !isNameVerified || isValidatingName}
             fullWidth
             startIcon={isPending ? <CircularProgress size={20} color="inherit" /> : null}
             sx={{
@@ -292,14 +345,14 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
               fontWeight: 900,
               fontSize: "1rem",
               letterSpacing: '0.5px',
-              boxShadow: "0 8px 24px rgba(52, 152, 219, 0.3)",
+              boxShadow: isNameVerified ? "0 8px 24px rgba(52, 152, 219, 0.3)" : "none",
               "&.Mui-disabled": {
                 bgcolor: "rgba(255,255,255,0.05)",
                 color: "rgba(255,255,255,0.2)"
               }
             }}
           >
-            {isPending ? "Memproses..." : "Konfirmasi Jadwal"}
+            {isPending ? "Memproses..." : isValidatingName ? "Memverifikasi Nama..." : "Konfirmasi Jadwal"}
           </Button>
         </motion.div>
       </Box>

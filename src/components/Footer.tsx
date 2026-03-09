@@ -118,13 +118,22 @@ export default function Footer() {
           Akses Admin
         </DialogTitle>
         <form onSubmit={handleSubmit}>
-          <DialogContent sx={{ pt: 0 }}>
+          <DialogContent sx={{ pt: 1 }}>
             <TextField
               fullWidth
               autoFocus
               type="password"
               label="Password"
               size="small"
+              sx={{ 
+                mt: 1,
+                "& .MuiInputLabel-outlined.MuiInputLabel-shrink": {
+                  bgcolor: "#1a1a1a", // Matches .refined-card background
+                  px: 1,
+                  borderRadius: 1,
+                  ml: -0.5
+                }
+              }}
               inputRef={passwordInputRef}
               value={password}
               onChange={(e) => setPassword(e.target.value)}

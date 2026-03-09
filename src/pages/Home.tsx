@@ -443,8 +443,9 @@ export default function Home() {
         <Paper
           className="refined-card"
           sx={{
-            p: 2.5,
-            mb: 2,
+            p: 1.5,
+            px: 2,
+            mb: 3,
             bgcolor: "rgba(255, 255, 255, 0.02) !important",
             border: "1px solid",
             borderColor:
@@ -457,123 +458,152 @@ export default function Home() {
           }}
         >
           <Box
-            sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1.5 }}
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" },
+              alignItems: { xs: "stretch", md: "center" },
+              gap: 2,
+            }}
           >
             <Box
               sx={{
-                p: 1,
-                borderRadius: "50%",
-                width: 36,
-                height: 36,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                bgcolor:
-                  searchStatus === "success"
-                    ? "rgba(46, 204, 113, 0.1)"
-                    : searchStatus === "error"
-                      ? "rgba(231, 76, 60, 0.1)"
-                      : "rgba(52, 152, 219, 0.1)",
-                color:
-                  searchStatus === "success"
-                    ? "#2ecc71"
-                    : searchStatus === "error"
-                      ? "#e74c3c"
-                      : "#3498db",
-                transition: "all 0.3s ease",
+                gap: 1.5,
+                minWidth: "fit-content",
               }}
             >
-              {isSearching ? (
-                <CircularProgress size={18} color="inherit" />
-              ) : (
-                <Search size={18} />
-              )}
-            </Box>
-            <Box>
-              <Typography
-                variant="subtitle2"
-                sx={{ fontWeight: 800, color: "#ffffff", lineHeight: 1.2 }}
-              >
-                Sudah punya jadwal?
-              </Typography>
-              <Typography
-                variant="caption"
+              <Box
                 sx={{
-                  color: "rgba(255,255,255,0.5)",
-                  display: "block",
-                  mt: -0.2,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  bgcolor:
+                    searchStatus === "success"
+                      ? "rgba(46, 204, 113, 0.1)"
+                      : searchStatus === "error"
+                        ? "rgba(231, 76, 60, 0.1)"
+                        : "rgba(52, 152, 219, 0.1)",
+                  color:
+                    searchStatus === "success"
+                      ? "#2ecc71"
+                      : searchStatus === "error"
+                        ? "#e74c3c"
+                        : "#3498db",
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  transition: "all 0.3s ease",
                 }}
               >
-                Ubah jadwal dengan memasukkan kode akses.
-              </Typography>
-            </Box>
-          </Box>
-
-          <form onSubmit={handleSearchSubmit}>
-            <Grid container spacing={1.5} alignItems="flex-start">
-              <Grid size={{ xs: 12, sm: 8, md: 9 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  placeholder="Kode Akses (6 digit)..."
-                  value={searchCode}
-                  onChange={(e) => {
-                    const val = e.target.value.slice(0, 6).toUpperCase();
-                    setSearchCode(val);
-                  }}
-                  error={searchStatus === "error"}
-                  helperText={
-                    searchStatus === "error"
-                      ? "Kode reservasi tidak ditemukan!"
-                      : ""
-                  }
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          {isSearching ? (
-                            <CircularProgress size={18} />
-                          ) : searchStatus === "success" ? (
-                            <CheckCircle2 size={18} color="#2ecc71" />
-                          ) : searchStatus === "error" ? (
-                            <XCircle size={18} color="#e74c3c" />
-                          ) : null}
-                        </InputAdornment>
-                      ),
-                      sx: {
-                        borderRadius: 3,
-                        textTransform: "uppercase",
-                        fontWeight: 700,
-                        letterSpacing: 1,
-                        bgcolor: "rgba(0,0,0,0.3)",
-                        "& fieldset": {
-                          borderColor: "rgba(255,255,255,0.1) !important",
-                        },
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 4, md: 3 }}>
-                <Button
-                  fullWidth
-                  type="submit"
-                  variant="contained"
-                  disabled={searchStatus !== "success" || isSearching}
-                  startIcon={<Edit2 size={16} />}
-                  sx={{
-                    height: 40,
-                    borderRadius: 3,
-                    boxShadow: searchStatus === "success" 
-                      ? "0 4px 14px 0 rgba(46, 204, 113, 0.3)" 
-                      : "none",
+                {isSearching ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : (
+                  <Search size={16} />
+                )}
+              </Box>
+              <Box>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ 
+                    fontWeight: 500, 
+                    color: "#ffffff", 
+                    lineHeight: 1.1, 
+                    fontSize: '0.85rem',
+                    fontStyle: 'italic',
+                    letterSpacing: '-0.2px'
                   }}
                 >
-                  Ubah Jadwal
-                </Button>
-              </Grid>
-            </Grid>
-          </form>
+                  Sudah punya jadwal?
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "rgba(255,255,255,0.4)",
+                    display: "block",
+                    fontSize: '0.7rem',
+                    fontWeight: 400,
+                    fontStyle: 'italic',
+                    letterSpacing: '-0.1px'
+                  }}
+                >
+                  Masukkan kode akses untuk mengubah.
+                </Typography>
+              </Box>
+            </Box>
+
+            <Box
+              component="form"
+              onSubmit={handleSearchSubmit}
+              sx={{
+                display: "flex",
+                flexGrow: 1,
+                gap: 1.5,
+                alignItems: "flex-start",
+              }}
+            >
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Kode Akses (6 digit)..."
+                value={searchCode}
+                onChange={(e) => {
+                  const val = e.target.value.slice(0, 6).toUpperCase();
+                  setSearchCode(val);
+                }}
+                error={searchStatus === "error"}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        {isSearching ? (
+                          <CircularProgress size={14} />
+                        ) : searchStatus === "success" ? (
+                          <CheckCircle2 size={14} color="#2ecc71" />
+                        ) : searchStatus === "error" ? (
+                          <XCircle size={14} color="#e74c3c" />
+                        ) : null}
+                      </InputAdornment>
+                    ),
+                    sx: {
+                      borderRadius: 2.5,
+                      textTransform: "uppercase",
+                      fontWeight: 500,
+                      fontSize: '0.85rem',
+                      fontStyle: 'italic',
+                      letterSpacing: '-0.3px',
+                      bgcolor: "rgba(0,0,0,0.3)",
+                      height: 38,
+                      "& fieldset": {
+                        borderColor: "rgba(255,255,255,0.1) !important",
+                      },
+                    },
+                  },
+                }}
+              />
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={searchStatus !== "success" || isSearching}
+                startIcon={<Edit2 size={14} />}
+                sx={{
+                  height: 38,
+                  px: 3,
+                  whiteSpace: 'nowrap',
+                  borderRadius: 2.5,
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  fontStyle: 'italic',
+                  letterSpacing: '-0.2px',
+                  boxShadow: searchStatus === "success" 
+                    ? "0 4px 12px 0 rgba(46, 204, 113, 0.2)" 
+                    : "none",
+                }}
+              >
+                Ubah Jadwal
+              </Button>
+            </Box>
+          </Box>
         </Paper>
       </motion.div>
 
