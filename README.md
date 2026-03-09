@@ -1,73 +1,46 @@
-# React + TypeScript + Vite
+# Sistem Reservasi Wawancara
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Selamat datang di aplikasi **Sistem Reservasi Wawancara**. Aplikasi ini dirancang untuk memudahkan pengaturan jadwal wawancara bagi peserta (Katekumen) dan pengelola (Admin) dalam sebuah kelompok atau kegiatan.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 📋 Fitur Utama
 
-## React Compiler
+### Untuk Peserta
+1. **Pendaftaran Mudah**: Pilih kelompok Anda, masukkan nama lengkap, dan pilih tanggal wawancara yang masih tersedia.
+2. **Verifikasi Nama**: Sistem secara otomatis mengecek apakah nama Anda sudah terdaftar dalam daftar peserta.
+3. **Tiket Digital**: Setelah berhasil mendaftar, Anda akan mendapatkan tiket digital yang berisi jadwal dan **Kode Akses**. Tiket ini bisa disimpan sebagai gambar (PNG).
+4. **Simpan ke Kalender**: Anda bisa langsung memasukkan jadwal wawancara ke Google Calendar atau kalender HP Anda.
+5. **Ubah Jadwal**: Salah pilih tanggal? Gunakan Kode Akses 6-digit Anda untuk mencari data Anda kembali dan mengubah jadwal ke tanggal lain.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Untuk Pengelola (Admin)
+1. **Atur Event**: Membuat kelompok baru, menentukan kapan pendaftaran dibuka, dan menyalin link pendaftaran.
+2. **Atur Jadwal**: Menentukan tanggal-tanggal wawancara dan kuota (jumlah maksimal peserta) per hari.
+3. **Daftar Peserta**: Memasukkan daftar nama yang diperbolehkan mendaftar (bisa langsung tempel/paste dari Excel).
+4. **Laporan & Rekap**: Melihat siapa saja yang sudah mendaftar dan mengunduh laporan dalam format PDF.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🚀 Cara Menjalankan Aplikasi (Untuk Pengembang)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Jika Anda ingin menjalankan aplikasi ini di komputer sendiri:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1. **Persiapan**: Pastikan Anda sudah menginstal [Node.js](https://nodejs.org/).
+2. **Instalasi**:
+   ```bash
+   npm install
+   ```
+3. **Pengaturan**: Buat file `.env` di folder utama dan masukkan kunci akses database Anda:
+   ```env
+   VITE_SUPABASE_URL=url_database_anda
+   VITE_SUPABASE_ANON_KEY=kunci_akses_anda
+   VITE_ADMIN_PASSWORD=kata_sandi_admin_pilihan_anda
+   ```
+4. **Jalankan**:
+   ```bash
+   npm run dev
+   ```
+   Buka alamat yang muncul di layar (biasanya `http://localhost:5173`) di browser Anda.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+*Dikembangkan untuk membantu proses administrasi yang lebih rapi dan transparan.*
