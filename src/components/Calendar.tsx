@@ -5,7 +5,6 @@ import type { Slot } from '../types';
 import { parseISO, startOfDay, format } from 'date-fns';
 import { useMemo } from 'react';
 
-// Use current app theme instead of local light theme
 interface Props {
   slots: Slot[];
   onSelect: (date: Date | null) => void;
@@ -39,7 +38,7 @@ export default function Calendar({ slots, onSelect, selected }: Props) {
     const { day, ...other } = props;
     if (!day) return <PickersDay {...other} day={day} />;
 
-    const dateStr = format(day as any, "yyyy-MM-dd");
+    const dateStr = format(day, "yyyy-MM-dd");
     const slot = slots.find((s) => s.date === dateStr);
 
     let dotColor = "transparent";
@@ -49,7 +48,7 @@ export default function Calendar({ slots, onSelect, selected }: Props) {
 
     return (
       <Badge
-        key={(day as any).toString()}
+        key={day.toString()}
         overlap="circular"
         badgeContent={
           slot ? (

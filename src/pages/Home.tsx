@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useTransition } from "react";
 import {
   Container,
   Typography,
@@ -35,7 +35,7 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import CountdownTimer from "../components/CountdownTimer";
 
 const motionContainer = {
@@ -350,6 +350,15 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
   );
 }
 
+interface ReservationSearch {
+  id: string;
+  slots: {
+    cohorts: {
+      unique_slug: string;
+    }
+  }
+}
+
 export default function Home() {
   const [cohorts, setCohorts] = useState<CohortWithSlots[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -369,7 +378,7 @@ export default function Home() {
       .from("reservations")
       .select("id")
       .eq("access_code", code.toUpperCase())
-      .single();
+      .maybeSingle();
 
     setIsSearching(false);
     if (error || !data) {
@@ -379,12 +388,16 @@ export default function Home() {
     }
   }, []);
 
+  const [, startTransitionSearch] = useTransition();
+
   // Auto-check code when it reaches 6 characters
   useEffect(() => {
     if (searchCode.length === 6) {
       checkCodeExists(searchCode);
     } else {
-      setSearchStatus("idle");
+      startTransitionSearch(() => {
+        setSearchStatus((prev) => prev !== "idle" ? "idle" : prev);
+      });
     }
   }, [searchCode, checkCodeExists]);
 
@@ -397,13 +410,14 @@ export default function Home() {
       .from("reservations")
       .select("*, slots(cohorts(unique_slug))")
       .eq("access_code", searchCode.toUpperCase())
-      .single();
+      .maybeSingle();
 
     setIsSearching(false);
     if (error || !data) {
       setSearchStatus("error");
     } else {
-      const slug = (data.slots as any).cohorts.unique_slug;
+      const reservation = data as unknown as ReservationSearch;
+      const slug = reservation.slots.cohorts.unique_slug;
       navigate(`/cohort/${slug}?edit=${searchCode.toUpperCase()}`);
     }
   };

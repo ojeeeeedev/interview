@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Container,
   Typography,
@@ -46,12 +46,65 @@ import { motion, AnimatePresence } from "framer-motion";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
+const TableSkeleton = ({ cols }: { cols: number }) => (
+  <TableBody>
+    {[1, 2, 3, 4, 5].map((row) => (
+      <TableRow key={row}>
+        {[...Array(cols)].map((_, col) => (
+          <TableCell key={col}>
+            <Skeleton variant="text" sx={{ bgcolor: 'rgba(255,255,255,0.05)' }} />
+          </TableCell>
+        ))}
+      </TableRow>
+    ))}
+  </TableBody>
+);
+
+interface ReservationExtended {
+  id: string;
+  user_name: string;
+  access_code: string;
+  created_at: string;
+  slot_id: string;
+  slots: {
+    date: string;
+    cohort_id: string;
+    cohorts: {
+      title: string;
+      nama_kelompok: string;
+    };
+  };
+}
+
+interface AllowedNameExtended {
+  id: string;
+  full_name: string;
+  cohort_id: string;
+  cohorts: {
+    title: string;
+    nama_kelompok: string;
+  };
+}
+
+interface SlotWithCohorts extends Slot {
+    cohorts: {
+        title: string;
+        nama_kelompok: string;
+    }
+}
+
+interface jsPDFWithAutoTable extends jsPDF {
+  lastAutoTable: {
+    finalY: number;
+  };
+}
+
 export default function Admin() {
   const [tab, setTab] = useState(0);
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
-  const [slots, setSlots] = useState<Slot[]>([]);
-  const [reservations, setReservations] = useState<any[]>([]);
-  const [allowedNames, setAllowedNames] = useState<any[]>([]);
+  const [slots, setSlots] = useState<SlotWithCohorts[]>([]);
+  const [reservations, setReservations] = useState<ReservationExtended[]>([]);
+  const [allowedNames, setAllowedNames] = useState<AllowedNameExtended[]>([]);
   const [selectedNameIds, setSelectedNameIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -98,19 +151,24 @@ export default function Admin() {
   });
   const [editingCohortId, setEditingCohortId] = useState<string | null>(null);
 
-  // Auto-generate slug (only when not editing)
-  useEffect(() => {
-    if (editingCohortId) return;
-
-    const generatedSlug = `${newCohort.nama_kelompok} ${newCohort.title}`
+  const generateSlug = (namaKelompok: string, title: string) => {
+    return `${namaKelompok} ${title}`
       .toLowerCase()
       .trim()
       .replace(/[^\w\s-]/g, "")
       .replace(/[\s_-]+/g, "-")
       .replace(/^-+|-+$/g, "");
+  };
 
-    setNewCohort((prev) => ({ ...prev, slug: generatedSlug }));
-  }, [newCohort.nama_kelompok, newCohort.title, editingCohortId]);
+  const handleCohortFieldChange = (field: keyof typeof newCohort, value: string) => {
+    setNewCohort((prev) => {
+      const updated = { ...prev, [field]: value };
+      if (!editingCohortId && (field === "nama_kelompok" || field === "title")) {
+        updated.slug = generateSlug(updated.nama_kelompok, updated.title);
+      }
+      return updated;
+    });
+  };
 
   const [newSlot, setNewSlot] = useState({
     cohort_id: "",
@@ -139,35 +197,33 @@ export default function Admin() {
     full_name: string;
   } | null>(null);
 
-  const fetchAll = async () => {
-    setLoading(true);
-    const { data: c } = await supabase
-      .from("cohorts")
-      .select("*")
-      .order("created_at", { ascending: false });
-    const { data: s } = await supabase
-      .from("slots")
-      .select("*, cohorts(title, nama_kelompok)");
-    const { data: r } = await supabase
-      .from("reservations")
-      .select("*, slots(date, cohort_id, cohorts(title, nama_kelompok))");
-    const { data: an } = await supabase
-      .from("allowed_names")
-      .select("*, cohorts(title, nama_kelompok)");
+  const fetchAll = useCallback(async () => {
+    // setLoading(true); // Redundant if called from useEffect on mount
+    const [
+        { data: c },
+        { data: s },
+        { data: r },
+        { data: an }
+    ] = await Promise.all([
+        supabase.from("cohorts").select("*").order("created_at", { ascending: false }),
+        supabase.from("slots").select("*, cohorts(title, nama_kelompok)"),
+        supabase.from("reservations").select("*, slots(date, cohort_id, cohorts(title, nama_kelompok))"),
+        supabase.from("allowed_names").select("*, cohorts(title, nama_kelompok)")
+    ]);
 
     if (c) setCohorts(c);
-    if (s) setSlots(s as any);
-    if (r) setReservations(r as any);
-    if (an) setAllowedNames(an as any);
+    if (s) setSlots(s as unknown as SlotWithCohorts[]);
+    if (r) setReservations(r as unknown as ReservationExtended[]);
+    if (an) setAllowedNames(an as unknown as AllowedNameExtended[]);
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     fetchAll();
-  }, []);
+  }, [fetchAll]);
 
   const groupedNames = useMemo(() => {
-    const groups: Record<string, any[]> = {};
+    const groups: Record<string, AllowedNameExtended[]> = {};
     allowedNames.forEach((an) => {
       const cohortTitle = an.cohorts?.title || "Tanpa Event";
       if (!groups[cohortTitle]) groups[cohortTitle] = [];
@@ -177,7 +233,7 @@ export default function Admin() {
   }, [allowedNames]);
 
   const reportData = useMemo(() => {
-    const cohortMap: Record<string, { cohort: Cohort; slots: Record<string, { slot: Slot; reservations: any[] }> }> = {};
+    const cohortMap: Record<string, { cohort: Cohort; slots: Record<string, { slot: Slot; reservations: ReservationExtended[] }> }> = {};
     
     cohorts.forEach(c => {
       cohortMap[c.id] = { cohort: c, slots: {} };
@@ -259,7 +315,7 @@ export default function Admin() {
         margin: { left: 14, right: 14 }
       });
 
-      currentY = (doc as any).lastAutoTable.finalY + 12;
+      currentY = (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 12;
     });
 
     if (!hasAnyData) {
@@ -531,20 +587,6 @@ export default function Admin() {
     showToast("Tautan berhasil disalin ke clipboard");
   };
 
-  const TableSkeleton = ({ cols }: { cols: number }) => (
-    <TableBody>
-      {[1, 2, 3, 4, 5].map((row) => (
-        <TableRow key={row}>
-          {[...Array(cols)].map((_, col) => (
-            <TableCell key={col}>
-              <Skeleton variant="text" sx={{ bgcolor: 'rgba(255,255,255,0.05)' }} />
-            </TableCell>
-          ))}
-        </TableRow>
-      ))}
-    </TableBody>
-  );
-
   return (
     <Container maxWidth="lg" sx={{ py: 0 }}>
       <motion.div
@@ -577,7 +619,7 @@ export default function Admin() {
           </Typography>
           <Tabs
             value={tab}
-            onChange={(_: any, v: number) => setTab(v)}
+            onChange={(_: React.SyntheticEvent, v: number) => setTab(v)}
             variant="scrollable"
             scrollButtons="auto"
             allowScrollButtonsMobile
@@ -650,11 +692,8 @@ export default function Admin() {
                                 ? "Nama kelompok wajib diisi"
                                 : ""
                             }
-                            onChange={(e: any) =>
-                              setNewCohort({
-                                ...newCohort,
-                                nama_kelompok: e.target.value,
-                              })
+                            onChange={(e) =>
+                              handleCohortFieldChange("nama_kelompok", e.target.value)
                             }
                           />
                           <TextField
@@ -668,11 +707,8 @@ export default function Admin() {
                                 ? "Judul event wajib diisi"
                                 : ""
                             }
-                            onChange={(e: any) =>
-                              setNewCohort({
-                                ...newCohort,
-                                title: e.target.value,
-                              })
+                            onChange={(e) =>
+                              handleCohortFieldChange("title", e.target.value)
                             }
                           />
                           <TextField
@@ -682,11 +718,8 @@ export default function Admin() {
                             multiline
                             rows={2}
                             value={newCohort.description}
-                            onChange={(e: any) =>
-                              setNewCohort({
-                                ...newCohort,
-                                description: e.target.value,
-                              })
+                            onChange={(e) =>
+                              handleCohortFieldChange("description", e.target.value)
                             }
                           />
                           <TextField
@@ -705,12 +738,8 @@ export default function Admin() {
                                 },
                               },
                             }}
-                            onChange={(e: any) =>
-                              editingCohortId &&
-                              setNewCohort({
-                                ...newCohort,
-                                slug: e.target.value,
-                              })
+                            onChange={(e) =>
+                              handleCohortFieldChange("slug", e.target.value)
                             }
                             helperText={
                               editingCohortId
@@ -725,11 +754,8 @@ export default function Admin() {
                             margin="normal"
                             slotProps={{ inputLabel: { shrink: true } }}
                             value={newCohort.start_at}
-                            onChange={(e: any) =>
-                              setNewCohort({
-                                ...newCohort,
-                                start_at: e.target.value,
-                              })
+                            onChange={(e) =>
+                              handleCohortFieldChange("start_at", e.target.value)
                             }
                             helperText="Opsional: Kosongkan jika ingin langsung dibuka"
                           />
@@ -740,11 +766,8 @@ export default function Admin() {
                             margin="normal"
                             slotProps={{ inputLabel: { shrink: true } }}
                             value={newCohort.end_at}
-                            onChange={(e: any) =>
-                              setNewCohort({
-                                ...newCohort,
-                                end_at: e.target.value,
-                              })
+                            onChange={(e) =>
+                              handleCohortFieldChange("end_at", e.target.value)
                             }
                             helperText="Opsional: Kosongkan jika tidak ada batas waktu"
                           />
@@ -797,11 +820,8 @@ export default function Admin() {
                       margin="normal"
                       placeholder="misal: Kelompok A"
                       value={newCohort.nama_kelompok}
-                      onChange={(e: any) =>
-                        setNewCohort({
-                          ...newCohort,
-                          nama_kelompok: e.target.value,
-                        })
+                      onChange={(e) =>
+                        handleCohortFieldChange("nama_kelompok", e.target.value)
                       }
                     />
                     <TextField
@@ -809,8 +829,8 @@ export default function Admin() {
                       label="Judul Event/Wawancara"
                       margin="normal"
                       value={newCohort.title}
-                      onChange={(e: any) =>
-                        setNewCohort({ ...newCohort, title: e.target.value })
+                      onChange={(e) =>
+                        handleCohortFieldChange("title", e.target.value)
                       }
                     />
                     <TextField
@@ -820,11 +840,8 @@ export default function Admin() {
                       multiline
                       rows={2}
                       value={newCohort.description}
-                      onChange={(e: any) =>
-                        setNewCohort({
-                          ...newCohort,
-                          description: e.target.value,
-                        })
+                      onChange={(e) =>
+                        handleCohortFieldChange("description", e.target.value)
                       }
                     />
                     <TextField
@@ -841,9 +858,8 @@ export default function Admin() {
                           },
                         },
                       }}
-                      onChange={(e: any) =>
-                        editingCohortId &&
-                        setNewCohort({ ...newCohort, slug: e.target.value })
+                      onChange={(e) =>
+                        handleCohortFieldChange("slug", e.target.value)
                       }
                       helperText={
                         editingCohortId
@@ -858,8 +874,8 @@ export default function Admin() {
                       margin="normal"
                       slotProps={{ inputLabel: { shrink: true } }}
                       value={newCohort.start_at}
-                      onChange={(e: any) =>
-                        setNewCohort({ ...newCohort, start_at: e.target.value })
+                      onChange={(e) =>
+                        handleCohortFieldChange("start_at", e.target.value)
                       }
                       helperText="Opsional: Kosongkan jika ingin langsung dibuka"
                     />
@@ -870,8 +886,8 @@ export default function Admin() {
                       margin="normal"
                       slotProps={{ inputLabel: { shrink: true } }}
                       value={newCohort.end_at}
-                      onChange={(e: any) =>
-                        setNewCohort({ ...newCohort, end_at: e.target.value })
+                      onChange={(e) =>
+                        handleCohortFieldChange("end_at", e.target.value)
                       }
                       helperText="Opsional: Kosongkan jika tidak ada batas waktu"
                     />
@@ -1080,7 +1096,7 @@ export default function Admin() {
                                 ? "Wajib pilih kelompok"
                                 : ""
                             }
-                            onChange={(e: any) => {
+                            onChange={(e) => {
                               setSelectedKelompok(e.target.value);
                               setNewSlot({ ...newSlot, cohort_id: "" });
                             }}
@@ -1107,7 +1123,7 @@ export default function Admin() {
                                 ? "Wajib pilih event"
                                 : ""
                             }
-                            onChange={(e: any) =>
+                            onChange={(e) =>
                               setNewSlot({
                                 ...newSlot,
                                 cohort_id: e.target.value,
@@ -1134,7 +1150,7 @@ export default function Admin() {
                                 ? "Wajib pilih tanggal"
                                 : ""
                             }
-                            onChange={(e: any) =>
+                            onChange={(e) =>
                               setNewSlot({ ...newSlot, date: e.target.value })
                             }
                           />
@@ -1154,7 +1170,7 @@ export default function Admin() {
                                 ? "Kuota minimal 1"
                                 : ""
                             }
-                            onChange={(e: any) =>
+                            onChange={(e) =>
                               setNewSlot({
                                 ...newSlot,
                                 quota: parseInt(e.target.value),
@@ -1192,7 +1208,7 @@ export default function Admin() {
                           ? "Wajib pilih kelompok"
                           : ""
                       }
-                      onChange={(e: any) => {
+                      onChange={(e) => {
                         setSelectedKelompok(e.target.value);
                         setNewSlot({ ...newSlot, cohort_id: "" });
                       }}
@@ -1219,7 +1235,7 @@ export default function Admin() {
                           ? "Wajib pilih event"
                           : ""
                       }
-                      onChange={(e: any) =>
+                      onChange={(e) =>
                         setNewSlot({ ...newSlot, cohort_id: e.target.value })
                       }
                     >
@@ -1241,7 +1257,7 @@ export default function Admin() {
                       helperText={
                         showErrors && !newSlot.date ? "Wajib pilih tanggal" : ""
                       }
-                      onChange={(e: any) =>
+                      onChange={(e) =>
                         setNewSlot({ ...newSlot, date: e.target.value })
                       }
                     />
@@ -1261,7 +1277,7 @@ export default function Admin() {
                           ? "Kuota minimal 1"
                           : ""
                       }
-                      onChange={(e: any) =>
+                      onChange={(e) =>
                         setNewSlot({
                           ...newSlot,
                           quota: parseInt(e.target.value),
@@ -1314,11 +1330,11 @@ export default function Admin() {
                               variant="body2"
                               sx={{ color: "#3498db", fontWeight: 600 }}
                             >
-                              {(s as any).cohorts?.nama_kelompok}
+                              {s.cohorts?.nama_kelompok}
                             </Typography>
                           </TableCell>
                           <TableCell sx={{ whiteSpace: "nowrap" }}>
-                            {(s as any).cohorts?.title}
+                            {s.cohorts?.title}
                           </TableCell>
                           <TableCell sx={{ whiteSpace: "nowrap" }}>
                             {s.date}

@@ -1,12 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
-
-interface AuthContextType {
-    isAdmin: boolean;
-    login: (password: string) => boolean;
-    logout: () => void;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import React, { useState } from 'react';
+import { AuthContext } from './AuthContext';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isAdmin, setIsAdmin] = useState<boolean>(() => {
@@ -32,12 +25,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             {children}
         </AuthContext.Provider>
     );
-};
-
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
 };

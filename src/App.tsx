@@ -5,7 +5,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { id } from "date-fns/locale";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider } from "./context/AuthProvider";
 import TopNav from "./components/TopNav";
 import Footer from "./components/Footer";
 
@@ -13,6 +13,7 @@ import Footer from "./components/Footer";
 const Home = lazy(() => import("./pages/Home"));
 const Landing = lazy(() => import("./pages/Landing"));
 const Admin = lazy(() => import("./pages/Admin"));
+const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 
 const theme = createTheme({
   palette: {
@@ -163,6 +164,7 @@ function App() {
                 }>
                   <Routes>
                     <Route path="/" element={<Home />} />
+                    <Route path="/login" element={<AdminLogin />} />
                     <Route path="/cohort/:slug" element={<Landing />} />
                     <Route
                       path="/admin"

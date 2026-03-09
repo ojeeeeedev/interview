@@ -10,7 +10,7 @@ import {
   TextField,
   DialogActions,
 } from "@mui/material";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Lock, Settings } from "lucide-react";
 

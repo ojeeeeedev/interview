@@ -1,4 +1,4 @@
-import { useState, useEffect, useActionState, useTransition } from "react";
+import { useState, useEffect, useActionState, useTransition, useCallback } from "react";
 import {
   Box,
   TextField,
@@ -58,8 +58,9 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
         setForceShowError(true);
       }, 10000);
       return () => clearTimeout(timer);
-    } else if (name.trim().length === 0 || isNameVerified) {
-      setForceShowError(false);
+    } else {
+        // Use a functional update to avoid synchronous setState in effect
+        setForceShowError((prev) => (prev ? false : prev));
     }
   }, [name, isNameVerified, nameCheckError]);
 
@@ -80,15 +81,14 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
 
   // Server-side check before allowing click
   useEffect(() => {
-    if (!name.trim() || name.length < 1) {
-      setIsNameVerified(false);
-      setNameCheckError(null);
-      return;
-    }
-
-    // Clear error immediately when name changes, unless it's a critical error
-    if (nameCheckError !== "Gagal memverifikasi nama") {
+    const trimmedName = name.trim();
+    if (!trimmedName || name.length < 1) {
+      // Use startTransition to avoid synchronous setState error
+      startTransition(() => {
+        setIsNameVerified(false);
         setNameCheckError(null);
+      });
+      return;
     }
 
     const timer = setTimeout(async () => {
@@ -98,7 +98,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
         .from("allowed_names")
         .select("id")
         .eq("cohort_id", cohortId)
-        .ilike("full_name", name.trim())
+        .ilike("full_name", trimmedName)
         .maybeSingle();
 
       if (error) {
@@ -106,7 +106,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
         setIsNameVerified(false);
       } else if (!data) {
         // Only show error if 4+ chars OR 10s timeout reached
-        if (name.trim().length >= 4 || forceShowError) {
+        if (trimmedName.length >= 4 || forceShowError) {
             setNameCheckError("Nama tidak terdaftar");
         }
         setIsNameVerified(false);
@@ -120,9 +120,9 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
     return () => clearTimeout(timer);
   }, [name, cohortId, forceShowError]);
 
-  const generateCode = () => {
+  const generateCode = useCallback(() => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
-  };
+  }, []);
 
   const bookingAction = async (_prevState: ActionState | null, formData: FormData): Promise<ActionState> => {
     const userName = formData.get("userName") as string;

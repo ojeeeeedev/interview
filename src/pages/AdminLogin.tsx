@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { Container, Box, Typography, TextField, Button, Paper, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 

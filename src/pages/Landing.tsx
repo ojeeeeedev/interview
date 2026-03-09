@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useLocation, Link, useNavigate } from "react-router-dom";
 import {
   Container,
@@ -17,9 +17,18 @@ import BookingForm from "../components/BookingForm";
 import SuccessTicket from "../components/SuccessTicket";
 import EditBooking from "../components/EditBooking";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import { Lock, ArrowLeft } from "lucide-react";
 import CountdownTimer from "../components/CountdownTimer";
+
+interface ReservationWithSlot {
+    id: string;
+    user_name: string;
+    access_code: string;
+    created_at: string;
+    slot_id: string;
+    slots: Slot;
+}
 
 export default function Landing() {
   const { slug } = useParams<{ slug: string }>();
@@ -34,11 +43,22 @@ export default function Landing() {
   const [successName, setSuccessName] = useState<string | null>(null);
   const [successDate, setSuccessDate] = useState<string | null>(null);
   const [successRawDate, setSuccessRawDate] = useState<Date | null>(null);
-  const [editingReservation, setEditingReservation] = useState<any>(null);
+  const [editingReservation, setEditingReservation] = useState<ReservationWithSlot | null>(null);
   const [now, setNow] = useState(new Date());
 
-  const fetchData = async () => {
-    setLoading(true);
+  const handleSearchCode = useCallback(async (codeToSearch: string) => {
+    const { data, error } = await supabase
+      .from("reservations")
+      .select("*, slots(*)")
+      .eq("access_code", codeToSearch.toUpperCase())
+      .maybeSingle();
+
+    if (!error && data) {
+      setEditingReservation(data as unknown as ReservationWithSlot);
+    }
+  }, []);
+
+  const fetchData = useCallback(async () => {
     const { data: cohortData, error: cohortError } = await supabase
       .from("cohorts")
       .select("*")
@@ -71,23 +91,15 @@ export default function Landing() {
     if (editCode) {
       handleSearchCode(editCode);
     }
-  };
+  }, [slug, location.search, handleSearchCode]);
 
   useEffect(() => {
-    fetchData();
-  }, [slug, location.search]);
-
-  const handleSearchCode = async (codeToSearch: string) => {
-    const { data, error } = await supabase
-      .from("reservations")
-      .select("*, slots(*)")
-      .eq("access_code", codeToSearch.toUpperCase())
-      .single();
-
-    if (!error && data) {
-      setEditingReservation(data);
+    let ignore = false;
+    if (!ignore) {
+        void fetchData();
     }
-  };
+    return () => { ignore = true; };
+  }, [fetchData]);
 
   if (loading)
     return (

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -6,8 +6,6 @@ import {
   Button,
   Box,
   Container,
-  Popover,
-  TextField,
   IconButton,
   Drawer,
   List,
@@ -20,9 +18,8 @@ import {
   useTheme,
 } from "@mui/material";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import {
-  Lock,
   Menu as MenuIcon,
   Home,
   LogOut,
@@ -30,43 +27,15 @@ import {
 } from "lucide-react";
 
 export default function TopNav() {
-  const { isAdmin, login, logout } = useAuth();
+  const { isAdmin, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
-  const passwordInputRef = useRef<HTMLInputElement>(null);
-
-  // Popover state
-  const [adminAnchorEl, setAdminAnchorEl] = useState<HTMLButtonElement | null>(
-    null,
-  );
-  const [password, setPassword] = useState("");
-  const [adminError, setAdminError] = useState(false);
-
   // Mobile Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const handleCloseLogin = () => {
-    setAdminAnchorEl(null);
-    setPassword("");
-    setAdminError(false);
-  };
-
-  const handleLoginSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (login(password)) {
-      handleCloseLogin();
-      setDrawerOpen(false); // Close mobile sidebar after login
-      navigate("/admin");
-    } else {
-      setAdminError(true);
-      passwordInputRef.current?.focus();
-    }
-  };
-
-  const isAdminOpen = Boolean(adminAnchorEl);
   const isActive = (path: string) => location.pathname === path;
 
   return (
@@ -236,6 +205,7 @@ export default function TopNav() {
                       onClick={() => {
                         logout();
                         setDrawerOpen(false);
+                        navigate("/");
                       }}
                       sx={{ borderRadius: 2 }}
                     >
@@ -287,7 +257,10 @@ export default function TopNav() {
                     Panel Admin
                   </Button>
                   <Button
-                    onClick={logout}
+                    onClick={() => {
+                        logout();
+                        navigate("/");
+                    }}
                     variant="contained"
                     color="error"
                     startIcon={<LogOut size={18} />}
@@ -298,84 +271,6 @@ export default function TopNav() {
               ) : null}
             </Box>
           )}
-
-          {/* Admin Login Popover */}
-          <Popover
-            open={isAdminOpen}
-            anchorEl={adminAnchorEl}
-            onClose={handleCloseLogin}
-            anchorOrigin={{
-              vertical: "bottom",
-              horizontal: "right",
-            }}
-            transformOrigin={{
-              vertical: "top",
-              horizontal: "right",
-            }}
-            TransitionProps={{
-              onEntered: () => {
-                passwordInputRef.current?.focus();
-              },
-            }}
-            PaperProps={{
-              sx: {
-                mt: 1.5,
-                p: 3,
-                width: { xs: "calc(100vw - 32px)", sm: 280 },
-                maxWidth: 280,
-                bgcolor: "#121212 !important",
-                border: "1px solid rgba(255,255,255,0.1)",
-                backgroundImage: "none",
-                borderRadius: 3,
-              },
-            }}
-          >
-            <form onSubmit={handleLoginSubmit}>
-              <Box
-                sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
-              >
-                <Lock size={16} color="#3498db" />
-                <Typography
-                  variant="subtitle2"
-                  sx={{ fontWeight: 800, color: "#ffffff" }}
-                >
-                  Admin Password
-                </Typography>
-              </Box>
-
-              <TextField
-                fullWidth
-                size="small"
-                type="password"
-                label="Password..."
-                inputRef={passwordInputRef}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                error={adminError}
-                sx={{ mb: 2 }}
-              />
-
-              {adminError && (
-                <Typography
-                  variant="caption"
-                  color="error"
-                  sx={{ display: "block", mb: 2, fontWeight: 600 }}
-                >
-                  Password salah!
-                </Typography>
-              )}
-
-              <Button
-                fullWidth
-                variant="contained"
-                type="submit"
-                size="large"
-                sx={{ py: 1.2 }}
-              >
-                Masuk
-              </Button>
-            </form>
-          </Popover>
         </Toolbar>
       </Container>
     </AppBar>
