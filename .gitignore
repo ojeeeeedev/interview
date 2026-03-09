@@ -24,7 +24,6 @@ dist-ssr
 *.sw?
 .codex/
 .cursor/
-.github/
 .zed/
 .gemini/
 gha-creds-*.json
