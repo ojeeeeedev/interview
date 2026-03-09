@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useTransition } from "react";
+import { useState, useEffect, useMemo, useTransition } from "react";
 import {
   Container,
   Typography,
@@ -372,7 +372,7 @@ export default function Home() {
     "idle" | "success" | "error"
   >("idle");
 
-  const checkCodeExists = useCallback(async (code: string) => {
+  const checkCodeExists = async (code: string) => {
     setIsSearching(true);
     const { data, error } = await supabase
       .from("reservations")
@@ -386,20 +386,9 @@ export default function Home() {
     } else {
       setSearchStatus("success");
     }
-  }, []);
+  };
 
   const [, startTransitionSearch] = useTransition();
-
-  // Auto-check code when it reaches 6 characters
-  useEffect(() => {
-    if (searchCode.length === 6) {
-      checkCodeExists(searchCode);
-    } else {
-      startTransitionSearch(() => {
-        setSearchStatus((prev) => prev !== "idle" ? "idle" : prev);
-      });
-    }
-  }, [searchCode, checkCodeExists]);
 
   const handleSearchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -564,6 +553,13 @@ export default function Home() {
                 onChange={(e) => {
                   const val = e.target.value.slice(0, 6).toUpperCase();
                   setSearchCode(val);
+                  if (val.length === 6) {
+                    void checkCodeExists(val);
+                  } else {
+                    startTransitionSearch(() => {
+                      setSearchStatus((prev) => prev !== "idle" ? "idle" : prev);
+                    });
+                  }
                 }}
                 error={searchStatus === "error"}
                 slotProps={{

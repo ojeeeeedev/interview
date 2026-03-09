@@ -1,4 +1,4 @@
-import { useState, useEffect, useActionState, useTransition, useCallback } from "react";
+import { useState, useEffect, useActionState, useTransition } from "react";
 import {
   Box,
   TextField,
@@ -59,8 +59,9 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
       }, 10000);
       return () => clearTimeout(timer);
     } else {
-        // Use a functional update to avoid synchronous setState in effect
-        setForceShowError((prev) => (prev ? false : prev));
+        // Defer to avoid synchronous setState in effect
+        const timer = setTimeout(() => setForceShowError(false), 0);
+        return () => clearTimeout(timer);
     }
   }, [name, isNameVerified, nameCheckError]);
 
@@ -120,10 +121,6 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
     return () => clearTimeout(timer);
   }, [name, cohortId, forceShowError]);
 
-  const generateCode = useCallback(() => {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-  }, []);
-
   const bookingAction = async (_prevState: ActionState | null, formData: FormData): Promise<ActionState> => {
     const userName = formData.get("userName") as string;
     const dateStr = formData.get("dateStr") as string;
@@ -164,7 +161,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
       return { error: "Tanggal yang dipilih tidak tersedia.", success: false };
     }
 
-    const code = generateCode();
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     const { error: bookError } = await supabase.rpc("book_reservation", {
       p_cohort_id: cohortId,
       p_slot_id: slot.id,

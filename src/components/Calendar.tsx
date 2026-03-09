@@ -21,6 +21,12 @@ export default function Calendar({ slots, onSelect, selected }: Props) {
     };
   }, [slots]);
 
+  const slotMap = useMemo(() => {
+    const map = new Map<string, Slot>();
+    slots.forEach(s => map.set(s.date, s));
+    return map;
+  }, [slots]);
+
   const getStatusColor = (slot: Slot) => {
     const ratio = slot.count / slot.quota;
     if (slot.count === slot.quota) return "#e74c3c";
@@ -31,15 +37,15 @@ export default function Calendar({ slots, onSelect, selected }: Props) {
   const selectionInfo = useMemo(() => {
     if (!selected) return null;
     const dateStr = format(selected, "yyyy-MM-dd");
-    return slots.find((s) => s.date === dateStr);
-  }, [selected, slots]);
+    return slotMap.get(dateStr);
+  }, [selected, slotMap]);
 
   const renderDay = (props: PickersDayProps) => {
     const { day, ...other } = props;
     if (!day) return <PickersDay {...other} day={day} />;
 
     const dateStr = format(day, "yyyy-MM-dd");
-    const slot = slots.find((s) => s.date === dateStr);
+    const slot = slotMap.get(dateStr);
 
     let dotColor = "transparent";
     if (slot) {
@@ -92,7 +98,7 @@ export default function Calendar({ slots, onSelect, selected }: Props) {
 
   const shouldDisableDate = (day: Date) => {
     const dateStr = format(day, "yyyy-MM-dd");
-    const slot = slots.find((s) => s.date === dateStr);
+    const slot = slotMap.get(dateStr);
     return !slot || slot.count >= slot.quota;
   };
 

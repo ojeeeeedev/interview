@@ -219,6 +219,7 @@ export default function Admin() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAll();
   }, [fetchAll]);
 
@@ -234,19 +235,22 @@ export default function Admin() {
 
   const reportData = useMemo(() => {
     const cohortMap: Record<string, { cohort: Cohort; slots: Record<string, { slot: Slot; reservations: ReservationExtended[] }> }> = {};
-    
+
     cohorts.forEach(c => {
       cohortMap[c.id] = { cohort: c, slots: {} };
     });
 
+    const slotLookup = new Map<string, SlotWithCohorts>();
+
     slots.forEach(s => {
+      slotLookup.set(s.id, s);
       if (cohortMap[s.cohort_id]) {
         cohortMap[s.cohort_id].slots[s.id] = { slot: s, reservations: [] };
       }
     });
 
     reservations.forEach(r => {
-      const slotObj = slots.find(sl => sl.id === r.slot_id);
+      const slotObj = slotLookup.get(r.slot_id);
       if (slotObj && cohortMap[slotObj.cohort_id] && cohortMap[slotObj.cohort_id].slots[r.slot_id]) {
         cohortMap[slotObj.cohort_id].slots[r.slot_id].reservations.push(r);
       }
@@ -254,7 +258,6 @@ export default function Admin() {
 
     return cohortMap;
   }, [cohorts, slots, reservations]);
-
   const downloadCohortPDF = (cohortId: string) => {
     const data = reportData[cohortId];
     if (!data) return;

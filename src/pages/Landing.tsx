@@ -96,6 +96,7 @@ export default function Landing() {
   useEffect(() => {
     let ignore = false;
     if (!ignore) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         void fetchData();
     }
     return () => { ignore = true; };
