@@ -932,7 +932,7 @@ export default function Admin() {
                 <Grid size={{ xs: 12, md: 8 }}>
                   <Box sx={{ mb: 2, px: 1 }}>
                     <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                      Daftar Event/Wawancara
+                      Daftar Event
                     </Typography>
                   </Box>
                   <TableContainer

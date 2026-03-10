@@ -70,7 +70,7 @@ export default function Footer() {
             mb: 1, // Reduced from 3
           }}
         >
-          © {new Date().getFullYear()} Subseksi Katekumen Dewasa
+          © {new Date().getFullYear()} Subseksi Katekumen Dewasa • v1.00
         </Typography>
 
         <Box sx={{ display: "flex", justifyContent: "center" }}>
@@ -89,7 +89,7 @@ export default function Footer() {
               fontWeight: 700,
               px: 2,
               py: 0.3, // Reduced vertical padding
-              minHeight: "auto",
+              minHeight: "32px", // Ensure button doesn't get too tall
               "&:hover": {
                 bgcolor: "rgba(52, 152, 219, 0.25)",
                 borderColor: "rgba(52, 152, 219, 0.6)",

@@ -132,6 +132,17 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
     format(selectedDate, "yyyy-MM-dd") === reservation.slots.date
   );
 
+  const maskName = (name: string) => {
+    if (!name) return "";
+    const parts = name.split(" ");
+    return parts
+      .map((part) => {
+        if (part.length <= 3) return part;
+        return part.slice(0, 3) + "*".repeat(part.length - 3);
+      })
+      .join(" ");
+  };
+
   return (
     <Stack spacing={2.5}>
       {/* Header Section */}
@@ -156,7 +167,7 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
             lineHeight: 1.1,
           }}
         >
-          Halo, {reservation.user_name}
+          Halo, {maskName(reservation.user_name)}
         </Typography>
       </Stack>
 
@@ -200,7 +211,7 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
               "&:hover": { bgcolor: "rgba(46, 204, 113, 0.1)" },
             }}
           >
-            Ke Kalender
+            Tambah Ke Kalender
           </Button>
         </Box>
         <Box

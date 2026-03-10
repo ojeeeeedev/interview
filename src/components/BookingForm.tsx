@@ -212,18 +212,6 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
     });
   };
 
-  const maskName = (name: string) => {
-    if (!name) return "";
-    const parts = name.split(" ");
-    return parts
-      .map((part) => {
-        if (part.length <= 2) return part;
-        if (part.length === 3) return part[0] + "*" + part[2];
-        return part[0] + "*".repeat(part.length - 2) + part[part.length - 1];
-      })
-      .join(" ");
-  };
-
   return (
     <Stack spacing={3} component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
       {(state?.error || nameCheckError) && (
@@ -284,11 +272,6 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
           inputValue={name}
           onInputChange={(_, newValue) => setName(newValue)}
           onChange={(_, newValue) => setName(newValue || "")}
-          renderOption={(props, option) => (
-            <li {...props} key={option}>
-              {maskName(option)}
-            </li>
-          )}
           slots={{
             paper: (props) => (
               <Paper

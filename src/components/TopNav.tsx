@@ -133,7 +133,7 @@ export default function TopNav() {
                   gap: 0.8
                 }}
               >
-                Katekumen Dewasa <span>•</span> Paroki St. Petrus Katedral <span>•</span> Bandung
+                Katekumen Dewasa <span>•</span> Paroki St. Petrus Katedral <span>•</span> Keuskupan Bandung
               </Typography>
             </Box>
           </Box>

@@ -285,6 +285,7 @@ export default function SuccessTicket({
                   py: 1,
                   borderRadius: 3,
                   fontWeight: 800,
+                  lineHeight: 1.4,
                   textTransform: "none",
                   fontSize: "0.8rem",
                   bgcolor: "rgba(46, 204, 113, 0.15)",
@@ -296,7 +297,7 @@ export default function SuccessTicket({
                   },
                 }}
               >
-                Ke Kalender
+                Tambah ke Kalender
               </Button>
             </Box>
 
