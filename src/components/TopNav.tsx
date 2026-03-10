@@ -100,19 +100,36 @@ export default function TopNav() {
                 }}
               />
             </Box>
-            <Typography
-              sx={{
-                color: "#ffffff",
-                fontWeight: 900,
-                fontSize: { xs: "1.2rem", sm: "1.5rem" },
-                letterSpacing: "-0.5px",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              Event Management System
-            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+              <Typography
+                sx={{
+                  color: "#ffffff",
+                  fontWeight: 900,
+                  fontSize: { xs: "1.1rem", sm: "1.3rem" },
+                  letterSpacing: "-0.5px",
+                  lineHeight: 1.1,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                Event Management System
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "rgba(255, 255, 255, 0.4)",
+                  fontWeight: 600,
+                  fontSize: { xs: "0.6rem", sm: "0.75rem" },
+                  letterSpacing: "0.2px",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                Katekumen Dewasa | Paroki St. Petrus Katedral | Bandung
+              </Typography>
+            </Box>
           </Box>
 
           {isMobile ? (
@@ -160,7 +177,7 @@ export default function TopNav() {
                           <Home size={20} />
                         </ListItemIcon>
                         <ListItemText
-                          primary="Daftar Event/Wawancara"
+                          primary="Daftar Event"
                           primaryTypographyProps={{ fontWeight: 700 }}
                         />
                       </ListItemButton>
@@ -233,7 +250,7 @@ export default function TopNav() {
                   border: "1px solid",
                 }}
               >
-                Daftar Event/Wawancara
+                Daftar Event
               </Button>
 
               {isAdmin ? (
