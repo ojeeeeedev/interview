@@ -55,7 +55,8 @@ export default function TopNav() {
         <Toolbar
           disableGutters
           sx={{
-            height: 64,
+            minHeight: { xs: 72, md: 80 },
+            height: { xs: 72, md: 80 },
             px: { xs: 2, md: 2 },
             bgcolor: "rgba(255, 255, 255, 0.03)",
             backdropFilter: "blur(10px)",
