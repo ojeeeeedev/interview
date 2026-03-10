@@ -108,7 +108,7 @@ export default function TopNav() {
                   fontWeight: 900,
                   fontSize: { xs: "1.1rem", sm: "1.3rem" },
                   letterSpacing: "-0.5px",
-                  lineHeight: 1.1,
+                  lineHeight: 1,
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -121,14 +121,19 @@ export default function TopNav() {
                 sx={{
                   color: "rgba(255, 255, 255, 0.4)",
                   fontWeight: 600,
-                  fontSize: { xs: "0.6rem", sm: "0.75rem" },
+                  fontSize: { xs: "0.6rem", sm: "0.7rem" },
                   letterSpacing: "0.2px",
+                  mt: 0.5,
+                  lineHeight: 1,
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.8
                 }}
               >
-                Katekumen Dewasa | Paroki St. Petrus Katedral | Bandung
+                Katekumen Dewasa <span>•</span> Paroki St. Petrus Katedral <span>•</span> Bandung
               </Typography>
             </Box>
           </Box>
