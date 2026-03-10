@@ -246,7 +246,7 @@ export default function SuccessTicket({
                 fontWeight: 800,
               }}
             >
-              Sistem Reservasi Wawancara
+              Sistem Manajemen Event
               <br />
               Katekumen Dewasa
               <br />

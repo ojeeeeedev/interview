@@ -225,14 +225,16 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
                     width: { xs: '100%', md: 'auto' },
                     minWidth: 100,
                     borderRadius: 2,
+                    fontSize: '0.8rem',
                     fontWeight: 700,
+                    lineHeight: 1.4,
                     textTransform: 'none',
                     background: canAccess ? '#3498db' : 'rgba(255,255,255,0.05)',
                     '&:hover': { background: '#2980b9' },
                     '&.Mui-disabled': { color: 'rgba(255,255,255,0.15)' }
                   }}
                 >
-                  {isAdmin && !isStarted ? "Kelola" : isEnded ? "Selesai" : "Daftar"}
+                  {isAdmin && !isStarted ? "Daftar (Admin)" : isEnded ? "Selesai" : "Daftar"}
                 </Button>
               ) : (
                 <Typography 
@@ -573,7 +575,7 @@ export default function Home() {
                       fontSize: "0.9rem",
                     }}
                   >
-                    Wawancara yang belum terjadwal ({unscheduled.length})
+                    Event yang belum terjadwal ({unscheduled.length})
                   </Typography>
                 </Box>
               </AccordionSummary>

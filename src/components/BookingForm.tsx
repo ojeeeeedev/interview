@@ -212,6 +212,18 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
     });
   };
 
+  const maskName = (name: string) => {
+    if (!name) return "";
+    const parts = name.split(" ");
+    return parts
+      .map((part) => {
+        if (part.length <= 2) return part;
+        if (part.length === 3) return part[0] + "*" + part[2];
+        return part[0] + "*".repeat(part.length - 2) + part[part.length - 1];
+      })
+      .join(" ");
+  };
+
   return (
     <Stack spacing={3} component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
       {(state?.error || nameCheckError) && (
@@ -219,7 +231,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
           <Alert
             severity="error"
             sx={{ 
-              borderRadius: 3, 
+              borderRadius: "12px", 
               border: "1px solid rgba(231, 76, 60, 0.2)",
               bgcolor: 'rgba(231, 76, 60, 0.05)',
               color: '#ff8a80',
@@ -272,15 +284,21 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
           inputValue={name}
           onInputChange={(_, newValue) => setName(newValue)}
           onChange={(_, newValue) => setName(newValue || "")}
+          renderOption={(props, option) => (
+            <li {...props} key={option}>
+              {maskName(option)}
+            </li>
+          )}
           slots={{
             paper: (props) => (
               <Paper
                 {...props}
                 sx={{
-                  bgcolor: "#1a1a1a !important",
+                  bgcolor: "rgba(25, 25, 25, 0.95) !important",
+                  backdropFilter: "blur(16px)",
                   border: "1px solid rgba(255,255,255,0.1)",
                   mt: 1,
-                  borderRadius: 3,
+                  borderRadius: "12px",
                   boxShadow: "0 12px 40px rgba(0,0,0,0.8)",
                   backgroundImage: "none",
                   "& .MuiAutocomplete-option": {
@@ -319,7 +337,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
                   ),
                   sx: { 
                     bgcolor: "rgba(0,0,0,0.2)", 
-                    borderRadius: 3,
+                    borderRadius: "12px",
                     fontSize: '0.95rem',
                     border: isNameVerified ? "1px solid rgba(46, 204, 113, 0.3)" : "1px solid rgba(255,255,255,0.1)",
                     "& fieldset": { border: 'none' },
@@ -362,7 +380,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
 
       <Box sx={{ pt: 2, textAlign: "center" }}>
         <motion.div 
-          whileHover={!isPending && selectedDate && isNameVerified ? { scale: 1.02 } : {}} 
+          whileHover={!isPending && selectedDate && isNameVerified ? { scale: 1.02, y: -4 } : {}} 
           whileTap={!isPending && selectedDate && isNameVerified ? { scale: 0.98 } : {}}
         >
           <Button
@@ -373,8 +391,8 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
             fullWidth
             startIcon={isPending ? <CircularProgress size={20} color="inherit" /> : null}
             sx={{
-              py: 2,
-              borderRadius: 3,
+              height: 56, // Slightly taller for primary action
+              borderRadius: "12px",
               bgcolor: "#3498db",
               fontWeight: 900,
               fontSize: "1rem",
@@ -397,21 +415,21 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
         onClose={() => !isPending && setConfirmOpen(false)}
         PaperProps={{
           className: "refined-card",
-          sx: { p: 1 },
+          sx: { p: 1, borderRadius: "12px" },
         }}
       >
         <DialogTitle sx={{ fontWeight: 800, color: "#ffffff" }}>
           Konfirmasi Jadwal
         </DialogTitle>
         <DialogContent>
-          <DialogContentText sx={{ color: "rgba(255,255,255,0.7)", mb: 2 }}>
+          <DialogContentText sx={{ color: "rgba(255,255,255,0.4)", mb: 2 }}>
             Apakah Anda yakin ingin menjadwalkan wawancara pada:
           </DialogContentText>
           <Box
             sx={{
               bgcolor: "rgba(52, 152, 219, 0.1)",
-              p: 2,
-              borderRadius: 2,
+              p: 2.5,
+              borderRadius: "12px",
               border: "1px solid rgba(52, 152, 219, 0.3)",
             }}
           >
@@ -431,7 +449,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
           <Button
             onClick={() => setConfirmOpen(false)}
             disabled={isPending}
-            sx={{ color: "rgba(255,255,255,0.5)", fontWeight: 700 }}
+            sx={{ color: "rgba(255,255,255,0.4)", fontWeight: 700, height: 40 }}
           >
             Batal
           </Button>
@@ -440,7 +458,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
             variant="contained"
             color="primary"
             disabled={isPending}
-            sx={{ fontWeight: 800, px: 3 }}
+            sx={{ fontWeight: 800, px: 3, height: 40 }}
           >
             Ya, Jadwalkan
           </Button>

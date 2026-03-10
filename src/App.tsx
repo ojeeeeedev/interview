@@ -19,20 +19,20 @@ const theme = createTheme({
   palette: {
     mode: "dark",
     primary: {
-      main: "#3498db", // Retaining Action Blue
+      main: "#3498db", // Action Blue
       contrastText: "#ffffff",
     },
     background: {
-      default: "#000000", // Pure Black Background
-      paper: "#121212", // Very Dark Grey Surface
+      default: "#000000", // Pure Black
+      paper: "#121212", // Surface
     },
     text: {
-      primary: "#ffffff", // Crisp White
-      secondary: "rgba(255, 255, 255, 0.7)", // Improved Contrast
+      primary: "#ffffff", // White
+      secondary: "rgba(255, 255, 255, 0.4)", // Muted Gray
     },
-    success: { main: "#2ecc71" },
+    success: { main: "#2ecc71" }, // Success Green
+    error: { main: "#e74c3c" }, // Error Red
     warning: { main: "#f39c12" },
-    error: { main: "#e74c3c" },
   },
   typography: {
     fontFamily: '"Plus Jakarta Sans", "Inter", sans-serif',
@@ -40,7 +40,9 @@ const theme = createTheme({
     h2: { fontWeight: 800, color: "#ffffff", letterSpacing: "-0.5px" },
     h3: { fontWeight: 700, color: "#ffffff" },
     h4: { fontWeight: 700, color: "#ffffff" },
+    h6: { fontWeight: 700, color: "#ffffff" },
     button: { fontWeight: 700, textTransform: "none", letterSpacing: "0.2px" },
+    caption: { fontWeight: 800, letterSpacing: "0.5px" },
   },
   shape: {
     borderRadius: 12,
@@ -50,16 +52,17 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 12,
+          height: 48,
           padding: "10px 24px",
           boxShadow: "none",
           textTransform: "none",
           fontWeight: 700,
           backdropFilter: "blur(8px)",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          transition: "all 0.2s ease-in-out",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          transition: "all 0.4s cubic-bezier(0.23, 1, 0.32, 1)",
           "&:hover": {
             boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-            transform: "translateY(-1px)",
+            transform: "translateY(-4px)",
             borderColor: "rgba(255, 255, 255, 0.2)",
           },
         },
@@ -94,22 +97,16 @@ const theme = createTheme({
             borderColor: "rgba(255, 255, 255, 0.4)",
           },
         },
-        text: {
-          backgroundColor: "transparent",
-          border: "1px solid transparent",
-          "&:hover": {
-            backgroundColor: "rgba(255, 255, 255, 0.05)",
-            borderColor: "rgba(255, 255, 255, 0.1)",
-          },
-        },
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 12,
           backgroundImage: "none",
-          border: "1px solid rgba(255,255,255,0.1)",
+          backgroundColor: "rgba(25, 25, 25, 0.6)",
+          backdropFilter: "blur(12px)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
         },
       },
     },
@@ -117,13 +114,13 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           "& .MuiOutlinedInput-root": {
-            borderRadius: 8,
+            borderRadius: 12,
             backgroundColor: "rgba(255, 255, 255, 0.05)",
             "& fieldset": {
-              borderColor: "rgba(255, 255, 255, 0.2)",
+              borderColor: "rgba(255, 255, 255, 0.1)",
             },
             "&:hover fieldset": {
-              borderColor: "rgba(255, 255, 255, 0.3)",
+              borderColor: "rgba(255, 255, 255, 0.2)",
             },
           },
         },
@@ -132,9 +129,10 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: "#000000", // Black Nav
+          backgroundColor: "rgba(0, 0, 0, 0.8)",
+          backdropFilter: "blur(12px)",
           backgroundImage: "none",
-          boxShadow: "0 1px 0px rgba(255,255,255,0.1)", // Border-like shadow
+          boxShadow: "0 1px 0px rgba(255,255,255,0.08)",
         },
       },
     },

@@ -105,7 +105,7 @@ export default function Landing() {
   if (loading)
     return (
       <Container maxWidth="md" sx={{ py: 4, display: "flex", justifyContent: 'center' }}>
-        <Paper className="refined-card" sx={{ p: { xs: 2, sm: 3, md: 4 }, width: "100%", maxWidth: '450px', bgcolor: 'rgba(255,255,255,0.02) !important' }}>
+        <Paper className="refined-card" sx={{ p: { xs: 3, sm: 4, md: 5 }, width: "100%", maxWidth: '450px' }}>
           <Stack spacing={2}>
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
               <Skeleton variant="text" width={100} height={20} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }} />
@@ -114,10 +114,10 @@ export default function Landing() {
             <Divider sx={{ opacity: 0.1 }} />
             <Box sx={{ pt: 2 }}>
               <Skeleton variant="text" width="60%" height={24} sx={{ mb: 1, bgcolor: 'rgba(255,255,255,0.05)' }} />
-              <Skeleton variant="rectangular" width="100%" height={56} sx={{ mb: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.05)' }} />
+              <Skeleton variant="rectangular" width="100%" height={56} sx={{ mb: 2, borderRadius: "12px", bgcolor: 'rgba(255,255,255,0.05)' }} />
               <Skeleton variant="text" width="40%" height={24} sx={{ mb: 1, bgcolor: 'rgba(255,255,255,0.05)' }} />
-              <Skeleton variant="rectangular" width="100%" height={56} sx={{ mb: 3, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.05)' }} />
-              <Skeleton variant="rectangular" width="100%" height={48} sx={{ borderRadius: 3, bgcolor: 'rgba(255,255,255,0.05)' }} />
+              <Skeleton variant="rectangular" width="100%" height={56} sx={{ mb: 3, borderRadius: "12px", bgcolor: 'rgba(255,255,255,0.05)' }} />
+              <Skeleton variant="rectangular" width="100%" height={48} sx={{ borderRadius: "12px", bgcolor: 'rgba(255,255,255,0.05)' }} />
             </Box>
           </Stack>
         </Paper>
@@ -127,7 +127,7 @@ export default function Landing() {
   if (error)
     return (
       <Container sx={{ mt: 5 }}>
-        <Alert severity="error">{error}</Alert>
+        <Alert severity="error" sx={{ borderRadius: "12px" }}>{error}</Alert>
       </Container>
     );
 
@@ -139,7 +139,7 @@ export default function Landing() {
     return (
       <Container maxWidth="sm" sx={{ py: 12 }}>
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
-          <Paper className="refined-card" sx={{ p: 6, textAlign: 'center', bgcolor: 'rgba(255,255,255,0.02) !important' }}>
+          <Paper className="refined-card" sx={{ p: 6, textAlign: 'center' }}>
             <Box sx={{ 
               width: 80, 
               height: 80, 
@@ -154,7 +154,7 @@ export default function Landing() {
               <Lock size={40} color="#e74c3c" />
             </Box>
             <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>Pendaftaran Ditutup</Typography>
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mb: 4 }}>
+            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)', mb: 4 }}>
               Pendaftaran untuk Kelompok {cohort.nama_kelompok} ({cohort.title}) telah berakhir pada:
               <br />
               <strong>{new Date(cohort.end_at!).toLocaleString("id-ID", { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</strong>
@@ -165,7 +165,7 @@ export default function Landing() {
               to="/" 
               variant="outlined" 
               startIcon={<ArrowLeft size={18} />}
-              sx={{ borderRadius: 3, px: 4 }}
+              sx={{ borderRadius: "12px", px: 4, color: 'rgba(255,255,255,0.6)' }}
             >
               Kembali ke Beranda
             </Button>
@@ -179,7 +179,7 @@ export default function Landing() {
     return (
       <Container maxWidth="sm" sx={{ py: 12 }}>
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
-          <Paper className="refined-card" sx={{ p: 6, textAlign: 'center', bgcolor: 'rgba(255,255,255,0.02) !important' }}>
+          <Paper className="refined-card" sx={{ p: 6, textAlign: 'center' }}>
             <Box sx={{ 
               width: 80, 
               height: 80, 
@@ -194,7 +194,7 @@ export default function Landing() {
               <Lock size={40} color="#3498db" />
             </Box>
             <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>Akses Belum Dibuka</Typography>
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mb: 4 }}>
+            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)', mb: 4 }}>
               Pendaftaran untuk Kelompok {cohort.nama_kelompok} ({cohort.title}) segera dibuka:
             </Typography>
             
@@ -212,7 +212,7 @@ export default function Landing() {
               to="/" 
               variant="outlined" 
               startIcon={<ArrowLeft size={18} />}
-              sx={{ borderRadius: 3, px: 4 }}
+              sx={{ borderRadius: "12px", px: 4, color: 'rgba(255,255,255,0.6)' }}
             >
               Kembali ke Beranda
             </Button>
@@ -224,7 +224,7 @@ export default function Landing() {
 
   if (successCode)
     return (
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -263,7 +263,6 @@ export default function Landing() {
           sx={{ 
             p: { xs: 3, sm: 4, md: 5 }, 
             width: "100%", 
-            bgcolor: 'rgba(255,255,255,0.02) !important', 
             position: 'relative',
             boxShadow: '0 20px 50px rgba(0,0,0,0.5) !important'
           }}
@@ -293,10 +292,10 @@ export default function Landing() {
                 >
                   KELOMPOK {cohort?.nama_kelompok?.toUpperCase()}
                 </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 800, fontSize: { xs: '1.5rem', sm: '2rem' }, lineHeight: 1.1 }}>
+                <Typography variant="h4" sx={{ fontWeight: 800, fontSize: { xs: '1.5rem', sm: '2rem' }, lineHeight: 1.1, letterSpacing: '-0.5px' }}>
                   {cohort?.title}
                 </Typography>
-                <Typography variant="body2" sx={{ mt: 1.5, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
+                <Typography variant="body2" sx={{ mt: 1.5, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
                   Silakan isi formulir di bawah ini untuk mengonfirmasi kehadiran Anda pada jadwal yang tersedia.
                 </Typography>
               </Box>
@@ -307,8 +306,8 @@ export default function Landing() {
                 <Box
                   sx={{
                     px: 3,
-                    py: 1.5,
-                    borderRadius: 3,
+                    py: 2,
+                    borderRadius: "12px",
                     bgcolor: "rgba(231, 76, 60, 0.05)",
                     border: "1px solid rgba(231, 76, 60, 0.15)",
                     display: "flex",
@@ -326,14 +325,14 @@ export default function Landing() {
                       color: "#e74c3c",
                     }}
                   >
-                    Berakhir Dalam:
+                    Berakhir:
                   </Typography>
                   <CountdownTimer
                     targetDate={cohort.end_at}
                     onFinish={() => setNow(new Date())}
                     small
                     showTarget
-                    targetLabel="BATAS PENDAFTARAN"
+                    targetLabel="BATAS"
                   />
                 </Box>
               )}

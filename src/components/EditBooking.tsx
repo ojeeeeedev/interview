@@ -165,22 +165,22 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
       {error && (
         <Alert
           severity="error"
-          sx={{ borderRadius: 2, border: "1px solid rgba(231, 76, 60, 0.3)" }}
+          sx={{ borderRadius: "12px", border: "1px solid rgba(231, 76, 60, 0.3)" }}
         >
           {error}
         </Alert>
       )}
 
       {/* Current Schedule Info */}
-      <Stack spacing={1}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      <Stack spacing={1.5}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', px: 0.5 }}>
           <Typography
             variant="subtitle2"
             sx={{
               fontWeight: 800,
-              color: "rgba(255,255,255,0.6)",
+              color: "rgba(255,255,255,0.4)",
               textTransform: "uppercase",
-              fontSize: "0.75rem",
+              fontSize: "0.7rem",
               letterSpacing: "1px",
             }}
           >
@@ -200,18 +200,18 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
               "&:hover": { bgcolor: "rgba(46, 204, 113, 0.1)" },
             }}
           >
-            Simpan ke Kalender
+            Ke Kalender
           </Button>
         </Box>
         <Box
           sx={{
-            p: 2,
-            bgcolor: "rgba(52, 152, 219, 0.05)",
-            borderRadius: 2,
+            p: 2.5,
+            bgcolor: "rgba(52, 152, 219, 0.08)",
+            borderRadius: "12px",
             border: "1px solid rgba(52, 152, 219, 0.2)",
           }}
         >
-          <Typography variant="h6" sx={{ fontWeight: 800, color: "#ffffff" }}>
+          <Typography variant="h6" sx={{ fontWeight: 800, color: "#ffffff", letterSpacing: '-0.3px' }}>
             {format(parseISO(reservation.slots.date), "EEEE, d MMMM yyyy", {
               locale: id,
             })}
@@ -228,16 +228,17 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
         PaperProps={{
           sx: {
             mt: 0.5,
-            bgcolor: "#1a1a1a",
-            border: "1px solid rgba(255,255,255,0.1)",
+            bgcolor: "rgba(25, 25, 25, 0.95)",
+            backdropFilter: 'blur(12px)',
+            border: "1px solid rgba(255,255,255,0.08)",
             boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-            borderRadius: 3,
-            minWidth: 180,
+            borderRadius: "12px",
+            minWidth: 200,
             "& .MuiMenuItem-root": {
-              py: 1,
-              px: 1.5,
+              py: 1.5,
+              px: 2,
               fontSize: '0.85rem',
-              color: "rgba(255,255,255,0.8)",
+              color: "rgba(255,255,255,0.7)",
               "&:hover": {
                 bgcolor: "rgba(255,255,255,0.05)",
                 color: "#fff",
@@ -261,15 +262,16 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
       </Menu>
 
       {/* Date Selection */}
-      <Stack spacing={1}>
+      <Stack spacing={1.5}>
         <Typography
           variant="subtitle2"
           sx={{
             fontWeight: 800,
-            color: "rgba(255,255,255,0.6)",
+            color: "rgba(255,255,255,0.4)",
             textTransform: "uppercase",
-            fontSize: "0.75rem",
+            fontSize: "0.7rem",
             letterSpacing: "1px",
+            px: 0.5
           }}
         >
           Pilih Tanggal Baru
@@ -284,21 +286,21 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
       {/* Action Buttons */}
       <Stack spacing={2} sx={{ pt: 1 }}>
         <motion.div
-          whileHover={!isSameDate ? { scale: 1.02 } : {}}
+          whileHover={!isSameDate ? { scale: 1.02, y: -4 } : {}}
           whileTap={!isSameDate ? { scale: 0.98 } : {}}
         >
           <Button
             variant="contained"
             fullWidth
-            startIcon={<RefreshCcw size={18} />}
+            startIcon={loading ? <RefreshCcw size={18} className="animate-spin" /> : <RefreshCcw size={18} />}
             onClick={() => setConfirmOpen(true)}
             disabled={loading || !selectedDate || isSameDate}
             sx={{
-              py: 1.5,
-              borderRadius: 2.5,
+              height: 56,
+              borderRadius: "12px",
               fontWeight: 800,
               bgcolor: "#3498db",
-              fontSize: "0.9rem",
+              fontSize: "1rem",
               textTransform: "none",
             }}
           >
@@ -313,13 +315,12 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
             startIcon={<ArrowLeft size={18} />}
             fullWidth
             sx={{
-              py: 1.2,
-              borderRadius: 2.5,
+              height: 48,
+              borderRadius: "12px",
               color: "rgba(255,255,255,0.5)",
               borderColor: "rgba(255,255,255,0.1)",
               fontWeight: 700,
               textTransform: "none",
-              border: "1px solid",
               "&:hover": {
                 borderColor: "rgba(255,255,255,0.3)",
                 bgcolor: "rgba(255,255,255,0.02)",
@@ -337,19 +338,20 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
             startIcon={<Trash2 size={18} />}
             fullWidth
             sx={{
-              py: 1.2,
-              borderRadius: 2.5,
+              height: 48,
+              borderRadius: "12px",
               fontWeight: 700,
               textTransform: "none",
-              border: "1px solid",
-              opacity: 0.8,
+              borderColor: "rgba(231, 76, 60, 0.2)",
+              color: "rgba(231, 76, 60, 0.6)",
               "&:hover": {
-                opacity: 1,
+                borderColor: "#e74c3c",
                 bgcolor: "rgba(231, 76, 60, 0.05)",
+                color: "#e74c3c",
               },
             }}
           >
-            Hapus Reservasi
+            Hapus
           </Button>
         </Box>
       </Stack>
@@ -357,24 +359,24 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
       {/* Update Confirmation Dialog */}
       <Dialog
         open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
+        onClose={() => !loading && setConfirmOpen(false)}
         PaperProps={{
           className: "refined-card",
-          sx: { p: 1 },
+          sx: { p: 1, borderRadius: "12px" },
         }}
       >
         <DialogTitle sx={{ fontWeight: 800, color: "#ffffff" }}>
           Konfirmasi Perubahan
         </DialogTitle>
         <DialogContent>
-          <DialogContentText sx={{ color: "rgba(255,255,255,0.7)", mb: 2 }}>
+          <DialogContentText sx={{ color: "rgba(255,255,255,0.4)", mb: 2 }}>
             Apakah Anda yakin ingin memindahkan jadwal wawancara ke tanggal:
           </DialogContentText>
           <Box
             sx={{
               bgcolor: "rgba(52, 152, 219, 0.1)",
-              p: 2,
-              borderRadius: 2,
+              p: 2.5,
+              borderRadius: "12px",
               border: "1px solid rgba(52, 152, 219, 0.3)",
             }}
           >
@@ -387,7 +389,8 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
         <DialogActions sx={{ p: 3, pt: 1 }}>
           <Button
             onClick={() => setConfirmOpen(false)}
-            sx={{ color: "rgba(255,255,255,0.5)", fontWeight: 700 }}
+            disabled={loading}
+            sx={{ color: "rgba(255,255,255,0.4)", fontWeight: 700, height: 40 }}
           >
             Batal
           </Button>
@@ -395,7 +398,8 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
             onClick={handleUpdate}
             variant="contained"
             color="primary"
-            sx={{ fontWeight: 800, px: 3 }}
+            disabled={loading}
+            sx={{ fontWeight: 800, px: 3, height: 40 }}
           >
             Ya, Perbarui
           </Button>
@@ -405,17 +409,17 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteConfirmOpen}
-        onClose={() => setDeleteConfirmOpen(false)}
+        onClose={() => !loading && setDeleteConfirmOpen(false)}
         PaperProps={{
           className: "refined-card",
-          sx: { p: 1 },
+          sx: { p: 1, borderRadius: "12px" },
         }}
       >
         <DialogTitle sx={{ fontWeight: 800, color: "#e74c3c" }}>
           Hapus Reservasi
         </DialogTitle>
         <DialogContent>
-          <DialogContentText sx={{ color: "rgba(255,255,255,0.7)" }}>
+          <DialogContentText sx={{ color: "rgba(255,255,255,0.4)" }}>
             Apakah Anda yakin ingin menghapus reservasi ini? Tindakan ini tidak
             dapat dibatalkan dan slot Anda akan dikosongkan untuk orang lain.
           </DialogContentText>
@@ -423,7 +427,8 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
         <DialogActions sx={{ p: 3, pt: 1 }}>
           <Button
             onClick={() => setDeleteConfirmOpen(false)}
-            sx={{ color: "rgba(255,255,255,0.5)", fontWeight: 700 }}
+            disabled={loading}
+            sx={{ color: "rgba(255,255,255,0.4)", fontWeight: 700, height: 40 }}
           >
             Batal
           </Button>
@@ -431,7 +436,8 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
             onClick={handleDelete}
             variant="contained"
             color="error"
-            sx={{ fontWeight: 800, px: 3 }}
+            disabled={loading}
+            sx={{ fontWeight: 800, px: 3, height: 40 }}
           >
             Ya, Hapus
           </Button>

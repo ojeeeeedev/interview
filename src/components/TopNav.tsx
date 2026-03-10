@@ -111,7 +111,7 @@ export default function TopNav() {
                 textOverflow: "ellipsis",
               }}
             >
-              Sistem Reservasi
+              Event Management System
             </Typography>
           </Box>
 

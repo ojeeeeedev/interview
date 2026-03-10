@@ -43,7 +43,7 @@ export default function AdminLogin() {
                     </Box>
                     <Typography variant="h4" gutterBottom sx={{ fontWeight: 800 }}>Admin Masuk</Typography>
                     <Typography variant="body1" color="textSecondary" sx={{ mb: 4 }}>
-                        Sistem Wawancara - Akses Panel
+                        Sistem Manajemen Event - Akses Panel
                     </Typography>
 
                     {error && <Alert severity="error" sx={{ mb: 4, textAlign: 'left' }}>{error}</Alert>}
