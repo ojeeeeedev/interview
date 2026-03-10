@@ -70,11 +70,7 @@ export default function Footer() {
             mb: 1, // Reduced from 3
           }}
         >
-          Subseksi Katekumen Dewasa
-          <br />
-          Paroki St. Petrus - Katedral
-          <br />
-          Keuskupan Bandung
+          © {new Date().getFullYear()} Subseksi Katekumen Dewasa
         </Typography>
 
         <Box sx={{ display: "flex", justifyContent: "center" }}>
