@@ -101,14 +101,14 @@ export default function TopNav() {
                 }}
               />
             </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0, py: 0.5 }}>
               <Typography
                 sx={{
                   color: "#ffffff",
                   fontWeight: 900,
                   fontSize: { xs: "1.1rem", sm: "1.3rem" },
                   letterSpacing: "-0.5px",
-                  lineHeight: 1.2,
+                  lineHeight: 1.4,
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -123,8 +123,8 @@ export default function TopNav() {
                   fontWeight: 600,
                   fontSize: { xs: "0.6rem", sm: "0.7rem" },
                   letterSpacing: "0.2px",
-                  mt: 0.8,
-                  lineHeight: 1.2,
+                  mt: 0.2,
+                  lineHeight: 1.4,
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
