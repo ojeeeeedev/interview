@@ -26,11 +26,9 @@ import { format, parseISO } from "date-fns";
 import { id } from "date-fns/locale";
 import {
   Search,
-  Calendar as CalendarIcon,
   ChevronRight,
   ChevronDown,
   Info,
-  Lock,
   Edit2,
   CheckCircle2,
   XCircle,
@@ -72,277 +70,189 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
   return (
     <motion.div
       variants={motionItem}
-      whileHover={canAccess ? { scale: 1.005, x: 4 } : {}}
-      whileTap={canAccess ? { scale: 0.995 } : {}}
+      whileHover={canAccess ? { y: -4 } : {}}
+      transition={{ duration: 0.3, ease: "easeOut" }}
     >
       <Paper
         component={canAccess ? Link : Box}
         to={canAccess ? `/cohort/${cohort.unique_slug}` : undefined}
-        className="refined-card"
+        elevation={0}
         sx={{
           cursor: canAccess ? "pointer" : "default",
           textDecoration: "none",
           display: "block",
-          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-          opacity: canAccess ? 1 : 0.8,
           position: "relative",
+          borderRadius: 1.5,
           overflow: "hidden",
-          "&:hover": canAccess
-            ? {
-                borderColor: "rgba(52, 152, 219, 0.6) !important",
-                background: "#222222 !important",
-                transform: "translateX(4px)",
-              }
-            : {},
+          background: "rgba(25, 25, 25, 0.6)", // Distinct fill color
+          backdropFilter: "blur(12px)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          transition: "all 0.4s cubic-bezier(0.23, 1, 0.32, 1)",
+          "&:hover": canAccess ? {
+            background: "rgba(35, 35, 35, 0.8)",
+            borderColor: "rgba(52, 152, 219, 0.4)",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(52, 152, 219, 0.1)",
+          } : {},
         }}
       >
-        {isEnded && !isAdmin && (
-          <Box
-            sx={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              bgcolor: "rgba(0,0,0,0.6)",
-              zIndex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backdropFilter: "blur(2px)",
-            }}
-          >
-            <Chip
-              icon={<Lock size={14} />}
-              label="PENDAFTARAN DITUTUP"
-              color="error"
-              sx={{ fontWeight: 900, px: 2, py: 2.5, borderRadius: 2 }}
-            />
-          </Box>
-        )}
-        <CardContent sx={{ p: 3, "&:last-child": { pb: 3 } }}>
-          <Grid container spacing={3} alignItems="center">
-            <Grid size={{ xs: 12, md: 4.5 }}>
+        <Box 
+          sx={{ 
+            position: 'absolute', 
+            top: 0, 
+            left: 0, 
+            width: '4px', 
+            height: '100%', 
+            background: isEnded ? 'rgba(255,255,255,0.1)' : 'linear-gradient(to bottom, #3498db, #2980b9)',
+            opacity: 0.8
+          }} 
+        />
+
+        <CardContent sx={{ p: { xs: 2.5, md: 3.5 } }}>
+          <Grid container spacing={4} alignItems="center">
+            
+            {/* Left: Info */}
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontWeight: 800,
+                    color: isEnded ? "rgba(255,255,255,0.3)" : "#3498db",
+                    letterSpacing: "0.5px",
+                    textTransform: 'uppercase',
+                    fontSize: '0.65rem'
+                  }}
+                >
+                  Kelompok {cohort.nama_kelompok}
+                </Typography>
+                {isAdmin && (
+                  <Chip label="Admin" size="small" sx={{ height: 18, fontSize: '0.6rem', fontWeight: 800, bgcolor: 'rgba(52, 152, 219, 0.1)', color: '#3498db', border: '1px solid rgba(52, 152, 219, 0.2)' }} />
+                )}
+              </Stack>
+              
               <Typography
-                variant="overline"
+                variant="h6"
                 sx={{
-                  fontWeight: 900,
-                  color: isEnded ? "rgba(255,255,255,0.3)" : "#3498db",
-                  letterSpacing: "2px",
-                  display: "block",
-                  lineHeight: 1,
-                  mb: 0.5,
-                }}
-              >
-                Kelompok {cohort.nama_kelompok}
-              </Typography>
-              <Typography
-                variant="h5"
-                sx={{
-                  color: isEnded ? "rgba(255,255,255,0.3)" : "#ffffff",
-                  fontWeight: 800,
-                  lineHeight: 1.1,
-                  mb: 1.5,
+                  color: isEnded ? "rgba(255,255,255,0.4)" : "#ffffff",
+                  fontWeight: 700,
+                  mb: 1,
+                  lineHeight: 1.2
                 }}
               >
                 {cohort.title}
               </Typography>
+              
               <Typography
                 variant="body2"
                 sx={{
-                  color: "rgba(255,255,255,0.4)",
-                  fontSize: "0.85rem",
-                  lineHeight: 1.4,
-                  display: { xs: 'none', md: 'block' }
+                  color: "rgba(255,255,255,0.35)",
+                  fontSize: "0.8rem",
+                  lineHeight: 1.5,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden'
                 }}
               >
                 {cohort.description}
               </Typography>
-
-              {cohort.end_at && !isEnded && isStarted && (
-                <Box
-                  sx={{
-                    mt: 2,
-                    px: 1.5,
-                    py: 0.8,
-                    borderRadius: 2,
-                    bgcolor: "rgba(231, 76, 60, 0.05)",
-                    border: "1px solid rgba(231, 76, 60, 0.1)",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 1.5,
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontWeight: 900,
-                      textTransform: "uppercase",
-                      letterSpacing: "1px",
-                      color: "#e74c3c",
-                      fontSize: '0.65rem'
-                    }}
-                  >
-                    Berakhir:
-                  </Typography>
-                  <CountdownTimer
-                    targetDate={cohort.end_at}
-                    onFinish={() => setNow(new Date())}
-                    small
-                    showTarget
-                    targetLabel="BATAS"
-                  />
-                </Box>
-              )}
             </Grid>
 
-            <Grid size={{ xs: 12, md: 4.5 }}>
+            {/* Middle: Dynamic Content (Countdown or Slots) */}
+            <Grid size={{ xs: 12, md: 5.5 }}>
               {!isStarted && !isAdmin ? (
-                <Box
-                  sx={{
-                    p: 2.5,
-                    borderRadius: 3,
-                    bgcolor: "rgba(52, 152, 219, 0.05)",
-                    border: "1px solid rgba(52, 152, 219, 0.2)",
-                    textAlign: "center",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 1.5,
-                      mb: 1.5,
-                    }}
-                  >
-                    <Lock size={16} color="#3498db" />
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        fontWeight: 900,
-                        textTransform: "uppercase",
-                        letterSpacing: "1px",
-                        color: "rgba(255,255,255,0.8)",
-                      }}
-                    >
-                      Pendaftaran Dibuka Dalam
-                    </Typography>
-                  </Box>
+                <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'center' }}>
+                  <Typography variant="caption" sx={{ fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', opacity: 0.4 }}>
+                    Pendaftaran Dibuka
+                  </Typography>
                   <CountdownTimer
                     targetDate={cohort.start_at!}
                     onFinish={() => setNow(new Date())}
-                    showTarget
-                    targetLabel="DIBUKA"
                   />
+                </Stack>
+              ) : isEnded && !isAdmin ? (
+                <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'center' }}>
+                   <Typography variant="subtitle2" sx={{ color: 'rgba(255,255,255,0.2)', fontWeight: 700 }}>
+                    Pendaftaran Selesai
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.2)' }}>
+                    Terima kasih atas partisipasi Anda
+                  </Typography>
+                </Stack>
+              ) : cohort.slots.length > 0 ? (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {cohort.slots.map((slot) => {
+                    const remaining = slot.quota - slot.count;
+                    const isFull = remaining <= 0;
+                    return (
+                      <Box
+                        key={slot.id}
+                        sx={{
+                          flex: { xs: '1 1 100%', sm: '1 1 calc(33.333% - 8px)' }, // 3 columns
+                          px: 1.2,
+                          py: 0.8,
+                          borderRadius: 2,
+                          bgcolor: "rgba(255,255,255,0.025)",
+                          border: "1px solid rgba(255,255,255,0.05)",
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: 0.2
+                        }}
+                      >
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, fontSize: '0.65rem' }}>
+                          {format(parseISO(slot.date), "EEE, d MMM", { locale: id })}
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 800, color: isFull ? '#e74c3c' : '#2ecc71', fontSize: '0.65rem' }}>
+                          {isFull ? "Full" : `${remaining} Slot`}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
                 </Box>
-              ) : (
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                      opacity: 0.6,
-                    }}
-                  >
-                    <CalendarIcon size={14} color="#3498db" />
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        fontWeight: 900,
-                        textTransform: "uppercase",
-                        letterSpacing: "1px",
-                        color: "#ffffff",
-                      }}
-                    >
-                      Slot Tersedia
-                    </Typography>
-                  </Box>
+              ) : null}
+            </Grid>
 
-                  <Stack spacing={1}>
-                    {cohort.slots.map((slot) => {
-                      const remaining = slot.quota - slot.count;
-                      const isFull = remaining <= 0;
-                      return (
-                        <Box
-                          key={slot.id}
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            px: 2,
-                            py: 1.25,
-                            borderRadius: 2.5,
-                            bgcolor: "rgba(255,255,255,0.03)",
-                            border: "1px solid rgba(255,255,255,0.05)",
-                            opacity: isEnded ? 0.3 : 1
-                          }}
-                        >
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontWeight: 700,
-                              color: "#ffffff",
-                              fontSize: '0.8rem'
-                            }}
-                          >
-                            {format(parseISO(slot.date), "EEEE, d MMM yyyy", {
-                              locale: id,
-                            })}
-                          </Typography>
-                          <Chip
-                            size="small"
-                            label={isFull ? "Penuh" : `${remaining} Slot`}
-                            color={isFull ? "error" : "success"}
-                            variant={isFull ? "filled" : "outlined"}
-                            sx={{
-                              height: 22,
-                              fontSize: "0.6rem",
-                              fontWeight: 900,
-                              textTransform: 'uppercase',
-                              minWidth: 70,
-                              borderRadius: 1.5
-                            }}
-                          />
-                        </Box>
-                      );
-                    })}
-                  </Stack>
-                </Box>
+            {/* Right: Action */}
+            <Grid size={{ xs: 12, md: 2.5 }} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' }, alignItems: 'center' }}>
+              {cohort.slots.length > 0 ? (
+                <Button
+                  variant="contained"
+                  disabled={!canAccess}
+                  endIcon={canAccess ? <ChevronRight size={18} /> : null}
+                  sx={{
+                    height: 48,
+                    width: { xs: '100%', md: 'auto' },
+                    minWidth: 100,
+                    borderRadius: 2,
+                    fontWeight: 700,
+                    textTransform: 'none',
+                    background: canAccess ? '#3498db' : 'rgba(255,255,255,0.05)',
+                    '&:hover': { background: '#2980b9' },
+                    '&.Mui-disabled': { color: 'rgba(255,255,255,0.15)' }
+                  }}
+                >
+                  {isAdmin && !isStarted ? "Kelola" : isEnded ? "Selesai" : "Daftar"}
+                </Button>
+              ) : (
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    color: 'rgba(255,255,255,0.25)', 
+                    fontWeight: 600, 
+                    fontStyle: 'italic',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    px: 2,
+                    py: 1,
+                    borderRadius: 2,
+                    bgcolor: 'rgba(255,255,255,0.02)'
+                  }}
+                >
+                  Jadwal belum tersedia
+                </Typography>
               )}
             </Grid>
 
-            <Grid
-              size={{ xs: 12, md: 3 }}
-              sx={{ textAlign: "right", mt: { xs: 1, md: 0 } }}
-            >
-              <Button
-                variant="contained"
-                fullWidth
-                disabled={!canAccess}
-                endIcon={
-                  canAccess ? <ChevronRight size={18} /> : <Lock size={18} />
-                }
-                sx={{
-                  pointerEvents: "none",
-                  borderRadius: 3,
-                  fontWeight: 800,
-                  py: 1.8,
-                  fontSize: '0.9rem',
-                  background: canAccess
-                    ? "rgba(52, 152, 219, 0.15)"
-                    : "rgba(255, 255, 255, 0.05)",
-                  border: canAccess
-                    ? "1px solid rgba(52, 152, 219, 0.3)"
-                    : "1px solid rgba(255, 255, 255, 0.1)",
-                  color: canAccess ? "#ffffff" : "rgba(255,255,255,0.2)",
-                  boxShadow: "none",
-                }}
-              >
-                {isAdmin && !isStarted ? "Akses Admin" : isEnded ? "Selesai" : "Daftar Sekarang"}
-              </Button>
-            </Grid>
           </Grid>
         </CardContent>
       </Paper>
@@ -667,53 +577,11 @@ export default function Home() {
                   </Typography>
                 </Box>
               </AccordionSummary>
-              <AccordionDetails sx={{ px: 2, pb: 2, background: "#121212" }}>
-                <Grid container spacing={1}>
+              <AccordionDetails sx={{ px: 2, pb: 2, background: "transparent" }}>
+                <Grid container spacing={2.5}>
                   {unscheduled.map((cohort) => (
                     <Grid size={{ xs: 12 }} key={cohort.id}>
-                      <Box
-                        sx={{
-                          p: 2,
-                          borderRadius: 2,
-                          bgcolor: "rgba(255,255,255,0.03)",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          border: "1px solid rgba(255,255,255,0.05)",
-                        }}
-                      >
-                        <Box>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              color: "#3498db",
-                              fontWeight: 800,
-                              display: "block",
-                              mb: 0.2,
-                            }}
-                          >
-                            KELOMPOK {cohort.nama_kelompok.toUpperCase()}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontWeight: 700,
-                              color: "rgba(255,255,255,0.8)",
-                            }}
-                          >
-                            {cohort.title}
-                          </Typography>
-                        </Box>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: "rgba(255,255,255,0.4)",
-                            fontStyle: "italic",
-                          }}
-                        >
-                          Belum ada jadwal
-                        </Typography>
-                      </Box>
+                      <CohortCard cohort={cohort} isAdmin={isAdmin} />
                     </Grid>
                   ))}
                 </Grid>
