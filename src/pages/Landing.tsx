@@ -302,7 +302,7 @@ export default function Landing() {
                 {cohort?.end_at && !isEnded && (
                   <Stack spacing={1.5} sx={{ mt: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: '#e74c3c', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900 }}>3</Box>
+                      <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: '#e74c3c', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900 }}>1</Box>
                       <Typography
                         variant="subtitle2"
                         sx={{
