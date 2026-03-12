@@ -144,16 +144,30 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
               </Typography>
               
               {cohort.slots.length > 0 && (
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: "rgba(255,255,255,0.35)",
-                    fontSize: "0.8rem",
-                    lineHeight: 1.5,
-                  }}
-                >
-                  {cohort.description}
-                </Typography>
+                <>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "rgba(255,255,255,0.35)",
+                      fontSize: "0.8rem",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {cohort.description}
+                  </Typography>
+                  
+                  {cohort.end_at && !isEnded && isStarted && (
+                    <Box sx={{ mt: 2, transform: 'scale(0.9)', transformOrigin: 'left top' }}>
+                      <CountdownTimer
+                        targetDate={cohort.end_at}
+                        onFinish={() => setNow(new Date())}
+                        small
+                        showTarget
+                        targetLabel="Batas Pendaftaran"
+                      />
+                    </Box>
+                  )}
+                </>
               )}
             </Grid>
 
@@ -260,19 +274,6 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
                   >
                     {isAdmin && !isStarted ? "Daftar (Admin)" : isEnded ? "Selesai" : "Daftar"}
                   </Button>
-                  {cohort.end_at && !isEnded && isStarted && (
-                    <Box sx={{ width: "100%", display: "flex", justifyContent: { xs: "flex-start", md: "flex-end" } }}>
-                      <Box sx={{ transform: 'scale(0.85)', transformOrigin: { xs: 'left top', md: 'right top' }, mt: -0.5 }}>
-                        <CountdownTimer
-                          targetDate={cohort.end_at}
-                          onFinish={() => setNow(new Date())}
-                          small
-                          showTarget
-                          targetLabel="Batas Pendaftaran"
-                        />
-                      </Box>
-                    </Box>
-                  )}
                 </Stack>
               ) : (
                 <Typography 
