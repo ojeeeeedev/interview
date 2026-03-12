@@ -6,13 +6,15 @@ export default function CountdownTimer({
     onFinish, 
     small = false,
     showTarget = false,
-    targetLabel = "BATAS"
+    targetLabel = "BATAS",
+    align = "center"
 }: { 
     targetDate: string, 
     onFinish: () => void,
     small?: boolean,
     showTarget?: boolean,
-    targetLabel?: string
+    targetLabel?: string,
+    align?: "center" | "flex-start"
 }) {
     const calculateTimeLeft = useCallback(() => {
         const difference = +new Date(targetDate) - +new Date();
@@ -50,47 +52,48 @@ export default function CountdownTimer({
         minute: '2-digit' 
     });
 
+    const labelColor = targetLabel.toUpperCase().includes("DIBUKA") ? "#3498db" : (targetLabel.toUpperCase().includes("BATAS") || targetLabel.toUpperCase().includes("DITUTUP") ? "#e74c3c" : "inherit");
+
     const targetDateElement = showTarget && (
-        <Typography 
-            variant="caption" 
-            sx={{ 
-                display: 'block', 
-                mb: small ? 0.5 : 1, 
-                opacity: 0.8, 
-                fontWeight: 900, 
-                fontSize: small ? '0.65rem' : '0.75rem',
-                textAlign: 'center',
-                color: targetLabel.toUpperCase().includes("DIBUKA") ? "#3498db" : (targetLabel.toUpperCase().includes("BATAS") ? "#e74c3c" : "inherit"),
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px'
-            }}
-        >
-            {targetLabel}: {formattedTarget}
-        </Typography>
+        <Box sx={{ mb: small ? 1 : 1.5, textAlign: align === "flex-start" ? "left" : "center" }}>
+            <Typography 
+                variant="caption" 
+                sx={{ 
+                    display: 'block', 
+                    mb: 0.8,
+                    opacity: 0.6, 
+                    fontWeight: 900, 
+                    fontSize: small ? '0.6rem' : '0.7rem',
+                    color: labelColor,
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                    lineHeight: 1
+                }}
+            >
+                {targetLabel}
+            </Typography>
+            <Typography 
+                variant="body2" 
+                sx={{ 
+                    display: 'block', 
+                    fontWeight: 900, 
+                    fontSize: small ? '0.8rem' : '0.95rem',
+                    color: labelColor,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    lineHeight: 1.1
+                }}
+            >
+                {formattedTarget}
+            </Typography>
+        </Box>
     );
 
     if (small) {
         return (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                {targetDateElement && (
-                    <Typography 
-                        variant="caption" 
-                        sx={{ 
-                            display: 'block', 
-                            mb: 0.5, 
-                            opacity: 0.8, 
-                            fontWeight: 900, 
-                            fontSize: '0.65rem',
-                            textAlign: 'left',
-                            color: targetLabel.toUpperCase().includes("DIBUKA") ? "#3498db" : (targetLabel.toUpperCase().includes("BATAS") ? "#e74c3c" : "inherit"),
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px'
-                        }}
-                    >
-                        {targetLabel}: {formattedTarget}
-                    </Typography>
-                )}
-                <Stack direction="row" spacing={1} alignItems="baseline" justifyContent="flex-start">
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: align }}>
+                {targetDateElement}
+                <Stack direction="row" spacing={1} alignItems="baseline" justifyContent={align === "flex-start" ? "flex-start" : "center"}>
                     {Object.entries(timeLeft).map(([label, value], index, arr) => (
                         <Box key={label} sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
                             <Typography variant="body2" sx={{ fontWeight: 800, color: '#3498db', lineHeight: 1 }}>

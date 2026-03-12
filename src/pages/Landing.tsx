@@ -300,30 +300,28 @@ export default function Landing() {
                 </Typography>
 
                 {cohort?.end_at && !isEnded && (
-                  <Stack spacing={1.5} sx={{ mt: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: '#e74c3c', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900 }}>1</Box>
-                      <Typography
-                        variant="subtitle2"
-                        sx={{
-                          fontWeight: 900,
-                          color: "#ffffff",
-                          textTransform: "uppercase",
-                          fontSize: "0.8rem",
-                          letterSpacing: "1px",
-                        }}
-                      >
-                        Batas Pendaftaran
-                      </Typography>
-                    </Box>
-                    <Box sx={{ px: 1 }}>
-                        <CountdownTimer
-                            targetDate={cohort.end_at}
-                            onFinish={() => setNow(new Date())}
-                            small
-                            showTarget
-                            targetLabel="DITUTUP PADA"
-                        />
+                  <Stack spacing={1.5} sx={{ mt: 3, alignItems: 'center' }}>
+                    <Box 
+                      sx={{ 
+                        width: '100%',
+                        px: 2,
+                        py: 1.5,
+                        borderRadius: "12px", 
+                        bgcolor: "rgba(231, 76, 60, 0.03)", 
+                        border: "1px solid rgba(231, 76, 60, 0.12)",
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <CountdownTimer
+                          targetDate={cohort.end_at}
+                          onFinish={() => setNow(new Date())}
+                          small
+                          showTarget
+                          targetLabel="PENDAFTARAN DITUTUP PADA"
+                          align="center"
+                      />
                     </Box>
                   </Stack>
                 )}
