@@ -37,6 +37,15 @@ type ActionState = {
   rawDate?: Date;
 };
 
+/**
+ * BookingForm Component
+ * 
+ * The core interaction point for public users. Features include:
+ * 1. Real-time name verification against the whitelist.
+ * 2. Visual date selection using a custom Calendar.
+ * 3. Atomic booking process via Supabase RPC.
+ * 4. Double-booking prevention.
+ */
 export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
   const [name, setName] = useState("");
   const [allowedNames, setAllowedNames] = useState<string[]>([]);
@@ -51,7 +60,11 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
   const [nameCheckError, setNameCheckError] = useState<string | null>(null);
   const [forceShowError, setForceShowError] = useState(false);
 
-  // 10 second timeout for showing error if name < 4 chars
+  /**
+   * Smart Error Suppression Logic
+   * To improve UX, errors for "Name not found" are suppressed until the user
+   * has typed at least 4 characters or 10 seconds have passed.
+   */
   useEffect(() => {
     if (name.trim().length > 0 && !isNameVerified && !nameCheckError) {
       const timer = setTimeout(() => {
@@ -121,6 +134,13 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
     return () => clearTimeout(timer);
   }, [name, cohortId, forceShowError]);
 
+  /**
+   * Main Booking Action
+   * This server-side action (React 19 pattern) handles:
+   * 1. Double booking check.
+   * 2. Final whitelist verification.
+   * 3. Atomic transaction via RPC 'book_reservation' to prevent race conditions.
+   */
   const bookingAction = async (_prevState: ActionState | null, formData: FormData): Promise<ActionState> => {
     const userName = formData.get("userName") as string;
     const dateStr = formData.get("dateStr") as string;

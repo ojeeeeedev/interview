@@ -100,6 +100,16 @@ interface jsPDFWithAutoTable extends jsPDF {
   };
 }
 
+/**
+ * Admin Panel Component
+ * 
+ * Comprehensive management dashboard for administrators.
+ * Functions include:
+ * 1. Event (Cohort) Creation & Modification
+ * 2. Slot (Schedule) Management & Quota Settings
+ * 3. Participant Whitelist (Allowed Names) Management
+ * 4. Booking Recap & PDF Report Generation
+ */
 export default function Admin() {
   const [tab, setTab] = useState(0);
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
@@ -199,8 +209,11 @@ export default function Admin() {
     full_name: string;
   } | null>(null);
 
+  /**
+   * Data Fetching
+   * Concurrent fetch of all administrative data points from Supabase.
+   */
   const fetchAll = useCallback(async () => {
-    // setLoading(true); // Redundant if called from useEffect on mount
     const [
         { data: c },
         { data: s },
@@ -260,6 +273,10 @@ export default function Admin() {
 
     return cohortMap;
   }, [cohorts, slots, reservations]);
+  /**
+   * PDF Generation Utility
+   * Uses jsPDF and autoTable to generate formatted reports for each cohort.
+   */
   const downloadCohortPDF = (cohortId: string) => {
     const data = reportData[cohortId];
     if (!data) return;
@@ -332,6 +349,10 @@ export default function Admin() {
     showToast(`Laporan ${cohort.nama_kelompok} berhasil diunduh`);
   };
 
+  /**
+   * Cohort Management Logic
+   * Handles creation, updates, and deletion of event groups.
+   */
   const handleCreateCohort = async () => {
     if (!newCohort.title || !newCohort.slug || !newCohort.nama_kelompok) {
       setShowErrors(true);
@@ -445,6 +466,10 @@ export default function Admin() {
     }
   };
 
+  /**
+   * Slot Management Logic
+   * Handles scheduling specific interview dates and setting quotas.
+   */
   const handleCreateSlot = async () => {
     if (!newSlot.cohort_id || !newSlot.date || !selectedKelompok) {
       setShowErrors(true);
@@ -522,6 +547,10 @@ export default function Admin() {
     }
   };
 
+  /**
+   * Participant Management Logic
+   * Includes bulk import from clipboard (Excel/Google Sheets) and individual edits.
+   */
   const handlePasteSubmit = async () => {
     if (!pasteData.trim()) return;
 
@@ -562,6 +591,10 @@ export default function Admin() {
     }
   };
 
+  /**
+   * Reservation Management Logic
+   * Handles deletion of individual bookings.
+   */
   const handleDeleteReservation = async (id: string, slotId: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus reservasi ini?")) return;
 

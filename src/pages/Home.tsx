@@ -52,13 +52,31 @@ const motionItem = {
   show: { opacity: 1, y: 0 },
 };
 
+/**
+ * Home Page Component
+ * 
+ * The main landing page for the application. It displays:
+ * 1. A Search Widget for users to find and edit their existing reservations.
+ * 2. Active Scheduled Events (Events with available slots).
+ * 3. Unscheduled Events (Events created by admin but without calendar slots).
+ * 4. Past Events (Events where the end_at time has passed).
+ */
+
 interface CohortWithSlots extends Cohort {
   slots: Slot[];
 }
 
+/**
+ * CohortCard Component
+ * 
+ * Represents a single event card. Handles the visual state based on access rules:
+ * - Administrators can always access/preview cards.
+ * - Regular users can only access if registration is open and slots exist.
+ */
 function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boolean }) {
   const [now, setNow] = useState(new Date());
   
+  // Update current time every minute to keep countdowns and access rules fresh
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000 * 60);
     return () => clearInterval(timer);
@@ -68,8 +86,10 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
   const isEnded = cohort.end_at && now >= new Date(cohort.end_at);
   const hasSlots = cohort.slots.length > 0;
   
-  // Disable if unscheduled or past events. Admins can still access if not yet started.
+  // Access control: Disable if unscheduled or past events. 
+  // Admins can still access if not yet started for testing.
   const canAccess = (isStarted || isAdmin) && !isEnded && hasSlots;
+// ... (rest of the file content follows with similar headers)
 
   return (
     <motion.div
@@ -291,7 +311,10 @@ export default function Home() {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  // Search state
+  /**
+   * Search State & Handlers
+   * Allows users to quickly find their booking by a 6-character access code.
+   */
   const [searchCode, setSearchCode] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchStatus, setSearchStatus] = useState<
@@ -337,6 +360,10 @@ export default function Home() {
     }
   };
 
+  /**
+   * Data Fetching
+   * Retrieves all cohorts and their associated slots from Supabase.
+   */
   useEffect(() => {
     const fetchCohorts = async () => {
       setIsLoading(true);
