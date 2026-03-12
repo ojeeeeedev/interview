@@ -390,6 +390,20 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
             {isPending ? "Memproses..." : isValidatingName ? "Memverifikasi Nama..." : "Konfirmasi Jadwal"}
           </Button>
         </motion.div>
+        
+        <Typography 
+          variant="caption" 
+          sx={{ 
+            display: 'block', 
+            mt: 2, 
+            color: 'rgba(255,255,255,0.4)', 
+            fontSize: '0.7rem',
+            lineHeight: 1.4,
+            px: 1
+          }}
+        >
+          <strong>Perhatian:</strong> Tidak akan ada slot tambahan, dan slot yang sudah didaftarkan hanya dapat diubah oleh peserta secara mandiri, panitia tidak dapat merubah pendaftaran yang sudah tercatat dalam sistem.
+        </Typography>
       </Box>
 
       {/* Confirmation Dialog */}

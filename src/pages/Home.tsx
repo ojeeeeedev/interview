@@ -160,75 +160,79 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
             {/* Middle: Dynamic Content (Countdown or Slots) */}
             {(cohort.slots.length > 0 || (!isStarted && !isAdmin) || (isEnded && !isAdmin)) && (
               <Grid size={{ xs: 12, md: 5.5 }}>
-                {!isStarted && !isAdmin ? (
-                  <Box
-                    sx={{
-                      px: { xs: 2, sm: 3 },
-                      py: 2,
-                      borderRadius: "12px",
-                      bgcolor: "rgba(52, 152, 219, 0.05)",
-                      border: "1px solid rgba(52, 152, 219, 0.15)",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center"
-                    }}
-                  >
-                    <CountdownTimer
-                      targetDate={cohort.start_at!}
-                      onFinish={() => setNow(new Date())}
-                      small
-                      showTarget
-                      targetLabel="Pendaftaran Dibuka"
-                    />
-                  </Box>
-                ) : isEnded && !isAdmin ? (
-                  <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'center' }}>
-                     <Typography variant="subtitle2" sx={{ color: 'rgba(255,255,255,0.2)', fontWeight: 700 }}>
-                      Pendaftaran Selesai
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.2)' }}>
-                      Terima kasih atas partisipasi Anda
-                    </Typography>
-                  </Stack>
-                ) : cohort.slots.length > 0 ? (
-                  <Stack spacing={1}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2, mb: -0.5 }}>
-                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        Tanggal
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        Ketersediaan
-                      </Typography>
+                <Stack spacing={2}>
+                  {!isStarted && !isAdmin && (
+                    <Box
+                      sx={{
+                        px: { xs: 2, sm: 3 },
+                        py: 2,
+                        borderRadius: "12px",
+                        bgcolor: "rgba(52, 152, 219, 0.05)",
+                        border: "1px solid rgba(52, 152, 219, 0.15)",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center"
+                      }}
+                    >
+                      <CountdownTimer
+                        targetDate={cohort.start_at!}
+                        onFinish={() => setNow(new Date())}
+                        small
+                        showTarget
+                        targetLabel="Pendaftaran Dibuka"
+                      />
                     </Box>
-                    {cohort.slots.map((slot) => {
-                      const remaining = slot.quota - slot.count;
-                      const isFull = remaining <= 0;
-                      return (
-                        <Box
-                          key={slot.id}
-                          sx={{
-                            px: 2,
-                            py: 1,
-                            borderRadius: 2,
-                            bgcolor: "rgba(255,255,255,0.025)",
-                            border: "1px solid rgba(255,255,255,0.05)",
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 1
-                          }}
-                        >
-                          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: '0.75rem', fontFamily: 'monospace' }}>
-                            {format(parseISO(slot.date.replace(/^0006-/, '2026-')), "EEEE, d MMMM yyyy", { locale: id })}
-                          </Typography>
-                          <Typography variant="caption" sx={{ fontWeight: 800, color: isFull ? '#e74c3c' : '#2ecc71', fontSize: '0.75rem', fontFamily: 'monospace' }}>
-                            {isFull ? "Full" : `${remaining} Slot`}
-                          </Typography>
-                        </Box>
-                      );
-                    })}
-                  </Stack>
-                ) : null}
+                  )}
+
+                  {isEnded && !isAdmin ? (
+                    <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'center' }}>
+                       <Typography variant="subtitle2" sx={{ color: 'rgba(255,255,255,0.2)', fontWeight: 700 }}>
+                        Pendaftaran Selesai
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.2)' }}>
+                        Terima kasih atas partisipasi Anda
+                      </Typography>
+                    </Stack>
+                  ) : cohort.slots.length > 0 ? (
+                    <Stack spacing={1}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2, mb: -0.5 }}>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          Tanggal
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          Ketersediaan
+                        </Typography>
+                      </Box>
+                      {cohort.slots.map((slot) => {
+                        const remaining = slot.quota - slot.count;
+                        const isFull = remaining <= 0;
+                        return (
+                          <Box
+                            key={slot.id}
+                            sx={{
+                              px: 2,
+                              py: 1,
+                              borderRadius: 2,
+                              bgcolor: "rgba(255,255,255,0.025)",
+                              border: "1px solid rgba(255,255,255,0.05)",
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: 1
+                            }}
+                          >
+                            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: '0.75rem', fontFamily: 'monospace' }}>
+                              {format(parseISO(slot.date.replace(/^0006-/, '2026-')), "EEEE, d MMMM yyyy", { locale: id })}
+                            </Typography>
+                            <Typography variant="caption" sx={{ fontWeight: 800, color: isFull ? '#e74c3c' : '#2ecc71', fontSize: '0.75rem', fontFamily: 'monospace' }}>
+                              {isFull ? "Full" : `${remaining} Slot`}
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  ) : null}
+                </Stack>
               </Grid>
             )}
 
@@ -257,26 +261,16 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
                     {isAdmin && !isStarted ? "Daftar (Admin)" : isEnded ? "Selesai" : "Daftar"}
                   </Button>
                   {cohort.end_at && !isEnded && isStarted && (
-                    <Box
-                      sx={{
-                        px: 2,
-                        py: 1.5,
-                        borderRadius: 2,
-                        bgcolor: "rgba(231, 76, 60, 0.05)",
-                        border: "1px solid rgba(231, 76, 60, 0.15)",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        width: "100%"
-                      }}
-                    >
-                      <CountdownTimer
-                        targetDate={cohort.end_at}
-                        onFinish={() => setNow(new Date())}
-                        small
-                        showTarget
-                        targetLabel="Batas Pendaftaran"
-                      />
+                    <Box sx={{ width: "100%", display: "flex", justifyContent: { xs: "flex-start", md: "flex-end" } }}>
+                      <Box sx={{ transform: 'scale(0.85)', transformOrigin: { xs: 'left top', md: 'right top' }, mt: -0.5 }}>
+                        <CountdownTimer
+                          targetDate={cohort.end_at}
+                          onFinish={() => setNow(new Date())}
+                          small
+                          showTarget
+                          targetLabel="Batas Pendaftaran"
+                        />
+                      </Box>
                     </Box>
                   )}
                 </Stack>

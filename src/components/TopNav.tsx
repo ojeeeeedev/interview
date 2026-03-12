@@ -109,10 +109,11 @@ export default function TopNav() {
                   fontWeight: 900,
                   fontSize: { xs: "1.1rem", sm: "1.3rem" },
                   letterSpacing: "-0.5px",
-                  lineHeight: 1.4,
-                  whiteSpace: "nowrap",
+                  lineHeight: 1.2,
+                  display: '-webkit-box',
+                  WebkitLineClamp: { xs: 2, sm: 'none' },
+                  WebkitBoxOrient: 'vertical',
                   overflow: "hidden",
-                  textOverflow: "ellipsis",
                 }}
               >
                 Event Management System

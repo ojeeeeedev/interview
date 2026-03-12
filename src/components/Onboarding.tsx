@@ -18,7 +18,8 @@ import {
   Ticket,
   Edit2,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  RefreshCw
 } from "lucide-react";
 
 const steps = [
@@ -46,6 +47,16 @@ const steps = [
     title: "Ubah atau Batal",
     description: "Untuk mengubah jadwal atau membatalkan reservasi, masukkan 6 digit Kode Akses Anda di kolom pencarian pada halaman utama.",
     icon: <Edit2 size={48} color="#e74c3c" />
+  },
+  {
+    title: "Tukar Jadwal?",
+    description: "Jika jadwal sudah penuh dan Anda ingin bertukar slot dengan orang lain, Anda berdua harus 'Hapus Reservasi' terlebih dahulu, lalu mendaftar ulang di slot yang baru.",
+    icon: <RefreshCw size={48} color="#9b59b6" />
+  },
+  {
+    title: "Perhatian Penting",
+    description: "Tidak akan ada slot tambahan, dan slot yang sudah didaftarkan hanya dapat diubah oleh peserta secara mandiri, panitia tidak dapat merubah pendaftaran yang sudah tercatat dalam sistem.",
+    icon: <CalendarDays size={48} color="#e74c3c" />
   }
 ];
 
@@ -151,54 +162,60 @@ export default function Onboarding() {
           </AnimatePresence>
         </DialogContent>
 
-        <Box sx={{ p: 3, pt: 0 }}>
-          <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
-            <Button
-              variant="text"
+        <Box sx={{ p: 3, pt: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <MobileStepper
+            variant="dots"
+            steps={steps.length}
+            position="static"
+            activeStep={activeStep}
+            sx={{
+              bgcolor: "transparent",
+              p: 0,
+              mb: 3,
+              "& .MuiMobileStepper-dot": {
+                bgcolor: "rgba(255,255,255,0.2)",
+              },
+              "& .MuiMobileStepper-dotActive": {
+                bgcolor: "#3498db",
+              }
+            }}
+            nextButton={null}
+            backButton={null}
+          />
+          <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
+            <IconButton
               onClick={handleBack}
               disabled={activeStep === 0}
-              startIcon={<ChevronLeft size={18} />}
-              sx={{ color: "rgba(255,255,255,0.6)", textTransform: "none", fontWeight: 600 }}
+              sx={{ color: "rgba(255,255,255,0.6)", "&.Mui-disabled": { opacity: 0 } }}
             >
-              Kembali
-            </Button>
+              <ChevronLeft size={24} />
+            </IconButton>
 
-            <MobileStepper
-              variant="dots"
-              steps={steps.length}
-              position="static"
-              activeStep={activeStep}
-              sx={{
-                bgcolor: "transparent",
-                p: 0,
-                "& .MuiMobileStepper-dot": {
-                  bgcolor: "rgba(255,255,255,0.2)",
-                },
-                "& .MuiMobileStepper-dotActive": {
-                  bgcolor: "#3498db",
-                }
-              }}
-              nextButton={null}
-              backButton={null}
-            />
-
-            <Button
-              variant="contained"
-              onClick={handleNext}
-              endIcon={activeStep < steps.length - 1 ? <ChevronRight size={18} /> : null}
-              sx={{
-                borderRadius: 2,
-                px: 3,
-                textTransform: "none",
-                fontWeight: 700,
-                bgcolor: activeStep === steps.length - 1 ? "#2ecc71" : "#3498db",
-                "&:hover": {
-                  bgcolor: activeStep === steps.length - 1 ? "#27ae60" : "#2980b9",
-                }
-              }}
-            >
-              {activeStep === steps.length - 1 ? "Mulai" : "Lanjut"}
-            </Button>
+            {activeStep === steps.length - 1 ? (
+              <Button
+                variant="contained"
+                onClick={handleNext}
+                sx={{
+                  borderRadius: 2,
+                  px: 3,
+                  textTransform: "none",
+                  fontWeight: 700,
+                  bgcolor: "#2ecc71",
+                  "&:hover": {
+                    bgcolor: "#27ae60",
+                  }
+                }}
+              >
+                Mulai
+              </Button>
+            ) : (
+              <IconButton
+                onClick={handleNext}
+                sx={{ color: "rgba(255,255,255,0.6)" }}
+              >
+                <ChevronRight size={24} />
+              </IconButton>
+            )}
           </Stack>
         </Box>
       </Box>
