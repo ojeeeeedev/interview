@@ -160,24 +160,31 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
                     <Box 
                       sx={{ 
                         mt: 2, 
-                        px: 2,
-                        py: 1.5,
-                        borderRadius: "12px", 
-                        bgcolor: "rgba(231, 76, 60, 0.03)", 
-                        border: "1px solid rgba(231, 76, 60, 0.12)",
-                        display: 'inline-flex',
-                        flexDirection: 'column',
-                        alignItems: 'center'
+                        display: 'flex',
+                        justifyContent: { xs: 'center', md: 'flex-start' }
                       }}
                     >
-                      <CountdownTimer
-                        targetDate={cohort.end_at}
-                        onFinish={() => setNow(new Date())}
-                        small
-                        showTarget
-                        targetLabel="PENDAFTARAN DITUTUP PADA"
-                        align="center"
-                      />
+                      <Box 
+                        sx={{ 
+                          px: 2,
+                          py: 1.5,
+                          borderRadius: "12px", 
+                          bgcolor: "rgba(231, 76, 60, 0.03)", 
+                          border: "1px solid rgba(231, 76, 60, 0.12)",
+                          display: 'inline-flex',
+                          flexDirection: 'column',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <CountdownTimer
+                          targetDate={cohort.end_at}
+                          onFinish={() => setNow(new Date())}
+                          small
+                          showTarget
+                          targetLabel="PENDAFTARAN DITUTUP PADA"
+                          align="center"
+                        />
+                      </Box>
                     </Box>
                   )}
                 </>
