@@ -61,15 +61,15 @@ const steps = [
 ];
 
 export default function Onboarding() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(() => {
+    if (typeof window !== "undefined") {
+      return !localStorage.getItem("hasSeenOnboarding");
+    }
+    return false;
+  });
   const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {
-    const hasSeenOnboarding = localStorage.getItem("hasSeenOnboarding");
-    if (!hasSeenOnboarding) {
-      setOpen(true);
-    }
-
     const handleOpenOnboarding = () => {
       setActiveStep(0);
       setOpen(true);

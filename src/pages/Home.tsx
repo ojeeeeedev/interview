@@ -371,9 +371,9 @@ export default function Home() {
 
       if (data) {
         // Ensure slots are strictly sorted by date client-side as well
-        const sortedData = data.map((cohort: any) => ({
+        const sortedData = data.map((cohort: CohortWithSlots) => ({
           ...cohort,
-          slots: (cohort.slots || []).sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
+          slots: (cohort.slots || []).sort((a: Slot, b: Slot) => new Date(a.date).getTime() - new Date(b.date).getTime())
         }));
         setCohorts(sortedData as CohortWithSlots[]);
       }

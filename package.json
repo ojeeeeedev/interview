@@ -16,6 +16,7 @@
     "@mui/material": "^7.3.8",
     "@mui/x-date-pickers": "^8.27.2",
     "@supabase/supabase-js": "^2.98.0",
+    "@vercel/analytics": "^2.0.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.35.0",
     "html-to-image": "^1.11.13",
