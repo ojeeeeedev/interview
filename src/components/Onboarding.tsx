@@ -14,49 +14,59 @@ import {
   X,
   ChevronRight,
   ChevronLeft,
-  CalendarDays,
-  Ticket,
   Edit2,
-  Clock,
-  CheckCircle2,
-  RefreshCw
+  TriangleAlert,
+  CalendarSearch,
+  CalendarPlus,
+  TicketCheck,
+  CalendarSync
 } from "lucide-react";
 
 const steps = [
   {
     title: "Selamat Datang!",
-    description: "Sistem Manajemen Event ini akan membantu Anda mendaftar pada jadwal wawancara atau event yang tersedia.",
-    icon: <CalendarDays size={48} color="#3498db" />
+    description: "Sistem Manajemen Event ini adalah platform pendaftaran event yang diselenggarakan oleh Tim Katekumen Dewasa Paroki St. Petrus Katedral, Bandung. ",
+    icon: (
+      <Box
+        component="img"
+        src="/logo.png"
+        alt="Logo"
+        sx={{
+          height: 96,
+          width: "auto",
+        }}
+      />
+    )
   },
   {
     title: "Memilih Event",
-    description: "Pilih event yang sedang 'Dibuka'. Perhatikan waktu buka (countdown) dan waktu tutup pendaftaran pada setiap kartu event.",
-    icon: <Clock size={48} color="#f39c12" />
+    description: "Pilihlah event yang sesuai dan telah terjadwal untuk kelompok anda. Perhatikanlah waktu pembukaan pendaftaran dan waktu tutup pendaftaran setiap event.",
+    icon: <CalendarSearch size={48} color="#f39c12" />
   },
   {
     title: "Pendaftaran Jadwal",
-    description: "Klik 'Daftar', ketik nama Anda untuk verifikasi, lalu pilih tanggal wawancara yang masih memiliki slot ketersediaan.",
-    icon: <CheckCircle2 size={48} color="#2ecc71" />
+    description: "Saat pendaftaran telah dibuka, klik 'Daftar'. Kemudian masukkan nama Anda, lalu pilih tanggal event yang masih memiliki slot ketersediaan. Nama harus sesuai dengan nama yang didaftarkan kepada panitia.",
+    icon: <CalendarPlus size={48} color="#2ecc71" />
   },
   {
     title: "Simpan Tiket Anda",
-    description: "Setelah berhasil, Anda akan mendapatkan Tiket dan Kode Akses 6 digit. Harap simpan atau screenshot tiket tersebut!",
-    icon: <Ticket size={48} color="#9b59b6" />
+    description: "Setelah berhasil reservasi event, Anda akan mendapatkan Tiket dan Kode Akses 6 karakter. Harap simpan atau screenshot tiket tersebut. Anda juga dapat menyimpan jadwal ke Kalender pilihan anda (iCal, Google Calendar, dll).",
+    icon: <TicketCheck size={48} color="#9b59b6" />
   },
   {
     title: "Ubah atau Batal",
-    description: "Untuk mengubah jadwal atau membatalkan reservasi, masukkan 6 digit Kode Akses Anda di kolom pencarian pada halaman utama.",
-    icon: <Edit2 size={48} color="#e74c3c" />
+    description: "Untuk mengubah jadwal atau membatalkan reservasi, masukkan Kode Akses Anda di kolom pencarian pada Halaman Utama.",
+    icon: <Edit2 size={48} color="#378ad3" />
   },
   {
     title: "Tukar Jadwal?",
-    description: "Jika jadwal sudah penuh dan Anda ingin bertukar slot dengan orang lain, Anda berdua harus 'Hapus Reservasi' terlebih dahulu, lalu mendaftar ulang di slot yang baru.",
-    icon: <RefreshCw size={48} color="#9b59b6" />
+    description: "Jika jadwal sudah penuh dan Anda ingin bertukar slot dengan orang lain, Anda berdua harus 'Hapus Reservasi' terlebih dahulu, lalu mendaftar ulang pada slot yang tersedia.",
+    icon: <CalendarSync size={48} color="#9b59b6" />
   },
   {
     title: "Perhatian Penting",
     description: "Tidak akan ada slot tambahan, dan slot yang sudah didaftarkan hanya dapat diubah oleh peserta secara mandiri, panitia tidak dapat merubah pendaftaran yang sudah tercatat dalam sistem.",
-    icon: <CalendarDays size={48} color="#e74c3c" />
+    icon: <TriangleAlert size={48} color="#e74c3c" />
   }
 ];
 
@@ -143,10 +153,11 @@ export default function Onboarding() {
                     width: 96,
                     height: 96,
                     borderRadius: "50%",
-                    bgcolor: "rgba(255,255,255,0.05)",
+                    bgcolor: activeStep === 0 ? "#ffffff" : "rgba(255,255,255,0.05)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
+                    overflow: "hidden"
                   }}
                 >
                   {steps[activeStep].icon}
@@ -172,6 +183,7 @@ export default function Onboarding() {
               bgcolor: "transparent",
               p: 0,
               mb: 3,
+              border: "none",
               "& .MuiMobileStepper-dot": {
                 bgcolor: "rgba(255,255,255,0.2)",
               },

@@ -29,6 +29,7 @@ import {
   ChevronRight,
   ChevronDown,
   Info,
+  History,
   Edit2,
   CheckCircle2,
   XCircle,
@@ -65,7 +66,10 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
 
   const isStarted = !cohort.start_at || now >= new Date(cohort.start_at);
   const isEnded = cohort.end_at && now >= new Date(cohort.end_at);
-  const canAccess = (isStarted && !isEnded) || isAdmin;
+  const hasSlots = cohort.slots.length > 0;
+  
+  // Disable if unscheduled or past events. Admins can still access if not yet started.
+  const canAccess = (isStarted || isAdmin) && !isEnded && hasSlots;
 
   return (
     <motion.div
@@ -88,6 +92,7 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
           backdropFilter: "blur(12px)",
           border: "1px solid rgba(255, 255, 255, 0.08)",
           transition: "all 0.4s cubic-bezier(0.23, 1, 0.32, 1)",
+          pointerEvents: canAccess ? "auto" : "none",
           "&:hover": canAccess ? {
             background: "rgba(35, 35, 35, 0.8)",
             borderColor: "rgba(52, 152, 219, 0.4)",
@@ -102,22 +107,22 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
             left: 0, 
             width: '4px', 
             height: '100%', 
-            background: isEnded ? 'rgba(255,255,255,0.1)' : 'linear-gradient(to bottom, #3498db, #2980b9)',
+            background: (isEnded || !hasSlots) ? 'rgba(255,255,255,0.1)' : 'linear-gradient(to bottom, #3498db, #2980b9)',
             opacity: 0.8
           }} 
         />
 
-        <CardContent sx={{ p: cohort.slots.length === 0 ? { xs: 2, md: 2.5 } : { xs: 2.5, md: 3.5 } }}>
-          <Grid container spacing={cohort.slots.length === 0 ? 2 : 4} alignItems="center">
+        <CardContent sx={{ p: { xs: 2.5, md: 3.5 } }}>
+          <Grid container spacing={4} alignItems="center">
             
             {/* Left: Info */}
-            <Grid size={{ xs: 12, md: cohort.slots.length === 0 ? 8 : 4 }}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                 <Typography
                   variant="caption"
                   sx={{
                     fontWeight: 800,
-                    color: isEnded ? "rgba(255,255,255,0.3)" : "#3498db",
+                    color: (isEnded || !hasSlots) ? "rgba(255,255,255,0.3)" : "#3498db",
                     letterSpacing: "0.5px",
                     textTransform: 'uppercase',
                     fontSize: '0.65rem'
@@ -133,29 +138,81 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
               <Typography
                 variant="h6"
                 sx={{
-                  color: isEnded ? "rgba(255,255,255,0.4)" : "#ffffff",
+                  color: (isEnded || !hasSlots) ? "rgba(255,255,255,0.4)" : "#ffffff",
                   fontWeight: 700,
-                  mb: cohort.slots.length === 0 ? 0 : 1,
+                  mb: 1,
                   lineHeight: 1.2,
-                  fontSize: cohort.slots.length === 0 ? '1.1rem' : undefined
                 }}
               >
                 {cohort.title}
               </Typography>
               
-              {cohort.slots.length > 0 && (
-                <>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "rgba(255,255,255,0.35)",
-                      fontSize: "0.8rem",
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    {cohort.description}
-                  </Typography>
-                  
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "rgba(255,255,255,0.35)",
+                  fontSize: "0.8rem",
+                  lineHeight: 1.5,
+                  mb: hasSlots ? 1.5 : 0
+                }}
+              >
+                {cohort.description}
+              </Typography>
+              
+              {hasSlots && (
+                <RegistrationStatus 
+                  startAt={cohort.start_at}
+                  endAt={cohort.end_at}
+                  isAdmin={isAdmin}
+                  small
+                  align="flex-start"
+                  onStatusChange={() => setNow(new Date())}
+                />
+              )}
+            </Grid>
+
+            {/* Middle: Dynamic Content (Slots or Countdown) */}
+            <Grid size={{ xs: 12, md: 5.5 }}>
+              {hasSlots ? (
+                <Stack spacing={1}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2, mb: -0.5 }}>
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Tanggal
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Ketersediaan
+                    </Typography>
+                  </Box>
+                  {cohort.slots.map((slot) => {
+                    const remaining = slot.quota - slot.count;
+                    const isFull = remaining <= 0;
+                    return (
+                      <Box
+                        key={slot.id}
+                        sx={{
+                          px: 2,
+                          py: 1,
+                          borderRadius: 2,
+                          bgcolor: "rgba(255,255,255,0.025)",
+                          border: "1px solid rgba(255,255,255,0.05)",
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 1
+                        }}
+                      >
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: '0.75rem', fontFamily: 'monospace' }}>
+                          {format(parseISO(slot.date.replace(/^0006-/, '2026-')), "EEEE, d MMMM yyyy", { locale: id })}
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 800, color: isFull ? '#e74c3c' : '#2ecc71', fontSize: '0.75rem', fontFamily: 'monospace' }}>
+                          {isFull ? "Full" : `${remaining} Slot`}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              ) : (
+                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                   <RegistrationStatus 
                     startAt={cohort.start_at}
                     endAt={cohort.end_at}
@@ -164,60 +221,13 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
                     align="center"
                     onStatusChange={() => setNow(new Date())}
                   />
-                </>
+                </Box>
               )}
             </Grid>
 
-            {/* Middle: Dynamic Content (Countdown or Slots) */}
-            {(cohort.slots.length > 0 || (!isStarted && !isAdmin) || (isEnded && !isAdmin)) && (
-              <Grid size={{ xs: 12, md: 5.5 }}>
-                <Stack spacing={2}>
-                  {cohort.slots.length > 0 && (!isEnded || isAdmin) && (
-                    <Stack spacing={1}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2, mb: -0.5 }}>
-                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                          Tanggal
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                          Ketersediaan
-                        </Typography>
-                      </Box>
-                      {cohort.slots.map((slot) => {
-                        const remaining = slot.quota - slot.count;
-                        const isFull = remaining <= 0;
-                        return (
-                          <Box
-                            key={slot.id}
-                            sx={{
-                              px: 2,
-                              py: 1,
-                              borderRadius: 2,
-                              bgcolor: "rgba(255,255,255,0.025)",
-                              border: "1px solid rgba(255,255,255,0.05)",
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              gap: 1
-                            }}
-                          >
-                            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: '0.75rem', fontFamily: 'monospace' }}>
-                              {format(parseISO(slot.date.replace(/^0006-/, '2026-')), "EEEE, d MMMM yyyy", { locale: id })}
-                            </Typography>
-                            <Typography variant="caption" sx={{ fontWeight: 800, color: isFull ? '#e74c3c' : '#2ecc71', fontSize: '0.75rem', fontFamily: 'monospace' }}>
-                              {isFull ? "Full" : `${remaining} Slot`}
-                            </Typography>
-                          </Box>
-                        );
-                      })}
-                    </Stack>
-                  )}
-                </Stack>
-              </Grid>
-            )}
-
             {/* Right: Action */}
-            <Grid size={{ xs: 12, md: cohort.slots.length === 0 ? 4 : 2.5 }} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' }, alignItems: 'center' }}>
-              {cohort.slots.length > 0 ? (
+            <Grid size={{ xs: 12, md: 2.5 }} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' }, alignItems: 'center' }}>
+              {hasSlots ? (
                 <Stack spacing={1.5} alignItems={{ xs: 'flex-start', md: 'flex-end' }} sx={{ width: '100%' }}>
                   <Button
                     variant="contained"
@@ -349,10 +359,14 @@ export default function Home() {
     fetchCohorts();
   }, []);
 
-  const { scheduled, unscheduled } = useMemo(() => {
+  const { scheduled, unscheduled, past } = useMemo(() => {
+    const now = new Date();
+    const isPast = (c: Cohort) => c.end_at && now >= new Date(c.end_at);
+
     return {
-      scheduled: cohorts.filter((c) => c.slots.length > 0),
-      unscheduled: cohorts.filter((c) => c.slots.length === 0),
+      scheduled: cohorts.filter((c) => c.slots.length > 0 && !isPast(c)),
+      unscheduled: cohorts.filter((c) => c.slots.length === 0 && !isPast(c)),
+      past: cohorts.filter((c) => isPast(c)),
     };
   }, [cohorts]);
 
@@ -591,6 +605,45 @@ export default function Home() {
               <AccordionDetails sx={{ px: 2, pb: 2, background: "transparent" }}>
                 <Grid container spacing={2.5}>
                   {unscheduled.map((cohort) => (
+                    <Grid size={{ xs: 12 }} key={cohort.id}>
+                      <CohortCard cohort={cohort} isAdmin={isAdmin} />
+                    </Grid>
+                  ))}
+                </Grid>
+              </AccordionDetails>
+            </Accordion>
+          </Box>
+        )}
+
+        {/* Past Events Accordion */}
+        {!isLoading && past.length > 0 && (
+          <Box sx={{ mt: unscheduled.length > 0 ? 2 : 6 }}>
+            <Accordion
+              sx={{
+                background: "#1a1a1a !important",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: "12px !important",
+                overflow: "hidden",
+                "&:before": { display: "none" },
+              }}
+            >
+              <AccordionSummary expandIcon={<ChevronDown color="white" />}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <History size={18} color="rgba(255,255,255,0.5)" />
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                      color: "rgba(255,255,255,0.7)",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    Event yang telah usai ({past.length})
+                  </Typography>
+                </Box>
+              </AccordionSummary>
+              <AccordionDetails sx={{ px: 2, pb: 2, background: "transparent" }}>
+                <Grid container spacing={2.5}>
+                  {past.map((cohort) => (
                     <Grid size={{ xs: 12 }} key={cohort.id}>
                       <CohortCard cohort={cohort} isAdmin={isAdmin} />
                     </Grid>
