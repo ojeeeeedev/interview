@@ -298,32 +298,38 @@ export default function Landing() {
                 <Typography variant="body2" sx={{ mt: 1.5, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
                   Silakan isi formulir di bawah ini untuk mengonfirmasi kehadiran Anda pada jadwal yang tersedia.
                 </Typography>
+
+                {cohort?.end_at && !isEnded && (
+                  <Stack spacing={1.5} sx={{ mt: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: '#e74c3c', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900 }}>3</Box>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          fontWeight: 900,
+                          color: "#ffffff",
+                          textTransform: "uppercase",
+                          fontSize: "0.8rem",
+                          letterSpacing: "1px",
+                        }}
+                      >
+                        Batas Pendaftaran
+                      </Typography>
+                    </Box>
+                    <Box sx={{ px: 1 }}>
+                        <CountdownTimer
+                            targetDate={cohort.end_at}
+                            onFinish={() => setNow(new Date())}
+                            small
+                            showTarget
+                            targetLabel="DITUTUP PADA"
+                        />
+                    </Box>
+                  </Stack>
+                )}
               </Box>
 
               <Divider sx={{ opacity: 0.1 }} />
-
-              {cohort?.end_at && !isEnded && (
-                <Box
-                  sx={{
-                    px: { xs: 2, sm: 3 },
-                    py: 2,
-                    borderRadius: "12px",
-                    bgcolor: "rgba(231, 76, 60, 0.05)",
-                    border: "1px solid rgba(231, 76, 60, 0.15)",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center"
-                  }}
-                >
-                  <CountdownTimer
-                    targetDate={cohort.end_at}
-                    onFinish={() => setNow(new Date())}
-                    small
-                    showTarget
-                    targetLabel="Batas Pendaftaran"
-                  />
-                </Box>
-              )}
 
               <BookingForm
                 cohortId={cohort!.id}

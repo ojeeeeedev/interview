@@ -71,9 +71,26 @@ export default function CountdownTimer({
 
     if (small) {
         return (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                {targetDateElement}
-                <Stack direction="row" spacing={1} alignItems="baseline" justifyContent="center">
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                {targetDateElement && (
+                    <Typography 
+                        variant="caption" 
+                        sx={{ 
+                            display: 'block', 
+                            mb: 0.5, 
+                            opacity: 0.8, 
+                            fontWeight: 900, 
+                            fontSize: '0.65rem',
+                            textAlign: 'left',
+                            color: targetLabel.toUpperCase().includes("DIBUKA") ? "#3498db" : (targetLabel.toUpperCase().includes("BATAS") ? "#e74c3c" : "inherit"),
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px'
+                        }}
+                    >
+                        {targetLabel}: {formattedTarget}
+                    </Typography>
+                )}
+                <Stack direction="row" spacing={1} alignItems="baseline" justifyContent="flex-start">
                     {Object.entries(timeLeft).map(([label, value], index, arr) => (
                         <Box key={label} sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
                             <Typography variant="body2" sx={{ fontWeight: 800, color: '#3498db', lineHeight: 1 }}>
