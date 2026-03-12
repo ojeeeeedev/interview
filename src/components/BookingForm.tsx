@@ -254,7 +254,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
       <Stack spacing={1.5}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: isNameVerified ? '#2ecc71' : '#3498db', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900, transition: 'all 0.3s' }}>1</Box>
+            <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: isNameVerified ? '#2ecc71' : 'rgba(255,255,255,0.1)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900, transition: 'all 0.3s' }}>1</Box>
             <Typography
               variant="subtitle2"
               sx={{
@@ -270,13 +270,12 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
           </Box>
           {isSearching && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="caption" sx={{ color: '#3498db', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.6rem' }}>
+              <Typography variant="caption" sx={{ color: '#2ecc71', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.6rem' }}>
                 Mencari Nama...
               </Typography>
-              <CircularProgress size={12} sx={{ color: '#3498db' }} />
+              <CircularProgress size={12} sx={{ color: '#2ecc71' }} />
             </Box>
-          )}
-          {isNameVerified && !isSearching && (
+          )}          {isNameVerified && !isSearching && (
             <Typography variant="caption" sx={{ color: '#2ecc71', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.6rem' }}>
               Nama Terdaftar ✓
             </Typography>
@@ -360,7 +359,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
 
       <Stack spacing={1.5}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: '#3498db', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900 }}>2</Box>
+          <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: selectedDate ? '#2ecc71' : 'rgba(255,255,255,0.1)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900, transition: 'all 0.3s' }}>2</Box>
           <Typography
             variant="subtitle2"
             sx={{
@@ -383,8 +382,8 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
 
       <Box sx={{ pt: 2, textAlign: "center" }}>
         <motion.div 
-          whileHover={!isPending && selectedDate && isNameVerified ? { scale: 1.02, y: -4 } : {}} 
-          whileTap={!isPending && selectedDate && isNameVerified ? { scale: 0.98 } : {}}
+          whileHover={!isPending && selectedDate && isNameVerified && !isValidatingName ? { scale: 1.02, y: -4 } : {}} 
+          whileTap={!isPending && selectedDate && isNameVerified && !isValidatingName ? { scale: 0.98 } : {}}
         >
           <Button
             type="submit"
@@ -394,16 +393,45 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
             fullWidth
             startIcon={isPending ? <CircularProgress size={20} color="inherit" /> : null}
             sx={{
-              height: 56, // Slightly taller for primary action
+              height: 56,
               borderRadius: "12px",
-              bgcolor: "#3498db",
               fontWeight: 900,
               fontSize: "1rem",
               letterSpacing: '0.5px',
-              boxShadow: isNameVerified ? "0 8px 24px rgba(52, 152, 219, 0.3)" : "none",
+              textTransform: 'none',
+              position: 'relative',
+              // Glassmorphic Green Style
+              background: (!isPending && !isValidatingName && isNameVerified && selectedDate) 
+                ? 'rgba(20, 80, 45, 0.25)' 
+                : 'rgba(255,255,255,0.05)',
+              backdropFilter: (!isPending && !isValidatingName && isNameVerified && selectedDate) ? 'blur(12px)' : 'none',
+              border: (!isPending && !isValidatingName && isNameVerified && selectedDate) ? '1px solid rgba(46, 204, 113, 0.3)' : '1px solid rgba(255,255,255,0.05)',
+              color: (!isPending && !isValidatingName && isNameVerified && selectedDate) ? '#2ecc71' : 'rgba(255,255,255,0.15)',
+              transition: 'all 0.4s ease',
+              // Persistent Glow Animation (Alternating Colors)
+              animation: (!isPending && !isValidatingName && isNameVerified && selectedDate) ? 'glow-alternate-btn 4s ease-in-out infinite' : 'none',
+              '@keyframes glow-alternate-btn': {
+                '0%': { 
+                  boxShadow: '0 0 8px rgba(123, 239, 178, 0.3)',
+                  borderColor: 'rgba(46, 204, 113, 0.4)' 
+                },
+                '50%': { 
+                  boxShadow: '0 0 8px rgba(52, 152, 219, 0.3)',
+                  borderColor: 'rgba(52, 152, 219, 0.4)' 
+                },
+                '100%': { 
+                  boxShadow: '0 0 8px rgba(123, 239, 178, 0.3)',
+                  borderColor: 'rgba(46, 204, 113, 0.4)' 
+                },
+              },
+              '&:hover': { 
+                background: 'rgba(46, 204, 113, 0.2)',
+                borderColor: 'rgba(46, 204, 113, 0.6)',
+              },
               "&.Mui-disabled": {
                 bgcolor: "rgba(255,255,255,0.05)",
-                color: "rgba(255,255,255,0.2)"
+                color: "rgba(255,255,255,0.2)",
+                border: '1px solid rgba(255,255,255,0.05)',
               }
             }}
           >
@@ -444,13 +472,13 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
           </DialogContentText>
           <Box
             sx={{
-              bgcolor: "rgba(52, 152, 219, 0.1)",
+              bgcolor: "rgba(46, 204, 113, 0.1)",
               p: 2.5,
               borderRadius: "12px",
-              border: "1px solid rgba(52, 152, 219, 0.3)",
+              border: "1px solid rgba(46, 204, 113, 0.3)",
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 800, color: "#3498db" }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: "#2ecc71" }}>
               {selectedDate &&
                 format(selectedDate, "EEEE, d MMMM yyyy", { locale: id })}
             </Typography>
@@ -462,23 +490,50 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
             </Typography>
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 1 }}>
-          <Button
-            onClick={() => setConfirmOpen(false)}
-            disabled={isPending}
-            sx={{ color: "rgba(255,255,255,0.4)", fontWeight: 700, height: 40 }}
-          >
-            Batal
-          </Button>
-          <Button
-            onClick={handleConfirm}
-            variant="contained"
-            color="primary"
-            disabled={isPending}
-            sx={{ fontWeight: 800, px: 3, height: 40 }}
-          >
-            Ya, Jadwalkan
-          </Button>
+        <DialogActions sx={{ p: 3, pt: 0.5 }}>
+          <Stack direction="row" spacing={2} sx={{ width: '100%' }}>
+            <Button
+              onClick={() => setConfirmOpen(false)}
+              disabled={isPending}
+              variant="outlined"
+              fullWidth
+              sx={{ 
+                color: "rgba(255,255,255,0.5)", 
+                fontWeight: 700, 
+                height: 44,
+                borderRadius: "10px",
+                borderColor: "rgba(255,255,255,0.1)",
+                textTransform: 'none',
+                '&:hover': {
+                  borderColor: "rgba(255,255,255,0.2)",
+                  bgcolor: "rgba(255,255,255,0.05)"
+                }
+              }}
+            >
+              Batal
+            </Button>
+            <Button
+              onClick={handleConfirm}
+              variant="contained"
+              disabled={isPending}
+              fullWidth
+              sx={{ 
+                fontWeight: 800, 
+                height: 44,
+                borderRadius: "10px",
+                bgcolor: 'rgba(20, 80, 45, 0.4)',
+                border: '1px solid rgba(46, 204, 113, 0.4)',
+                color: '#2ecc71',
+                textTransform: 'none',
+                '&:hover': {
+                  bgcolor: 'rgba(46, 204, 113, 0.2)',
+                  borderColor: 'rgba(46, 204, 113, 0.6)',
+                }
+              }}
+            >
+              Jadwalkan
+            </Button>
+          </Stack>
         </DialogActions>
       </Dialog>
     </Stack>

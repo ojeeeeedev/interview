@@ -74,7 +74,7 @@ export default function RegistrationStatus({
   return (
     <Box 
       sx={{ 
-        width: align === 'center' ? '100%' : 'auto',
+        width: '100%',
         display: 'flex',
         justifyContent: align === 'center' ? 'center' : 'flex-start',
         mt: small ? 2 : 0

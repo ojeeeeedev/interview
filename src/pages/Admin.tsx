@@ -30,6 +30,8 @@ import {
   Alert,
   Skeleton,
   Tooltip,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import {
   Trash2,
@@ -112,6 +114,8 @@ interface jsPDFWithAutoTable extends jsPDF {
  */
 export default function Admin() {
   const [tab, setTab] = useState(0);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [slots, setSlots] = useState<SlotWithCohorts[]>([]);
   const [reservations, setReservations] = useState<ReservationExtended[]>([]);
@@ -286,7 +290,7 @@ export default function Admin() {
     let currentY = 15;
 
     doc.setFontSize(20);
-    doc.text("Laporan Reservasi Wawancara", 105, currentY, { align: "center" });
+    doc.text("Rekapitulasi Reservasi Wawancara", 105, currentY, { align: "center" });
     currentY += 15;
 
     doc.setFontSize(16);
@@ -325,15 +329,22 @@ export default function Admin() {
             year: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
-          })
+          }),
+          "" // Empty cell for "Kehadiran"
         ]);
 
       autoTable(doc, {
         startY: currentY,
-        head: [['Nama Peserta', 'Kode Akses', 'Waktu Daftar']],
+        head: [['Nama Peserta', 'Kode Akses', 'Waktu Daftar', 'Kehadiran']],
         body: tableRows,
         theme: 'grid',
         headStyles: { fillColor: [52, 152, 219] },
+        columnStyles: {
+          0: { cellWidth: 72 }, // 40% of standard usable width (approx 182mm)
+          1: { cellWidth: 25 },
+          2: { cellWidth: 45 },
+          3: { cellWidth: 40 } 
+        },
         margin: { left: 14, right: 14 }
       });
 
@@ -1835,10 +1846,11 @@ export default function Admin() {
                                       downloadCohortPDF(cohort.id);
                                     }}
                                     sx={{ 
-                                      borderRadius: 2, 
+                                      borderRadius: 1, 
                                       fontWeight: 700,
                                       py: 0.5,
                                       px: 1.5,
+                                      maxHeight: "32px",
                                       borderColor: 'rgba(52, 152, 219, 0.4)',
                                       color: '#3498db',
                                       '&:hover': {
@@ -1875,14 +1887,14 @@ export default function Admin() {
                                       
                                       {slotReservations.length > 0 ? (
                                         <TableContainer>
-                                          <Table size="small">
+                                          <Table size="small" sx={{ tableLayout: isMobile ? 'auto' : 'fixed' }}>
                                             <TableHead>
                                               <TableRow>
-                                                <TableCell sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>No</TableCell>
-                                                <TableCell sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>Nama</TableCell>
-                                                <TableCell sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>Waktu Daftar</TableCell>
-                                                <TableCell sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>Kode</TableCell>
-                                                <TableCell align="right"></TableCell>
+                                                <TableCell sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, width: '40px' }}>No</TableCell>
+                                                <TableCell sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, width: isMobile ? 'auto' : '40%' }}>Nama</TableCell>
+                                                <TableCell sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, width: isMobile ? 'auto' : '120px' }}>Waktu Daftar</TableCell>
+                                                <TableCell sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, width: isMobile ? 'auto' : '80px' }}>Kode</TableCell>
+                                                <TableCell align="right" sx={{ width: '50px' }}></TableCell>
                                               </TableRow>
                                             </TableHead>
                                             <TableBody>
@@ -1891,7 +1903,20 @@ export default function Admin() {
                                                 .map((r, idx) => (
                                                   <TableRow key={r.id} sx={{ '& td': { py: 1 } }}>
                                                     <TableCell sx={{ color: 'rgba(255,255,255,0.3)', fontWeight: 700 }}>{idx + 1}</TableCell>
-                                                    <TableCell sx={{ fontWeight: 600 }}>{r.user_name}</TableCell>
+                                                    <TableCell sx={{ 
+                                                      fontWeight: 600,
+                                                      whiteSpace: 'nowrap',
+                                                      overflow: 'hidden',
+                                                      textOverflow: 'ellipsis',
+                                                      // On mobile, we limit width to ensure ellipsis triggers
+                                                      maxWidth: isMobile ? '140px' : 'none'
+                                                    }}>
+                                                      {isMobile ? (
+                                                        r.user_name.split(' ').length > 2 
+                                                          ? r.user_name.split(' ').slice(0, 2).join(' ') + '...'
+                                                          : r.user_name
+                                                      ) : r.user_name}
+                                                    </TableCell>
                                                     <TableCell sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
                                                       {new Date(r.created_at).toLocaleString("id-ID", {
                                                         day: '2-digit',

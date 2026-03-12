@@ -271,13 +271,15 @@ export default function Landing() {
                 </Typography>
 
                 {cohort?.end_at && !isEnded && (
-                  <RegistrationStatus 
-                    startAt={cohort.start_at}
-                    endAt={cohort.end_at}
-                    isAdmin={isAdmin}
-                    small
-                    onStatusChange={() => setNow(new Date())}
-                  />
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                    <RegistrationStatus 
+                      startAt={cohort.start_at}
+                      endAt={cohort.end_at}
+                      isAdmin={isAdmin}
+                      small
+                      onStatusChange={() => setNow(new Date())}
+                    />
+                  </Box>
                 )}
               </Box>
 

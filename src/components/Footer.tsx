@@ -72,7 +72,7 @@ export default function Footer() {
             fontSize: "0.65rem",
           }}
         >
-          © {new Date().getFullYear()} Subseksi Katekumen Dewasa • Paroki St. Petrus, Katedral | Keuskupan Bandung • v1.1.2
+          © {new Date().getFullYear()} Subseksi Katekumen Dewasa • Paroki St. Petrus, Katedral • Keuskupan Bandung<br />v1.2.0
         </Typography>
 
         <Box sx={{ display: "flex", justifyContent: "center" }}>
@@ -85,13 +85,13 @@ export default function Footer() {
               color: "#ffffff",
               bgcolor: "rgba(52, 152, 219, 0.15)", // Dark blue tint
               borderColor: "rgba(52, 152, 219, 0.4)", // Border color
-              borderRadius: "20px",
+              borderRadius: 1,
               fontSize: "0.7rem",
               textTransform: "none",
               fontWeight: 700,
               px: 2,
               py: 0.3, // Reduced vertical padding
-              minHeight: "32px", // Ensure button doesn't get too tall
+              maxHeight: "32px", // Ensure button doesn't get too tall
               "&:hover": {
                 bgcolor: "rgba(52, 152, 219, 0.25)",
                 borderColor: "rgba(52, 152, 219, 0.6)",

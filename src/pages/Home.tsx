@@ -17,6 +17,8 @@ import {
   CircularProgress,
   Skeleton,
   Stack,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
@@ -26,13 +28,13 @@ import { format, parseISO } from "date-fns";
 import { id } from "date-fns/locale";
 import {
   Search,
-  ChevronRight,
   ChevronDown,
   Info,
   History,
   Edit2,
   CheckCircle2,
   XCircle,
+  CircleChevronRight,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import RegistrationStatus from "../components/RegistrationStatus";
@@ -75,6 +77,8 @@ interface CohortWithSlots extends Cohort {
  */
 function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boolean }) {
   const [now, setNow] = useState(new Date());
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   
   // Update current time every minute to keep countdowns and access rules fresh
   useEffect(() => {
@@ -89,7 +93,6 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
   // Access control: Disable if unscheduled or past events. 
   // Admins can still access if not yet started for testing.
   const canAccess = (isStarted || isAdmin) && !isEnded && hasSlots;
-// ... (rest of the file content follows with similar headers)
 
   return (
     <motion.div
@@ -106,7 +109,7 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
           textDecoration: "none",
           display: "block",
           position: "relative",
-          borderRadius: 1.5,
+          borderRadius: 1,
           overflow: "hidden",
           background: "rgba(25, 25, 25, 0.6)", // Distinct fill color
           backdropFilter: "blur(12px)",
@@ -145,7 +148,7 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
                     color: (isEnded || !hasSlots) ? "rgba(255,255,255,0.3)" : "#3498db",
                     letterSpacing: "0.5px",
                     textTransform: 'uppercase',
-                    fontSize: '0.65rem'
+                    fontSize: '0.7rem'
                   }}
                 >
                   Kelompok {cohort.nama_kelompok}
@@ -185,7 +188,8 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
                   endAt={cohort.end_at}
                   isAdmin={isAdmin}
                   small
-                  align="flex-start"
+                  // Center on mobile (xs), left-aligned on desktop (md)
+                  align={isMobile ? "center" : "flex-start"}
                   onStatusChange={() => setNow(new Date())}
                 />
               )}
@@ -212,7 +216,7 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
                         sx={{
                           px: 2,
                           py: 1,
-                          borderRadius: 2,
+                          borderRadius: 1,
                           bgcolor: "rgba(255,255,255,0.025)",
                           border: "1px solid rgba(255,255,255,0.05)",
                           display: 'flex',
@@ -252,22 +256,74 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
                   <Button
                     variant="contained"
                     disabled={!canAccess}
-                    endIcon={canAccess ? <ChevronRight size={18} /> : null}
                     sx={{
                       height: 48,
                       width: { xs: '100%', md: 'auto' },
                       minWidth: 100,
-                      borderRadius: 2,
-                      fontSize: '0.8rem',
+                      borderRadius: 1,
+                      fontSize: '1rem',
                       fontWeight: 700,
-                      lineHeight: 1.4,
+                      lineHeight: 1.25,
                       textTransform: 'none',
-                      background: canAccess ? '#3498db' : 'rgba(255,255,255,0.05)',
-                      '&:hover': { background: '#2980b9' },
+                      position: 'relative',
+                      overflow: 'hidden', // Ensure icon disappears past the edge
+                      // Glassmorphic Green Style
+                      background: canAccess 
+                        ? 'rgba(20, 80, 45, 0.25)' 
+                        : 'rgba(255,255,255,0.05)',
+                      backdropFilter: canAccess ? 'blur(12px)' : 'none',
+                      border: canAccess ? '1px solid rgba(46, 204, 113, 0.3)' : '1px solid rgba(255,255,255,0.05)',
+                      color: canAccess ? '#2ecc71' : 'rgba(255,255,255,0.15)',
+                      transition: 'all 0.4s ease',
+                      // Persistent Glow Animation (Alternating Colors)
+                      animation: canAccess ? 'glow-alternate 4s ease-in-out infinite' : 'none',
+                      '@keyframes glow-alternate': {
+                        '0%': { 
+                          boxShadow: '0 0 8px rgba(123, 239, 178, 0.3)',
+                          borderColor: 'rgba(46, 204, 113, 0.4)' 
+                        },
+                        '50%': { 
+                          boxShadow: '0 0 8px rgba(52, 152, 219, 0.3)',
+                          borderColor: 'rgba(77, 161, 66, 0.4)' 
+                        },
+                        '100%': { 
+                          boxShadow: '0 0 8px rgba(123, 239, 178, 0.3)',
+                          borderColor: 'rgba(46, 204, 113, 0.4)' 
+                        },
+                      },
+                      '&:hover': { 
+                        background: 'rgba(46, 204, 113, 0.2)',
+                        borderColor: 'rgba(46, 204, 113, 0.6)',
+                        transform: 'translateY(-2px)'
+                      },
                       '&.Mui-disabled': { color: 'rgba(255,255,255,0.15)' }
                     }}
                   >
-                    {isAdmin && !isStarted ? "Daftar (Admin)" : isEnded ? "Selesai" : "Daftar"}
+                    <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {isAdmin && !isStarted ? "Daftar (Admin)" : isEnded ? "Selesai" : "Daftar"}
+                      {canAccess && (
+                        <motion.span
+                          variants={{
+                            initial: { x: 0, opacity: 1 },
+                            hover: { 
+                              x: [0, 4, 4, 40], 
+                              opacity: [1, 1, 1, 0],
+                              transition: { 
+                                repeat: Infinity, 
+                                duration: 1.2,
+                                times: [0, 0.2, 0.5, 1],
+                                ease: "easeIn"
+                              }
+                            }
+                          }}
+                          initial="initial"
+                          whileHover="hover"
+                          style={{ display: 'inline-flex' }}
+                        >
+                          <CircleChevronRight size={21} />
+                        </motion.span>
+                      )}
+                    </Box>
                   </Button>
                 </Stack>
               ) : (
@@ -280,7 +336,7 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
                     border: '1px solid rgba(255,255,255,0.05)',
                     px: 2,
                     py: 1,
-                    borderRadius: 2,
+                    borderRadius: 1,
                     bgcolor: 'rgba(255,255,255,0.02)'
                   }}
                 >
@@ -562,7 +618,7 @@ export default function Home() {
                   height: 38,
                   px: 3,
                   whiteSpace: 'nowrap',
-                  borderRadius: 2.5,
+                  borderRadius: 1,
                   fontSize: '0.8rem',
                   fontWeight: 600,
                   fontStyle: 'italic',

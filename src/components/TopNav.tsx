@@ -61,7 +61,7 @@ export default function TopNav() {
             px: { xs: 2, md: 2 },
             bgcolor: "rgba(255, 255, 255, 0.03)",
             backdropFilter: "blur(10px)",
-            borderRadius: 3,
+            borderRadius: 1,
             border: "1px solid rgba(255, 255, 255, 0.08)",
           }}
         >
@@ -137,7 +137,7 @@ export default function TopNav() {
                   gap: { xs: 0.4, sm: 0.8 }
                 }}
               >
-                Katekumen Dewasa <span style={{ padding: '0 4px' }}>•</span> Paroki St. Petrus Katedral <span style={{ padding: '0 4px' }}>•</span> Keuskupan Bandung
+                Tim Katekumen Dewasa - Paroki St. Petrus, Bandung
               </Typography>
             </Box>
           </Box>
@@ -271,6 +271,8 @@ export default function TopNav() {
                     : "rgba(255, 255, 255, 0.1)",
                   color: isActive("/") ? "#3498db" : "#ffffff",
                   border: "1px solid",
+                  lineHeight: 1.25,
+                  textAlign: "center",
                 }}
               >
                 Daftar Event
@@ -292,6 +294,8 @@ export default function TopNav() {
                         : "rgba(255, 255, 255, 0.1)",
                       color: isActive("/admin") ? "#3498db" : "#ffffff",
                       border: "1px solid",
+                      lineHeight: 1.25,
+                      textAlign: "center",
                     }}
                   >
                     Panel Admin
