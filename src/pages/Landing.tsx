@@ -193,9 +193,9 @@ export default function Landing() {
             }}>
               <Lock size={40} color="#3498db" />
             </Box>
-            <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>Akses Belum Dibuka</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>Pendaftaran Belum Dibuka</Typography>
             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)', mb: 4 }}>
-              Pendaftaran untuk Kelompok {cohort.nama_kelompok} ({cohort.title}) segera dibuka:
+              Pendaftaran untuk Kelompok {cohort.nama_kelompok} ({cohort.title}) akan dibuka pada
             </Typography>
             
             <Box sx={{ mb: 6 }}>
@@ -203,7 +203,7 @@ export default function Landing() {
                 targetDate={cohort.start_at!} 
                 onFinish={() => setNow(new Date())} 
                 showTarget
-                targetLabel="DIBUKA"
+                targetLabel="TANGGAL/WAKTU"
               />
             </Box>
 
@@ -305,34 +305,22 @@ export default function Landing() {
               {cohort?.end_at && !isEnded && (
                 <Box
                   sx={{
-                    px: 3,
+                    px: { xs: 2, sm: 3 },
                     py: 2,
                     borderRadius: "12px",
                     bgcolor: "rgba(231, 76, 60, 0.05)",
                     border: "1px solid rgba(231, 76, 60, 0.15)",
                     display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 2,
+                    justifyContent: "center",
+                    alignItems: "center"
                   }}
                 >
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontWeight: 900,
-                      textTransform: "uppercase",
-                      letterSpacing: "1px",
-                      color: "#e74c3c",
-                    }}
-                  >
-                    Berakhir:
-                  </Typography>
                   <CountdownTimer
                     targetDate={cohort.end_at}
                     onFinish={() => setNow(new Date())}
                     small
                     showTarget
-                    targetLabel="BATAS"
+                    targetLabel="Batas Pendaftaran"
                   />
                 </Box>
               )}

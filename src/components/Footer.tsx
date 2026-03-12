@@ -61,16 +61,18 @@ export default function Footer() {
     >
       <Container maxWidth="lg">
         <Typography
-          variant="body2"
+          variant="caption"
           align="center"
           sx={{
             color: "rgba(255, 255, 255, 0.4)",
             fontWeight: 600,
             letterSpacing: "0.5px",
             mb: 1, // Reduced from 3
+            display: "block",
+            fontSize: "0.65rem",
           }}
         >
-          © {new Date().getFullYear()} Subseksi Katekumen Dewasa • v1.00
+          © {new Date().getFullYear()} Subseksi Katekumen Dewasa • Paroki St. Petrus, Katedral | Keuskupan Bandung • v1.1.2
         </Typography>
 
         <Box sx={{ display: "flex", justifyContent: "center" }}>

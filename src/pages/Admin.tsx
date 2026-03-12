@@ -29,6 +29,7 @@ import {
   Snackbar,
   Alert,
   Skeleton,
+  Tooltip,
 } from "@mui/material";
 import {
   Trash2,
@@ -175,6 +176,7 @@ export default function Admin() {
     date: "",
     quota: 10,
   });
+  const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
   const [selectedKelompok, setSelectedKelompok] = useState("");
 
   const uniqueKelompok = useMemo(() => {
@@ -206,7 +208,7 @@ export default function Admin() {
         { data: an }
     ] = await Promise.all([
         supabase.from("cohorts").select("*").order("created_at", { ascending: false }),
-        supabase.from("slots").select("*, cohorts(title, nama_kelompok)"),
+        supabase.from("slots").select("*, cohorts(title, nama_kelompok)").order("date", { ascending: true }),
         supabase.from("reservations").select("*, slots(date, cohort_id, cohorts(title, nama_kelompok))"),
         supabase.from("allowed_names").select("*, cohorts(title, nama_kelompok)")
     ]);
@@ -462,6 +464,43 @@ export default function Admin() {
       setNewSlot({ ...newSlot, date: "" });
       setShowErrors(false);
       showToast("Jadwal berhasil ditambahkan");
+      fetchAll();
+    }
+  };
+
+  const handleEditSlotClick = (slot: SlotWithCohorts) => {
+    setEditingSlotId(slot.id);
+    setSelectedKelompok(slot.cohorts?.nama_kelompok || "");
+    setNewSlot({
+      cohort_id: slot.cohort_id,
+      date: slot.date,
+      quota: slot.quota,
+    });
+    showToast("Mode ubah jadwal aktif", "info");
+  };
+
+  const handleUpdateSlot = async () => {
+    if (!editingSlotId || !newSlot.cohort_id || !newSlot.date || !selectedKelompok) {
+      setShowErrors(true);
+      showToast("Mohon lengkapi semua field wajib", "error");
+      return;
+    }
+    const { error } = await supabase
+      .from("slots")
+      .update({
+        cohort_id: newSlot.cohort_id,
+        date: newSlot.date,
+        quota: newSlot.quota,
+      })
+      .eq("id", editingSlotId);
+
+    if (error) {
+      showToast(error.message, "error");
+    } else {
+      setEditingSlotId(null);
+      setNewSlot({ cohort_id: "", date: "", quota: 10 });
+      setShowErrors(false);
+      showToast("Jadwal berhasil diubah");
       fetchAll();
     }
   };
@@ -990,72 +1029,86 @@ export default function Admin() {
                           </TableCell>
                           <TableCell align="right">                                <Box
                                   display="flex"
-                                  gap={1}
+                                  gap={0.5}
                                   justifyContent="flex-end"
+                                  alignItems="center"
                                 >
-                                  <Button
-                                    size="small"
-                                    variant="outlined"
-                                    startIcon={<Copy size={14} />}
-                                    onClick={() => copyInviteLink(c.unique_slug)}
-                                    sx={{
-                                      py: 0.3,
-                                      px: 1.5,
-                                      minWidth: "auto",
-                                      fontSize: "0.75rem",
-                                    }}
-                                  >
-                                    Link
-                                  </Button>
-                                  <Button
-                                    size="small"
-                                    variant="outlined"
-                                    color="primary"
-                                    startIcon={<Edit2 size={14} />}
-                                    onClick={() => handleEditCohortClick(c)}
-                                    sx={{
-                                      py: 0.3,
-                                      px: 1.5,
-                                      minWidth: "auto",
-                                      fontSize: "0.75rem",
-                                    }}
-                                  >
-                                    Ubah
-                                  </Button>
-                                  <Button
-                                    size="small"
-                                    startIcon={<UserPlus size={14} />}
-                                    variant="outlined"
-                                    color="primary"
-                                    onClick={() => {
-                                      setPasteTargetCohort(c.id);
-                                      setPasteDialogOpen(true);
-                                    }}
-                                    sx={{
-                                      py: 0.3,
-                                      px: 1.5,
-                                      minWidth: "auto",
-                                      fontSize: "0.75rem",
-                                    }}
-                                  >
-                                    Peserta
-                                  </Button>
-                                  <IconButton
-                                    size="small"
-                                    color="error"
-                                    onClick={() => handleDeleteCohort(c.id)}
-                                    sx={{
-                                      bgcolor: "rgba(231, 76, 60, 0.15)",
-                                      borderRadius: "50%",
-                                      width: 32,
-                                      height: 32,
-                                      "&:hover": {
-                                        bgcolor: "rgba(231, 76, 60, 0.25)",
-                                      },
-                                    }}
-                                  >
-                                    <Trash2 size={16} />
-                                  </IconButton>
+                                  <Tooltip title="Salin Link Daftar">
+                                    <IconButton
+                                      size="small"
+                                      color="inherit"
+                                      onClick={() => copyInviteLink(c.unique_slug)}
+                                      sx={{
+                                        bgcolor: "rgba(255, 255, 255, 0.05)",
+                                        borderRadius: "50%",
+                                        width: 28,
+                                        height: 28,
+                                        "&:hover": {
+                                          bgcolor: "rgba(255, 255, 255, 0.1)",
+                                        },
+                                      }}
+                                    >
+                                      <Copy size={14} />
+                                    </IconButton>
+                                  </Tooltip>
+                                  <Tooltip title="Ubah Event">
+                                    <IconButton
+                                      size="small"
+                                      color="primary"
+                                      onClick={() => handleEditCohortClick(c)}
+                                      sx={{
+                                        bgcolor: "rgba(52, 152, 219, 0.15)",
+                                        borderRadius: "50%",
+                                        width: 28,
+                                        height: 28,
+                                        "&:hover": {
+                                          bgcolor: "rgba(52, 152, 219, 0.25)",
+                                        },
+                                      }}
+                                    >
+                                      <Edit2 size={14} />
+                                    </IconButton>
+                                  </Tooltip>
+                                  <Tooltip title="Atur Peserta">
+                                    <IconButton
+                                      size="small"
+                                      color="primary"
+                                      onClick={() => {
+                                        setPasteTargetCohort(c.id);
+                                        setPasteDialogOpen(true);
+                                      }}
+                                      sx={{
+                                        bgcolor: "rgba(46, 204, 113, 0.15)",
+                                        borderRadius: "50%",
+                                        width: 28,
+                                        height: 28,
+                                        color: "#2ecc71",
+                                        "&:hover": {
+                                          bgcolor: "rgba(46, 204, 113, 0.25)",
+                                        },
+                                      }}
+                                    >
+                                      <UserPlus size={14} />
+                                    </IconButton>
+                                  </Tooltip>
+                                  <Tooltip title="Hapus Event">
+                                    <IconButton
+                                      size="small"
+                                      color="error"
+                                      onClick={() => handleDeleteCohort(c.id)}
+                                      sx={{
+                                        bgcolor: "rgba(231, 76, 60, 0.15)",
+                                        borderRadius: "50%",
+                                        width: 28,
+                                        height: 28,
+                                        "&:hover": {
+                                          bgcolor: "rgba(231, 76, 60, 0.25)",
+                                        },
+                                      }}
+                                    >
+                                      <Trash2 size={14} />
+                                    </IconButton>
+                                  </Tooltip>
                                 </Box>
                               </TableCell>
                             </TableRow>
@@ -1073,7 +1126,7 @@ export default function Admin() {
                 <Grid size={{ xs: 12, md: 4 }}>
                   <Box sx={{ mb: 2, px: 1 }}>
                     <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                      Tambah Jadwal Event/Wawancara
+                      {editingSlotId ? "Ubah Jadwal Event/Wawancara" : "Tambah Jadwal Event/Wawancara"}
                     </Typography>
                   </Box>
                   {/* Mobile Collapsible Form */}
@@ -1180,14 +1233,28 @@ export default function Admin() {
                               })
                             }
                           />
-                          <Button
-                            variant="contained"
-                            sx={{ mt: 2 }}
-                            onClick={handleCreateSlot}
-                            fullWidth
-                          >
-                            Tambah
-                          </Button>
+                          <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                            {editingSlotId && (
+                              <Button
+                                variant="outlined"
+                                color="inherit"
+                                onClick={() => {
+                                  setEditingSlotId(null);
+                                  setNewSlot({ cohort_id: "", date: "", quota: 10 });
+                                }}
+                                fullWidth
+                              >
+                                Batal
+                              </Button>
+                            )}
+                            <Button
+                              variant="contained"
+                              onClick={editingSlotId ? handleUpdateSlot : handleCreateSlot}
+                              fullWidth
+                            >
+                              {editingSlotId ? "Simpan Perubahan" : "Tambah"}
+                            </Button>
+                          </Stack>
                         </Box>
                       </AccordionDetails>
                     </Accordion>
@@ -1287,14 +1354,28 @@ export default function Admin() {
                         })
                       }
                     />
-                    <Button
-                      variant="contained"
-                      sx={{ mt: 2 }}
-                      onClick={handleCreateSlot}
-                      fullWidth
-                    >
-                      Tambah
-                    </Button>
+                    <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                      {editingSlotId && (
+                        <Button
+                          variant="outlined"
+                          color="inherit"
+                          onClick={() => {
+                            setEditingSlotId(null);
+                            setNewSlot({ cohort_id: "", date: "", quota: 10 });
+                          }}
+                          fullWidth
+                        >
+                          Batal
+                        </Button>
+                      )}
+                      <Button
+                        variant="contained"
+                        onClick={editingSlotId ? handleUpdateSlot : handleCreateSlot}
+                        fullWidth
+                      >
+                        {editingSlotId ? "Simpan Perubahan" : "Tambah"}
+                      </Button>
+                    </Stack>
                   </Paper>
                 </Grid>
                 <Grid size={{ xs: 12, md: 8 }}>
@@ -1346,22 +1427,44 @@ export default function Admin() {
                             {s.count} / {s.quota}
                           </TableCell>
                           <TableCell align="right">
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleDeleteSlot(s.id)}
-                              sx={{
-                                bgcolor: "rgba(231, 76, 60, 0.15)",
-                                borderRadius: "50%",
-                                width: 32,
-                                height: 32,
-                                "&:hover": {
-                                  bgcolor: "rgba(231, 76, 60, 0.25)",
-                                },
-                              }}
-                            >
-                              <Trash2 size={16} />
-                            </IconButton>
+                            <Box display="flex" gap={0.5} justifyContent="flex-end" alignItems="center">
+                              <Tooltip title="Ubah Jadwal">
+                                <IconButton
+                                  size="small"
+                                  color="primary"
+                                  onClick={() => handleEditSlotClick(s)}
+                                  sx={{
+                                    bgcolor: "rgba(52, 152, 219, 0.15)",
+                                    borderRadius: "50%",
+                                    width: 32,
+                                    height: 32,
+                                    "&:hover": {
+                                      bgcolor: "rgba(52, 152, 219, 0.25)",
+                                    },
+                                  }}
+                                >
+                                  <Edit2 size={16} />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Hapus Jadwal">
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={() => handleDeleteSlot(s.id)}
+                                  sx={{
+                                    bgcolor: "rgba(231, 76, 60, 0.15)",
+                                    borderRadius: "50%",
+                                    width: 32,
+                                    height: 32,
+                                    "&:hover": {
+                                      bgcolor: "rgba(231, 76, 60, 0.25)",
+                                    },
+                                  }}
+                                >
+                                  <Trash2 size={16} />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -1493,10 +1596,10 @@ export default function Admin() {
                                   sx={{
                                     fontWeight: 700,
                                     fontSize: { xs: "0.75rem", sm: "1rem" },
-                                    whiteSpace: "nowrap",
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
                                     overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    maxWidth: { xs: "120px", sm: "none" },
                                   }}
                                 >
                                   {cohortTitle}
@@ -1595,46 +1698,52 @@ export default function Admin() {
                                           display="flex"
                                           gap={0.5}
                                           justifyContent="flex-end"
+                                          alignItems="center"
                                         >
-                                          <Button
-                                            size="small"
-                                            color="primary"
-                                            variant="outlined"
-                                            startIcon={<Edit2 size={10} />}
-                                            onClick={() => {
-                                              setEditingName({
-                                                id: an.id,
-                                                full_name: an.full_name,
-                                              });
-                                              setEditNameDialogOpen(true);
-                                            }}
-                                            sx={{
-                                              py: 0.2,
-                                              px: 1,
-                                              minWidth: "auto",
-                                              fontSize: "0.65rem",
-                                            }}
-                                          >
-                                            Ubah
-                                          </Button>
-                                          <IconButton
-                                            size="small"
-                                            color="error"
-                                            onClick={() =>
-                                              handleDeleteAllowedName(an.id)
-                                            }
-                                            sx={{
-                                              bgcolor: "rgba(231, 76, 60, 0.1)",
-                                              borderRadius: "50%",
-                                              width: 28,
-                                              height: 28,
-                                              "&:hover": {
-                                                bgcolor: "rgba(231, 76, 60, 0.2)",
-                                              },
-                                            }}
-                                          >
-                                            <Trash2 size={14} />
-                                          </IconButton>
+                                          <Tooltip title="Ubah Nama">
+                                            <IconButton
+                                              size="small"
+                                              color="primary"
+                                              onClick={() => {
+                                                setEditingName({
+                                                  id: an.id,
+                                                  full_name: an.full_name,
+                                                });
+                                                setEditNameDialogOpen(true);
+                                              }}
+                                              sx={{
+                                                bgcolor: "rgba(52, 152, 219, 0.15)",
+                                                borderRadius: "50%",
+                                                width: 24,
+                                                height: 24,
+                                                "&:hover": {
+                                                  bgcolor: "rgba(52, 152, 219, 0.25)",
+                                                },
+                                              }}
+                                            >
+                                              <Edit2 size={12} />
+                                            </IconButton>
+                                          </Tooltip>
+                                          <Tooltip title="Hapus Nama">
+                                            <IconButton
+                                              size="small"
+                                              color="error"
+                                              onClick={() =>
+                                                handleDeleteAllowedName(an.id)
+                                              }
+                                              sx={{
+                                                bgcolor: "rgba(231, 76, 60, 0.1)",
+                                                borderRadius: "50%",
+                                                width: 24,
+                                                height: 24,
+                                                "&:hover": {
+                                                  bgcolor: "rgba(231, 76, 60, 0.2)",
+                                                },
+                                              }}
+                                            >
+                                              <Trash2 size={12} />
+                                            </IconButton>
+                                          </Tooltip>
                                         </Box>
                                       </TableCell>
                                     </TableRow>
@@ -1762,17 +1871,19 @@ export default function Admin() {
                                                       <code>{r.access_code}</code>
                                                     </TableCell>
                                                     <TableCell align="right">
-                                                      <IconButton
-                                                        size="small"
-                                                        color="error"
-                                                        onClick={() => handleDeleteReservation(r.id, r.slot_id)}
-                                                        sx={{ 
-                                                          bgcolor: 'rgba(231, 76, 60, 0.1)',
-                                                          '&:hover': { bgcolor: 'rgba(231, 76, 60, 0.2)' }
-                                                        }}
-                                                      >
-                                                        <Trash2 size={14} />
-                                                      </IconButton>
+                                                      <Tooltip title="Hapus Reservasi">
+                                                        <IconButton
+                                                          size="small"
+                                                          color="error"
+                                                          onClick={() => handleDeleteReservation(r.id, r.slot_id)}
+                                                          sx={{ 
+                                                            bgcolor: 'rgba(231, 76, 60, 0.1)',
+                                                            '&:hover': { bgcolor: 'rgba(231, 76, 60, 0.2)' }
+                                                          }}
+                                                        >
+                                                          <Trash2 size={14} />
+                                                        </IconButton>
+                                                      </Tooltip>
                                                     </TableCell>
                                                   </TableRow>
                                                 ))}

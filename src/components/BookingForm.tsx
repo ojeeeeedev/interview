@@ -308,7 +308,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
               fullWidth
               required
               variant="outlined"
-              placeholder="Masukkan nama lengkap sesuai pendaftaran..."
+              placeholder="Masukkan nama lengkap..."
               slotProps={{
                 input: {
                   ...params.InputProps,
@@ -334,7 +334,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
           )}
         />
         <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', px: 1 }}>
-          * Nama harus sesuai dengan data yang terdaftar di sistem.
+          * Nama harus sesuai dengan yang didaftarkan kepada panitia.
         </Typography>
       </Stack>
 

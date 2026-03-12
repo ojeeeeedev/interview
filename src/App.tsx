@@ -8,6 +8,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthProvider";
 import TopNav from "./components/TopNav";
 import Footer from "./components/Footer";
+import Onboarding from "./components/Onboarding";
 
 // Lazy load pages
 const Home = lazy(() => import("./pages/Home"));
@@ -177,6 +178,7 @@ function App() {
               </Box>
               <Footer />
             </Box>
+            <Onboarding />
           </Router>
         </AuthProvider>
       </LocalizationProvider>

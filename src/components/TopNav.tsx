@@ -24,6 +24,7 @@ import {
   Home,
   LogOut,
   Settings,
+  CircleHelp,
 } from "lucide-react";
 
 export default function TopNav() {
@@ -125,21 +126,29 @@ export default function TopNav() {
                   letterSpacing: "0.2px",
                   mt: 0.2,
                   lineHeight: 1.4,
-                  whiteSpace: "nowrap",
+                  display: { xs: 'none', sm: 'flex' },
+                  WebkitLineClamp: { xs: 2, sm: 'none' },
+                  WebkitBoxOrient: { xs: 'vertical', sm: 'horizontal' },
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                  display: 'flex',
                   alignItems: 'center',
-                  gap: 0.8
+                  flexWrap: 'wrap',
+                  gap: { xs: 0.4, sm: 0.8 }
                 }}
               >
-                Katekumen Dewasa <span>•</span> Paroki St. Petrus Katedral <span>•</span> Keuskupan Bandung
+                Katekumen Dewasa <span style={{ padding: '0 4px' }}>•</span> Paroki St. Petrus Katedral <span style={{ padding: '0 4px' }}>•</span> Keuskupan Bandung
               </Typography>
             </Box>
           </Box>
 
           {isMobile ? (
-            <>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <IconButton
+                color="inherit"
+                onClick={() => window.dispatchEvent(new Event("open-onboarding"))}
+              >
+                <CircleHelp />
+              </IconButton>
               <IconButton
                 color="inherit"
                 onClick={() => setDrawerOpen(true)}
@@ -237,9 +246,16 @@ export default function TopNav() {
                   )}
                 </Box>
               </Drawer>
-            </>
+            </Box>
           ) : (
-            <Box sx={{ display: "flex", gap: 1.5 }}>
+            <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
+              <IconButton
+                color="inherit"
+                onClick={() => window.dispatchEvent(new Event("open-onboarding"))}
+                sx={{ bgcolor: 'rgba(255,255,255,0.08)', '&:hover': { bgcolor: 'rgba(255,255,255,0.15)' } }}
+              >
+                <CircleHelp size={20} />
+              </IconButton>
               <Button
                 component={Link}
                 to="/"

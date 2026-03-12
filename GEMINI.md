@@ -5,17 +5,18 @@ This is a **Cohort Booking System (Sistem Reservasi Wawancara)** designed to man
 
 ### Key Technologies & Libraries
 - **Frontend Core**: React 19, TypeScript, Vite.
-- **Routing**: React Router DOM v7 (`react-router-dom`).
+- **Routing**: React Router DOM v7 (`react-router-dom`) with lazy-loaded routes.
 - **UI/UX**: 
-  - Material UI (MUI) v7 with a custom, highly optimized Dark Theme.
+  - Material UI (MUI) with a custom, highly optimized Dark Theme.
   - Framer Motion for smooth, accessible page and component transitions.
   - Lucide React for modern, clean iconography.
 - **Date Handling**: `date-fns` for parsing, formatting, and localized date manipulation.
 - **Backend/Database**: Supabase (PostgreSQL).
-- **State & Form Management**: Modern React 19 Hooks (`useActionState`, `useTransition`), Context API (`AuthContext`), and controlled MUI components.
+- **State & Form Management**: Modern React 19 Hooks (`useActionState`, `useTransition`, `Suspense`), Context API (`AuthContext`), and controlled MUI components.
 - **Utilities**:
   - `html-to-image`: For generating downloadable PNG tickets upon successful booking.
   - `jspdf` & `jspdf-autotable`: For generating and downloading PDF recap reports in the Admin dashboard.
+  - `papaparse`: For parsing imported CSV/Excel data.
   - `src/lib/calendar.ts`: Shared utility for generating cross-platform calendar deep-links and RFC 5545 compliant `.ics` files.
 
 ---
@@ -23,13 +24,13 @@ This is a **Cohort Booking System (Sistem Reservasi Wawancara)** designed to man
 ## Application Architecture & Data Model
 
 ### Database Schema (Supabase)
-1. **`cohorts`**: Represents a group or event (e.g., "Kelompok A"). Contains title, description, unique URL slug, and an optional `start_at` timestamp for countdowns.
+1. **`cohorts`**: Represents a group or event (e.g., "Kelompok A"). Contains title, description, unique URL slug, and optional `start_at`/`end_at` timestamps for countdowns.
 2. **`slots`**: Represents available interview dates for a specific cohort. Includes the date, maximum `quota`, and current booking `count`.
 3. **`allowed_names`**: A whitelist of full names. A user can only book a slot if their name exists in this table for the specific cohort.
 4. **`reservations`**: Links a user's name to a specific `slot`. Includes an auto-generated 6-character `access_code` used for modifying bookings.
 
 ### Concurrency & Integrity
-- **Atomic Transactions**: Booking logic is handled strictly on the database side using a PL/pgSQL RPC function (`book_reservation`). This function uses `FOR UPDATE` row-level locks to ensure that the slot `count` never exceeds the `quota`, preventing race conditions and overbooking.
+- **Atomic Transactions**: Booking logic is handled strictly on the database side using PL/pgSQL RPC functions (`book_reservation` and `change_reservation`). These functions use `FOR UPDATE` row-level locks to ensure that the slot `count` never exceeds the `quota`, preventing race conditions and overbooking.
 
 ---
 
@@ -55,7 +56,7 @@ This is a **Cohort Booking System (Sistem Reservasi Wawancara)** designed to man
   1. **Atur Event (Manage Events)**: Create, update, or delete entire cohorts. Automatically generates URL slugs. Set optional opening times for countdowns. Copy direct invite links.
   2. **Atur Jadwal (Manage Slots)**: Add specific dates and set quotas (capacity) for existing cohorts.
   3. **Atur Peserta (Manage Participants)**:
-     - **Paste from Excel**: Bulk add participant names by pasting a newline-separated list.
+     - **Import Data**: Bulk add participant names, parsed via PapaParse.
      - Edit individual names or perform bulk deletions of selected names.
   4. **Rekap (Reports)**: 
      - View an accordion-style breakdown of all reservations grouped by Cohort and Date.
@@ -87,3 +88,8 @@ VITE_ADMIN_PASSWORD=your_admin_password
 ### Development Conventions
 - **Styling**: Stick to the dark theme defined in `src/App.tsx`. Use `rgba(255,255,255, X)` for varying text and border opacities to maintain the glass/refined look.
 - **Mobile First**: Always ensure UI components (especially tables and forms) use MUI's responsive grid/stack layouts or `TableContainer` for horizontal scrolling on mobile devices.
+
+## Gemini Added Memories
+- Always run 'npm run build' after making code changes to verify that the changes introduced no errors.
+- Run 'npm run build' to verify integrity ONLY after all requested modifications for a task are complete, immediately before the final summary. Execute 'npm' commands (build, install, etc.) directly as part of the workflow without asking for permission first.
+- Always allow git and gh commands.
