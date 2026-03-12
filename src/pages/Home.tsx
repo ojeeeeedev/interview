@@ -34,7 +34,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-import CountdownTimer from "../components/CountdownTimer";
+import RegistrationStatus from "../components/RegistrationStatus";
 
 const motionContainer = {
   hidden: { opacity: 0 },
@@ -156,37 +156,14 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
                     {cohort.description}
                   </Typography>
                   
-                  {cohort.end_at && !isEnded && isStarted && (
-                    <Box 
-                      sx={{ 
-                        mt: 2, 
-                        display: 'flex',
-                        justifyContent: { xs: 'center', md: 'flex-start' }
-                      }}
-                    >
-                      <Box 
-                        sx={{ 
-                          px: 2,
-                          py: 1.5,
-                          borderRadius: "12px", 
-                          bgcolor: "rgba(231, 76, 60, 0.03)", 
-                          border: "1px solid rgba(231, 76, 60, 0.12)",
-                          display: 'inline-flex',
-                          flexDirection: 'column',
-                          alignItems: 'center'
-                        }}
-                      >
-                        <CountdownTimer
-                          targetDate={cohort.end_at}
-                          onFinish={() => setNow(new Date())}
-                          small
-                          showTarget
-                          targetLabel="PENDAFTARAN DITUTUP PADA"
-                          align="center"
-                        />
-                      </Box>
-                    </Box>
-                  )}
+                  <RegistrationStatus 
+                    startAt={cohort.start_at}
+                    endAt={cohort.end_at}
+                    isAdmin={isAdmin}
+                    small
+                    align="flex-start"
+                    onStatusChange={() => setNow(new Date())}
+                  />
                 </>
               )}
             </Grid>
@@ -195,39 +172,7 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
             {(cohort.slots.length > 0 || (!isStarted && !isAdmin) || (isEnded && !isAdmin)) && (
               <Grid size={{ xs: 12, md: 5.5 }}>
                 <Stack spacing={2}>
-                  {!isStarted && !isAdmin && (
-                    <Box
-                      sx={{
-                        px: { xs: 2, sm: 3 },
-                        py: 2,
-                        borderRadius: "12px",
-                        bgcolor: "rgba(52, 152, 219, 0.05)",
-                        border: "1px solid rgba(52, 152, 219, 0.15)",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center"
-                      }}
-                    >
-                      <CountdownTimer
-                        targetDate={cohort.start_at!}
-                        onFinish={() => setNow(new Date())}
-                        small
-                        showTarget
-                        targetLabel="Pendaftaran Dibuka"
-                      />
-                    </Box>
-                  )}
-
-                  {isEnded && !isAdmin ? (
-                    <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'center' }}>
-                       <Typography variant="subtitle2" sx={{ color: 'rgba(255,255,255,0.2)', fontWeight: 700 }}>
-                        Pendaftaran Selesai
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.2)' }}>
-                        Terima kasih atas partisipasi Anda
-                      </Typography>
-                    </Stack>
-                  ) : cohort.slots.length > 0 ? (
+                  {cohort.slots.length > 0 && (!isEnded || isAdmin) && (
                     <Stack spacing={1}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2, mb: -0.5 }}>
                         <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -265,7 +210,7 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
                         );
                       })}
                     </Stack>
-                  ) : null}
+                  )}
                 </Stack>
               </Grid>
             )}

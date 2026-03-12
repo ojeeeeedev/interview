@@ -18,8 +18,8 @@ import SuccessTicket from "../components/SuccessTicket";
 import EditBooking from "../components/EditBooking";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
-import { Lock, ArrowLeft } from "lucide-react";
-import CountdownTimer from "../components/CountdownTimer";
+import { ArrowLeft } from "lucide-react";
+import RegistrationStatus from "../components/RegistrationStatus";
 
 interface ReservationWithSlot {
     id: string;
@@ -140,35 +140,24 @@ export default function Landing() {
       <Container maxWidth="sm" sx={{ py: 12 }}>
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
           <Paper className="refined-card" sx={{ p: 6, textAlign: 'center' }}>
-            <Box sx={{ 
-              width: 80, 
-              height: 80, 
-              borderRadius: '50%', 
-              bgcolor: 'rgba(231, 76, 60, 0.1)', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              margin: '0 auto 24px',
-              border: '1px solid rgba(231, 76, 60, 0.3)'
-            }}>
-              <Lock size={40} color="#e74c3c" />
-            </Box>
-            <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>Pendaftaran Ditutup</Typography>
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)', mb: 4 }}>
-              Pendaftaran untuk Kelompok {cohort.nama_kelompok} ({cohort.title}) telah berakhir pada:
-              <br />
-              <strong>{new Date(cohort.end_at!).toLocaleString("id-ID", { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</strong>
-            </Typography>
+            <RegistrationStatus 
+              startAt={cohort.start_at}
+              endAt={cohort.end_at}
+              isAdmin={isAdmin}
+              onStatusChange={() => setNow(new Date())}
+            />
 
-            <Button 
-              component={Link} 
-              to="/" 
-              variant="outlined" 
-              startIcon={<ArrowLeft size={18} />}
-              sx={{ borderRadius: "12px", px: 4, color: 'rgba(255,255,255,0.6)' }}
-            >
-              Kembali ke Beranda
-            </Button>
+            <Box sx={{ mt: 4 }}>
+              <Button 
+                component={Link} 
+                to="/" 
+                variant="outlined" 
+                startIcon={<ArrowLeft size={18} />}
+                sx={{ borderRadius: "12px", px: 4, color: 'rgba(255,255,255,0.6)' }}
+              >
+                Kembali ke Beranda
+              </Button>
+            </Box>
           </Paper>
         </motion.div>
       </Container>
@@ -180,42 +169,24 @@ export default function Landing() {
       <Container maxWidth="sm" sx={{ py: 12 }}>
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
           <Paper className="refined-card" sx={{ p: 6, textAlign: 'center' }}>
-            <Box sx={{ 
-              width: 80, 
-              height: 80, 
-              borderRadius: '50%', 
-              bgcolor: 'rgba(52, 152, 219, 0.1)', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              margin: '0 auto 24px',
-              border: '1px solid rgba(52, 152, 219, 0.3)'
-            }}>
-              <Lock size={40} color="#3498db" />
-            </Box>
-            <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>Pendaftaran Belum Dibuka</Typography>
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)', mb: 4 }}>
-              Pendaftaran untuk Kelompok {cohort.nama_kelompok} ({cohort.title}) akan dibuka pada
-            </Typography>
-            
-            <Box sx={{ mb: 6 }}>
-              <CountdownTimer 
-                targetDate={cohort.start_at!} 
-                onFinish={() => setNow(new Date())} 
-                showTarget
-                targetLabel="TANGGAL/WAKTU"
-              />
-            </Box>
+            <RegistrationStatus 
+              startAt={cohort.start_at}
+              endAt={cohort.end_at}
+              isAdmin={isAdmin}
+              onStatusChange={() => setNow(new Date())}
+            />
 
-            <Button 
-              component={Link} 
-              to="/" 
-              variant="outlined" 
-              startIcon={<ArrowLeft size={18} />}
-              sx={{ borderRadius: "12px", px: 4, color: 'rgba(255,255,255,0.6)' }}
-            >
-              Kembali ke Beranda
-            </Button>
+            <Box sx={{ mt: 4 }}>
+              <Button 
+                component={Link} 
+                to="/" 
+                variant="outlined" 
+                startIcon={<ArrowLeft size={18} />}
+                sx={{ borderRadius: "12px", px: 4, color: 'rgba(255,255,255,0.6)' }}
+              >
+                Kembali ke Beranda
+              </Button>
+            </Box>
           </Paper>
         </motion.div>
       </Container>
@@ -300,30 +271,13 @@ export default function Landing() {
                 </Typography>
 
                 {cohort?.end_at && !isEnded && (
-                  <Stack spacing={1.5} sx={{ mt: 3, alignItems: 'center' }}>
-                    <Box 
-                      sx={{ 
-                        width: '100%',
-                        px: 2,
-                        py: 1.5,
-                        borderRadius: "12px", 
-                        bgcolor: "rgba(231, 76, 60, 0.03)", 
-                        border: "1px solid rgba(231, 76, 60, 0.12)",
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center'
-                      }}
-                    >
-                      <CountdownTimer
-                          targetDate={cohort.end_at}
-                          onFinish={() => setNow(new Date())}
-                          small
-                          showTarget
-                          targetLabel="PENDAFTARAN DITUTUP PADA"
-                          align="center"
-                      />
-                    </Box>
-                  </Stack>
+                  <RegistrationStatus 
+                    startAt={cohort.start_at}
+                    endAt={cohort.end_at}
+                    isAdmin={isAdmin}
+                    small
+                    onStatusChange={() => setNow(new Date())}
+                  />
                 )}
               </Box>
 

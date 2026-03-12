@@ -7,14 +7,16 @@ export default function CountdownTimer({
     small = false,
     showTarget = false,
     targetLabel = "BATAS",
-    align = "center"
+    align = "center",
+    color
 }: { 
     targetDate: string, 
     onFinish: () => void,
     small?: boolean,
     showTarget?: boolean,
     targetLabel?: string,
-    align?: "center" | "flex-start"
+    align?: "center" | "flex-start",
+    color?: string
 }) {
     const calculateTimeLeft = useCallback(() => {
         const difference = +new Date(targetDate) - +new Date();
@@ -52,7 +54,7 @@ export default function CountdownTimer({
         minute: '2-digit' 
     });
 
-    const labelColor = targetLabel.toUpperCase().includes("DIBUKA") ? "#3498db" : (targetLabel.toUpperCase().includes("BATAS") || targetLabel.toUpperCase().includes("DITUTUP") ? "#e74c3c" : "inherit");
+    const labelColor = color || (targetLabel.toUpperCase().includes("DIBUKA") ? "#3498db" : (targetLabel.toUpperCase().includes("BATAS") || targetLabel.toUpperCase().includes("DITUTUP") ? "#e74c3c" : "inherit"));
 
     const targetDateElement = showTarget && (
         <Box sx={{ mb: small ? 1 : 1.5, textAlign: align === "flex-start" ? "left" : "center" }}>
@@ -96,10 +98,20 @@ export default function CountdownTimer({
                 <Stack direction="row" spacing={1} alignItems="baseline" justifyContent={align === "flex-start" ? "flex-start" : "center"}>
                     {Object.entries(timeLeft).map(([label, value], index, arr) => (
                         <Box key={label} sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 800, color: '#3498db', lineHeight: 1 }}>
+                            <Typography 
+                                variant="body2" 
+                                sx={{ 
+                                    fontWeight: 800, 
+                                    color: labelColor, 
+                                    lineHeight: 1,
+                                    fontFamily: 'monospace',
+                                    minWidth: '1.2rem',
+                                    textAlign: 'center'
+                                }}
+                            >
                                 {String(value).padStart(2, '0')}
                             </Typography>
-                            <Typography variant="caption" sx={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.7, fontWeight: 900 }}>
+                            <Typography variant="caption" sx={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.7, fontWeight: 900, color: labelColor }}>
                                 {label}
                             </Typography>
                             {index < arr.length - 1 && (
@@ -118,10 +130,20 @@ export default function CountdownTimer({
             <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 1.5 }}>
                 {Object.entries(timeLeft).map(([label, value]) => (
                     <Box key={label} sx={{ textAlign: 'center', minWidth: 50 }}>
-                        <Typography variant="h5" sx={{ fontWeight: 900, lineHeight: 1, color: '#3498db', mb: 0.5 }}>
+                        <Typography 
+                            variant="h5" 
+                            sx={{ 
+                                fontWeight: 900, 
+                                lineHeight: 1, 
+                                color: labelColor, 
+                                mb: 0.5,
+                                fontFamily: 'monospace',
+                                display: 'block'
+                            }}
+                        >
                             {String(value).padStart(2, '0')}
                         </Typography>
-                        <Typography variant="caption" sx={{ fontSize: '0.7rem', textTransform: 'uppercase', opacity: 0.8, fontWeight: 900 }}>
+                        <Typography variant="caption" sx={{ fontSize: '0.7rem', textTransform: 'uppercase', opacity: 0.8, fontWeight: 900, color: labelColor }}>
                             {label}
                         </Typography>
                     </Box>
