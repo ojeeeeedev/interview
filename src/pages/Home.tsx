@@ -161,7 +161,7 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
                     endAt={cohort.end_at}
                     isAdmin={isAdmin}
                     small
-                    align="flex-start"
+                    align="center"
                     onStatusChange={() => setNow(new Date())}
                   />
                 </>
