@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Box, Typography } from "@mui/material";
 import CountdownTimer from "./CountdownTimer";
 
@@ -14,31 +14,30 @@ interface Props {
 export default function RegistrationStatus({
   startAt,
   endAt,
-  isAdmin = false,
   small = false,
   align = "center",
   onStatusChange
 }: Props) {
   const [now, setNow] = useState(new Date());
 
+  // Colors
+  const UPCOMING_COLOR = "#f39c12"; // Orange/Yellow
+  const ACTIVE_COLOR = "#e74c3c";   // Red
+
+  // Use a slower interval (1 minute) for general freshness, 
+  // as the CountdownTimer handles precise second-by-second updates.
   useEffect(() => {
     const timer = setInterval(() => {
-      const nextNow = new Date();
-      setNow(nextNow);
-      
-      // If we just crossed a boundary, trigger parent refresh
-      if (onStatusChange) {
-          const start = startAt ? new Date(startAt) : null;
-          const end = endAt ? new Date(endAt) : null;
-          
-          if ((start && Math.abs(nextNow.getTime() - start.getTime()) < 1000) || 
-              (end && Math.abs(nextNow.getTime() - end.getTime()) < 1000)) {
-              onStatusChange();
-          }
-      }
-    }, 1000);
+      setNow(new Date());
+    }, 1000 * 60);
     return () => clearInterval(timer);
-  }, [startAt, endAt, onStatusChange]);
+  }, []);
+
+  const handleTimerFinish = useCallback(() => {
+    const nextNow = new Date();
+    setNow(nextNow);
+    if (onStatusChange) onStatusChange();
+  }, [onStatusChange]);
 
   const start = startAt ? new Date(startAt) : null;
   const end = endAt ? new Date(endAt) : null;
@@ -47,20 +46,18 @@ export default function RegistrationStatus({
   const isActive = (!start || now >= start) && end && now < end;
   const isEnded = end && now >= end;
 
+  // If no registration rules defined, don't show status
   if (!isUpcoming && !isActive && !isEnded) return null;
 
-  // Colors
-  const UPCOMING_COLOR = "#f39c12"; // Orange/Yellow
-  const ACTIVE_COLOR = "#e74c3c";   // Red
-  const ENDED_COLOR = "rgba(255,255,255,0.2)";
-
-  if (isEnded && !isAdmin) {
+  // Always show "SELESAI" if ended, regardless of admin status. 
+  // Admin can still access the group via separate logic in parent.
+  if (isEnded) {
     return (
       <Box sx={{ textAlign: align, py: small ? 0 : 2 }}>
-        <Typography variant="subtitle2" sx={{ color: ENDED_COLOR, fontWeight: 700 }}>
+        <Typography variant="subtitle2" sx={{ color: "rgba(255,255,255,0.2)", fontWeight: 700 }}>
           PENDAFTARAN SELESAI
         </Typography>
-        <Typography variant="caption" sx={{ color: ENDED_COLOR, opacity: 0.8 }}>
+        <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.2)", opacity: 0.8 }}>
           Terima kasih atas partisipasi Anda
         </Typography>
       </Box>
@@ -95,7 +92,7 @@ export default function RegistrationStatus({
       >
         <CountdownTimer
           targetDate={targetDate}
-          onFinish={() => setNow(new Date())}
+          onFinish={handleTimerFinish}
           small={small}
           showTarget
           targetLabel={label}

@@ -21,7 +21,6 @@ export default function CountdownTimer({
     const calculateTimeLeft = useCallback(() => {
         const difference = +new Date(targetDate) - +new Date();
         if (difference <= 0) {
-            onFinish();
             return null;
         }
 
@@ -31,18 +30,27 @@ export default function CountdownTimer({
             M: Math.floor((difference / 1000 / 60) % 60),
             D: Math.floor((difference / 1000) % 60)
         };
-    }, [targetDate, onFinish]);
+    }, [targetDate]);
 
     const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
 
     useEffect(() => {
+        // Initial check in case it's already finished
+        if (!calculateTimeLeft()) {
+            onFinish();
+            return;
+        }
+
         const timer = setInterval(() => {
             const left = calculateTimeLeft();
             setTimeLeft(left);
-            if (!left) clearInterval(timer);
+            if (!left) {
+                clearInterval(timer);
+                onFinish();
+            }
         }, 1000);
         return () => clearInterval(timer);
-    }, [calculateTimeLeft]);
+    }, [calculateTimeLeft, onFinish]);
 
     if (!timeLeft) return null;
 

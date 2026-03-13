@@ -75,16 +75,28 @@ interface CohortWithSlots extends Cohort {
  * - Administrators can always access/preview cards.
  * - Regular users can only access if registration is open and slots exist.
  */
-function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boolean }) {
-  const [now, setNow] = useState(new Date());
+function CohortCard({ 
+  cohort, 
+  isAdmin, 
+  now: parentNow, 
+  onStatusChange 
+}: { 
+  cohort: CohortWithSlots; 
+  isAdmin: boolean; 
+  now?: Date;
+  onStatusChange?: () => void;
+}) {
+  const [internalNow, setInternalNow] = useState(new Date());
+  const now = parentNow || internalNow;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   
-  // Update current time every minute to keep countdowns and access rules fresh
+  // Update internal time every minute only if parent doesn't provide it
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000 * 60);
+    if (parentNow) return;
+    const timer = setInterval(() => setInternalNow(new Date()), 1000 * 60);
     return () => clearInterval(timer);
-  }, []);
+  }, [parentNow]);
 
   const isStarted = !cohort.start_at || now >= new Date(cohort.start_at);
   const isEnded = cohort.end_at && now >= new Date(cohort.end_at);
@@ -190,7 +202,7 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
                   small
                   // Center on mobile (xs), left-aligned on desktop (md)
                   align={isMobile ? "center" : "flex-start"}
-                  onStatusChange={() => setNow(new Date())}
+                  onStatusChange={onStatusChange}
                 />
               )}
             </Grid>
@@ -243,7 +255,7 @@ function CohortCard({ cohort, isAdmin }: { cohort: CohortWithSlots; isAdmin: boo
                     isAdmin={isAdmin}
                     small
                     align="center"
-                    onStatusChange={() => setNow(new Date())}
+                    onStatusChange={onStatusChange}
                   />
                 </Box>
               )}
@@ -364,8 +376,15 @@ interface ReservationSearch {
 export default function Home() {
   const [cohorts, setCohorts] = useState<CohortWithSlots[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [now, setNow] = useState(new Date());
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
+
+  // Single timer for the entire page to keep countdowns and access rules fresh
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000 * 60);
+    return () => clearInterval(timer);
+  }, []);
 
   /**
    * Search State & Handlers
@@ -653,7 +672,7 @@ export default function Home() {
           ) : (
             scheduled.map((cohort) => (
               <Grid size={{ xs: 12 }} key={cohort.id}>
-                <CohortCard cohort={cohort} isAdmin={isAdmin} />
+                <CohortCard cohort={cohort} isAdmin={isAdmin} now={now} onStatusChange={() => setNow(new Date())} />
               </Grid>
             ))
           )}
@@ -689,7 +708,7 @@ export default function Home() {
                 <Grid container spacing={2.5}>
                   {unscheduled.map((cohort) => (
                     <Grid size={{ xs: 12 }} key={cohort.id}>
-                      <CohortCard cohort={cohort} isAdmin={isAdmin} />
+                      <CohortCard cohort={cohort} isAdmin={isAdmin} now={now} onStatusChange={() => setNow(new Date())} />
                     </Grid>
                   ))}
                 </Grid>
@@ -728,7 +747,7 @@ export default function Home() {
                 <Grid container spacing={2.5}>
                   {past.map((cohort) => (
                     <Grid size={{ xs: 12 }} key={cohort.id}>
-                      <CohortCard cohort={cohort} isAdmin={isAdmin} />
+                      <CohortCard cohort={cohort} isAdmin={isAdmin} now={now} onStatusChange={() => setNow(new Date())} />
                     </Grid>
                   ))}
                 </Grid>
