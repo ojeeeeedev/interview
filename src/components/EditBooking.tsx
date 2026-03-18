@@ -30,10 +30,11 @@ import type { CalendarEvent } from "../lib/calendar";
 interface Props {
   reservation: Reservation & { slots: Slot };
   slots: Slot[];
+  isEnded?: boolean;
   onDone: () => void;
 }
 
-export default function EditBooking({ reservation, slots, onDone }: Props) {
+export default function EditBooking({ reservation, slots, isEnded = false, onDone }: Props) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(
     parseISO(reservation.slots.date),
   );
@@ -173,6 +174,21 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
 
       <Divider sx={{ opacity: 0.1 }} />
 
+      {isEnded && (
+        <Alert
+          severity="error"
+          sx={{ 
+            borderRadius: "12px", 
+            border: "1px solid rgba(231, 76, 60, 0.3)",
+            bgcolor: "rgba(231, 76, 60, 0.1)",
+            color: "#fff",
+            "& .MuiAlert-icon": { color: "#e74c3c" }
+          }}
+        >
+          Pendaftaran untuk event ini telah ditutup. Anda tidak dapat lagi mengubah atau menghapus reservasi Anda.
+        </Alert>
+      )}
+
       {error && (
         <Alert
           severity="error"
@@ -273,51 +289,55 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
       </Menu>
 
       {/* Date Selection */}
-      <Stack spacing={1.5}>
-        <Typography
-          variant="subtitle2"
-          sx={{
-            fontWeight: 800,
-            color: "rgba(255,255,255,0.4)",
-            textTransform: "uppercase",
-            fontSize: "0.7rem",
-            letterSpacing: "1px",
-            px: 0.5
-          }}
-        >
-          Pilih Tanggal Baru
-        </Typography>
-        <Calendar
-          slots={slots}
-          onSelect={setSelectedDate}
-          selected={selectedDate}
-        />
-      </Stack>
+      {!isEnded && (
+        <Stack spacing={1.5}>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 800,
+              color: "rgba(255,255,255,0.4)",
+              textTransform: "uppercase",
+              fontSize: "0.7rem",
+              letterSpacing: "1px",
+              px: 0.5
+            }}
+          >
+            Pilih Tanggal Baru
+          </Typography>
+          <Calendar
+            slots={slots}
+            onSelect={setSelectedDate}
+            selected={selectedDate}
+          />
+        </Stack>
+      )}
 
       {/* Action Buttons */}
       <Stack spacing={2} sx={{ pt: 1 }}>
-        <motion.div
-          whileHover={!isSameDate ? { scale: 1.02, y: -4 } : {}}
-          whileTap={!isSameDate ? { scale: 0.98 } : {}}
-        >
-          <Button
-            variant="contained"
-            fullWidth
-            startIcon={loading ? <RefreshCcw size={18} className="animate-spin" /> : <RefreshCcw size={18} />}
-            onClick={() => setConfirmOpen(true)}
-            disabled={loading || !selectedDate || isSameDate}
-            sx={{
-              height: 56,
-              borderRadius: "12px",
-              fontWeight: 800,
-              bgcolor: "#3498db",
-              fontSize: "1rem",
-              textTransform: "none",
-            }}
+        {!isEnded && (
+          <motion.div
+            whileHover={!isSameDate ? { scale: 1.02, y: -4 } : {}}
+            whileTap={!isSameDate ? { scale: 0.98 } : {}}
           >
-            {loading ? "Memproses..." : "Ubah Jadwal"}
-          </Button>
-        </motion.div>
+            <Button
+              variant="contained"
+              fullWidth
+              startIcon={loading ? <RefreshCcw size={18} className="animate-spin" /> : <RefreshCcw size={18} />}
+              onClick={() => setConfirmOpen(true)}
+              disabled={loading || !selectedDate || isSameDate}
+              sx={{
+                height: 56,
+                borderRadius: "12px",
+                fontWeight: 800,
+                bgcolor: "#3498db",
+                fontSize: "1rem",
+                textTransform: "none",
+              }}
+            >
+              {loading ? "Memproses..." : "Ubah Jadwal"}
+            </Button>
+          </motion.div>
+        )}
 
         <Box sx={{ display: "flex", gap: 2 }}>
           <Button
@@ -342,28 +362,30 @@ export default function EditBooking({ reservation, slots, onDone }: Props) {
             Kembali
           </Button>
 
-          <Button
-            variant="outlined"
-            color="error"
-            onClick={() => setDeleteConfirmOpen(true)}
-            startIcon={<Trash2 size={18} />}
-            fullWidth
-            sx={{
-              height: 48,
-              borderRadius: "12px",
-              fontWeight: 700,
-              textTransform: "none",
-              borderColor: "rgba(231, 76, 60, 0.2)",
-              color: "rgba(231, 76, 60, 0.6)",
-              "&:hover": {
-                borderColor: "#e74c3c",
-                bgcolor: "rgba(231, 76, 60, 0.05)",
-                color: "#e74c3c",
-              },
-            }}
-          >
-            Hapus
-          </Button>
+          {!isEnded && (
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={() => setDeleteConfirmOpen(true)}
+              startIcon={<Trash2 size={18} />}
+              fullWidth
+              sx={{
+                height: 48,
+                borderRadius: "12px",
+                fontWeight: 700,
+                textTransform: "none",
+                borderColor: "rgba(231, 76, 60, 0.2)",
+                color: "rgba(231, 76, 60, 0.6)",
+                "&:hover": {
+                  borderColor: "#e74c3c",
+                  bgcolor: "rgba(231, 76, 60, 0.05)",
+                  color: "#e74c3c",
+                },
+              }}
+            >
+              Hapus
+            </Button>
+          )}
         </Box>
       </Stack>
 

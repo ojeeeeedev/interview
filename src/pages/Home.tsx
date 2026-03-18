@@ -209,7 +209,7 @@ function CohortCard({
 
             {/* Middle: Dynamic Content (Slots or Countdown) */}
             <Grid size={{ xs: 12, md: 5.5 }}>
-              {hasSlots ? (
+              {hasSlots && !isEnded ? (
                 <Stack spacing={1}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2, mb: -0.5 }}>
                     <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -249,14 +249,16 @@ function CohortCard({
                 </Stack>
               ) : (
                 <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                  <RegistrationStatus 
-                    startAt={cohort.start_at}
-                    endAt={cohort.end_at}
-                    isAdmin={isAdmin}
-                    small
-                    align="center"
-                    onStatusChange={onStatusChange}
-                  />
+                  {!isEnded && (
+                    <RegistrationStatus 
+                      startAt={cohort.start_at}
+                      endAt={cohort.end_at}
+                      isAdmin={isAdmin}
+                      small
+                      align="center"
+                      onStatusChange={onStatusChange}
+                    />
+                  )}
                 </Box>
               )}
             </Grid>

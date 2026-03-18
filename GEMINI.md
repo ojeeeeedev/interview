@@ -4,33 +4,36 @@
 This is a **Cohort Booking System (Sistem Reservasi Wawancara)** designed to manage interview schedules and registrations for specific groups or cohorts. The system features a public-facing booking flow restricted by a whitelist of allowed names, and an administrative dashboard for managing events, schedules, participants, and generating PDF reports.
 
 ### Key Technologies & Libraries
-- **Frontend Core**: React 19, TypeScript, Vite.
-- **Routing**: React Router DOM v7 (`react-router-dom`) with lazy-loaded routes.
+- **Frontend Core**: React 19 (using `useActionState` and `useTransition`), TypeScript, Vite.
+- **Routing**: React Router DOM v7 (`react-router-dom`) with lazy-loaded routes and navigation state management.
 - **UI/UX**: 
-  - Material UI (MUI) with a custom, highly optimized Dark Theme.
-  - Framer Motion for smooth, accessible page and component transitions.
+  - Material UI (MUI) v7 with a custom, highly optimized Dark Theme and Glassmorphism effects.
+  - Framer Motion for sophisticated entrance/exit animations and button-glow effects.
   - Lucide React for modern, clean iconography.
-- **Date Handling**: `date-fns` for parsing, formatting, and localized date manipulation.
-- **Backend/Database**: Supabase (PostgreSQL).
+- **Date Handling**: `date-fns` for parsing, formatting, and localized (id) date manipulation.
+- **Backend/Database**: Supabase (PostgreSQL) with Row Level Security (RLS).
 - **State & Form Management**: Modern React 19 Hooks (`useActionState`, `useTransition`, `Suspense`), Context API (`AuthContext`), and controlled MUI components.
 - **Utilities**:
-  - `html-to-image`: For generating downloadable PNG tickets upon successful booking.
-  - `jspdf` & `jspdf-autotable`: For generating and downloading PDF recap reports in the Admin dashboard.
-  - `papaparse`: For parsing imported CSV/Excel data.
-  - `src/lib/calendar.ts`: Shared utility for generating cross-platform calendar deep-links and RFC 5545 compliant `.ics` files.
+  - `html-to-image`: Used in `SuccessTicket.tsx` to generate downloadable PNG tickets with a custom background and QR-style look.
+  - `jspdf` & `jspdf-autotable`: Used in `Admin.tsx` to generate clean, professional PDF recap reports with tabular attendee data.
+  - `papaparse`: Used for bulk participant data parsing from CSV/Excel files.
+  - `src/lib/calendar.ts`: Shared utility for generating cross-platform calendar deep-links (Google, Outlook) and RFC 5545 compliant `.ics` files.
 
 ---
 
 ## Application Architecture & Data Model
 
 ### Database Schema (Supabase)
-1. **`cohorts`**: Represents a group or event (e.g., "Kelompok A"). Contains title, description, unique URL slug, and optional `start_at`/`end_at` timestamps for countdowns.
+1. **`cohorts`**: Represents a group or event (e.g., "Kelompok A"). Contains title, description, unique URL slug, and optional `start_at`/`end_at` timestamps for countdowns and auto-closing.
 2. **`slots`**: Represents available interview dates for a specific cohort. Includes the date, maximum `quota`, and current booking `count`.
-3. **`allowed_names`**: A whitelist of full names. A user can only book a slot if their name exists in this table for the specific cohort.
-4. **`reservations`**: Links a user's name to a specific `slot`. Includes an auto-generated 6-character `access_code` used for modifying bookings.
+3. **`allowed_names`**: A whitelist of full names per cohort. A user can only book if their name matches (case-insensitive) an entry in this table.
+4. **`reservations`**: Links a user's name to a specific `slot`. Includes an auto-generated 6-character `access_code` (unique) used for modifying bookings.
 
 ### Concurrency & Integrity
-- **Atomic Transactions**: Booking logic is handled strictly on the database side using PL/pgSQL RPC functions (`book_reservation` and `change_reservation`). These functions use `FOR UPDATE` row-level locks to ensure that the slot `count` never exceeds the `quota`, preventing race conditions and overbooking.
+- **Atomic Transactions**: Booking logic is offloaded to the database via PL/pgSQL RPC functions to prevent race conditions:
+  - `book_reservation`: Locks the slot row (`FOR UPDATE`), checks quota, inserts the reservation, and increments the count in a single atomic operation.
+  - `change_reservation`: Atomically handles rescheduling by decrementing the old slot, incrementing the new slot (with quota check), and updating the reservation record.
+  - `decrement_slot_count`: Safely handles slot count reduction when admins delete reservations.
 
 ---
 
@@ -38,30 +41,30 @@ This is a **Cohort Booking System (Sistem Reservasi Wawancara)** designed to man
 
 ### User Facing (Public)
 - **Home / Dashboard**: 
-  - Displays all available cohorts grouped by scheduled and unscheduled events.
-  - "Search Widget" allows users to input their 6-digit access code to immediately find and edit their existing reservation.
+  - Displays all available cohorts grouped by status (Scheduled, Unscheduled, Past).
+  - **Search Widget**: Real-time validation of 6-digit access codes with immediate redirect to the booking page in "Edit Mode".
 - **Event/Landing Page**: 
-  - If the event `start_at` time is in the future, displays a live **Countdown Timer**.
+  - **Countdown Timer**: Displays if the event `start_at` time is in the future.
   - **Booking Form**: 
-    - Step 1: User inputs their name using an Autocomplete field that verifies against the `allowed_names` whitelist. **Smart Verification**: Checks start after 1 character with a loading spinner; errors are suppressed until 4 characters or a 10-second timeout.
-    - Step 2: User selects an available date using a custom, dark-themed Calendar component. Dates that are full are visually disabled.
-  - **Success Ticket**: Upon booking, generates a visual "Ticket" containing the user's name, schedule, and access code. 
-    - **Simpan Tiket**: Users can download the ticket as a PNG image.
-    - **Add to Calendar**: Integrated support for Google Calendar, Outlook, and Apple iCal (.ics) to save the schedule directly.
-  - **Edit Booking**: Users can re-schedule their interview by selecting a new available date if they access the form via their access code. Includes a persistent "Add to Calendar" option for existing reservations.
+    - **Step 1 (Whitelist Verification)**: Autocomplete field with "Smart Verification". Starts checking after 1 character; suppresses "Not Found" errors until 4+ characters or a 10-second timeout to improve UX.
+    - **Step 2 (Calendar Selection)**: Custom-built `Calendar.tsx` component with visual feedback for full dates (disabled) and selected dates.
+  - **Success Ticket**: Displays after booking or search.
+    - **Download PNG**: Uses `html-to-image` to capture the ticket component.
+    - **Add to Calendar**: One-click integration for Google, Outlook, and Apple iCal.
+  - **Edit Booking**: Full rescheduling support using the `change_reservation` RPC, accessible only via access code.
 
 ### Admin Dashboard (Protected)
-- **Authentication**: Simple password-based authentication (`VITE_ADMIN_PASSWORD` in `.env`) managed via React Context and stored in `sessionStorage`.
+- **Authentication**: Admin password-based authentication (`VITE_ADMIN_PASSWORD`) stored in `sessionStorage` and managed via a global `useAuth` hook and `ProtectedRoute` component.
 - **Panel Tabs**:
-  1. **Atur Event (Manage Events)**: Create, update, or delete entire cohorts. Automatically generates URL slugs. Set optional opening times for countdowns. Copy direct invite links.
-  2. **Atur Jadwal (Manage Slots)**: Add specific dates and set quotas (capacity) for existing cohorts.
-  3. **Atur Peserta (Manage Participants)**:
-     - **Import Data**: Bulk add participant names, parsed via PapaParse.
-     - Edit individual names or perform bulk deletions of selected names.
-  4. **Rekap (Reports)**: 
-     - View an accordion-style breakdown of all reservations grouped by Cohort and Date.
-     - Individual deletion of reservations (automatically decrements the slot count via RPC).
-     - **Download PDF**: Generates a formatted PDF report of all attendees for a specific cohort.
+  1. **Atur Event**: Create/Update/Delete cohorts. Manages metadata like `nama_kelompok` and countdown times.
+  2. **Atur Jadwal**: Manage slots and quotas. Features individual and bulk deletion.
+  3. **Atur Peserta**: 
+     - **Import Data**: Supports pasting directly from Excel or CSV (parsing via newlines and PapaParse). 
+     - Bulk selection and deletion of participant names.
+  4. **Rekap**: 
+     - Accordion-based view of all attendees grouped by date.
+     - Individual reservation deletion.
+     - **Export PDF**: Generates reports with `jspdf-autotable`.
 
 ---
 

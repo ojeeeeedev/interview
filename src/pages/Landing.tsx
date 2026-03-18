@@ -242,6 +242,7 @@ export default function Landing() {
             <EditBooking
               reservation={editingReservation}
               slots={slots}
+              isEnded={!!isEnded}
               onDone={() => {
                 setEditingReservation(null);
                 navigate("/"); // Return to homepage
