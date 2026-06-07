@@ -53,7 +53,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const timerRef = useRef<any>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Validation states
   const [isValidatingName, setIsValidatingName] = useState(false);
