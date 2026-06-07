@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import packageJson from "../../package.json";
 import {
   Box,
   Container,
@@ -72,7 +73,7 @@ export default function Footer() {
             fontSize: "0.65rem",
           }}
         >
-          © {new Date().getFullYear()} Subseksi Katekumen Dewasa • Paroki St. Petrus, Katedral • Keuskupan Bandung<br />v1.2.0
+          © {new Date().getFullYear()} Subseksi Katekumen Dewasa • Paroki St. Petrus, Katedral • Keuskupan Bandung<br />v{packageJson.version}
         </Typography>
 
         <Box sx={{ display: "flex", justifyContent: "center" }}>
