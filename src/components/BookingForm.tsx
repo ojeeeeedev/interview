@@ -1,4 +1,4 @@
-import { useState, useEffect, useActionState, useTransition } from "react";
+import { useState, useEffect, useActionState, useTransition, useRef } from "react";
 import {
   Box,
   TextField,
@@ -53,6 +53,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const timerRef = useRef<any>(null);
 
   // Validation states
   const [isValidatingName, setIsValidatingName] = useState(false);
@@ -123,7 +124,11 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
       nameToSet = localMatches[0];
     }
 
-    const timer = setTimeout(async () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
+    timerRef.current = setTimeout(async () => {
       setIsValidatingName(true);
 
       const { data, error } = await supabase
@@ -154,8 +159,81 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
       setIsValidatingName(false);
     }, 600);
 
-    return () => clearTimeout(timer);
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
   }, [name, cohortId, forceShowError, allowedNames]);
+
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter") {
+      // If the dropdown is open, let Autocomplete handle the option selection first
+      if (dropdownOpen) {
+        return;
+      }
+
+      // If name is already verified, let the form submit normally
+      if (isNameVerified) {
+        return;
+      }
+
+      e.preventDefault();
+
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+
+      const trimmedName = name.trim();
+      if (!trimmedName) {
+        setIsNameVerified(false);
+        setNameCheckError(null);
+        return;
+      }
+
+      const lowercaseTrimmed = trimmedName.toLowerCase();
+      const localMatches = allowedNames.filter(n => n.toLowerCase().includes(lowercaseTrimmed));
+      const exactMatch = allowedNames.find(n => n.toLowerCase() === lowercaseTrimmed);
+
+      let nameToCheck = trimmedName;
+      let nameToSet = "";
+
+      if (exactMatch) {
+        nameToCheck = exactMatch;
+        if (name !== exactMatch) {
+          nameToSet = exactMatch;
+        }
+      } else if (localMatches.length === 1) {
+        nameToCheck = localMatches[0];
+        nameToSet = localMatches[0];
+      }
+
+      setIsValidatingName(true);
+
+      const { data, error } = await supabase
+        .from("allowed_names")
+        .select("id")
+        .eq("cohort_id", cohortId)
+        .ilike("full_name", nameToCheck)
+        .maybeSingle();
+
+      if (error) {
+        setNameCheckError("Gagal memverifikasi nama");
+        setIsNameVerified(false);
+      } else if (!data) {
+        // If they hit Enter and it is invalid, immediately throw the error with the spelling check note
+        setNameCheckError("Nama tidak terdaftar. Periksa ejaan nama anda");
+        setIsNameVerified(false);
+      } else {
+        setIsNameVerified(true);
+        setNameCheckError(null);
+        if (nameToSet) {
+          setName(nameToSet);
+        }
+      }
+      setIsValidatingName(false);
+    }
+  };
 
   /**
    * Main Booking Action
@@ -351,6 +429,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
               required
               variant="outlined"
               placeholder="Masukkan nama lengkap..."
+              onKeyDown={handleKeyDown}
               slotProps={{
                 input: {
                   ...params.InputProps,
