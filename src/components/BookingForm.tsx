@@ -105,6 +105,24 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
       return;
     }
 
+    const lowercaseTrimmed = trimmedName.toLowerCase();
+    const localMatches = allowedNames.filter(n => n.toLowerCase().includes(lowercaseTrimmed));
+    const exactMatch = allowedNames.find(n => n.toLowerCase() === lowercaseTrimmed);
+    const hasLocalMatches = localMatches.length > 0;
+
+    let nameToCheck = trimmedName;
+    let nameToSet = "";
+
+    if (exactMatch) {
+      nameToCheck = exactMatch;
+      if (name !== exactMatch) {
+        nameToSet = exactMatch;
+      }
+    } else if (localMatches.length === 1) {
+      nameToCheck = localMatches[0];
+      nameToSet = localMatches[0];
+    }
+
     const timer = setTimeout(async () => {
       setIsValidatingName(true);
 
@@ -112,27 +130,32 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
         .from("allowed_names")
         .select("id")
         .eq("cohort_id", cohortId)
-        .ilike("full_name", trimmedName)
+        .ilike("full_name", nameToCheck)
         .maybeSingle();
 
       if (error) {
         setNameCheckError("Gagal memverifikasi nama");
         setIsNameVerified(false);
       } else if (!data) {
-        // Only show error if 4+ chars OR 10s timeout reached
-        if (trimmedName.length >= 4 || forceShowError) {
+        // Only show error if 4+ chars OR 10s timeout reached, AND there are no local matches
+        if (!hasLocalMatches && (trimmedName.length >= 4 || forceShowError)) {
             setNameCheckError("Nama tidak terdaftar");
+        } else {
+            setNameCheckError(null);
         }
         setIsNameVerified(false);
       } else {
         setIsNameVerified(true);
         setNameCheckError(null);
+        if (nameToSet) {
+          setName(nameToSet);
+        }
       }
       setIsValidatingName(false);
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [name, cohortId, forceShowError]);
+  }, [name, cohortId, forceShowError, allowedNames]);
 
   /**
    * Main Booking Action
