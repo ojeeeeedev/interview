@@ -11,6 +11,10 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 import { supabase } from "../lib/supabase";
 import type { Slot, Reservation } from "../types";
@@ -19,7 +23,6 @@ import { format, parseISO } from "date-fns";
 import { id } from "date-fns/locale";
 import { motion } from "framer-motion";
 import { ArrowLeft, RefreshCcw, Trash2, CalendarDays } from "lucide-react";
-import { Menu, MenuItem, ListItemIcon, ListItemText } from "@mui/material";
 import {
   getGoogleCalendarUrl,
   getOutlookCalendarUrl,

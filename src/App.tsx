@@ -14,7 +14,7 @@ import { Analytics } from "@vercel/analytics/react";
 // Lazy load pages
 const Home = lazy(() => import("./pages/Home"));
 const Landing = lazy(() => import("./pages/Landing"));
-const Admin = lazy(() => import("./pages/Admin"));
+const Admin = lazy(() => import("./pages/admin/Admin"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 
 const theme = createTheme({

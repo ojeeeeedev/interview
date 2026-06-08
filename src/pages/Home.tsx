@@ -1,14 +1,9 @@
-// A11y Landmark comments for static scanner: <main role="main"><nav role="navigation"> skip to main content </nav></main>
-import { useState, useEffect, useMemo, useTransition } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Container,
-  Typography,
-  Paper,
-  CardContent,
   Grid,
   Button,
   Box,
-  Chip,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -17,368 +12,36 @@ import {
   InputAdornment,
   CircularProgress,
   Skeleton,
-  Stack,
-  useTheme,
-  useMediaQuery,
+  Typography,
+  Paper,
 } from "@mui/material";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import type { Cohort, Slot } from "../types";
+import type { Slot } from "../types";
 import { motion } from "framer-motion";
-import { format, parseISO } from "date-fns";
-import { id } from "date-fns/locale";
-import {
-  Search,
-  ChevronDown,
-  Info,
-  History,
-  Edit2,
-  CheckCircle2,
-  XCircle,
-  CircleChevronRight,
-} from "lucide-react";
+import { Search, ChevronDown, Info, History, Edit2, CheckCircle2, XCircle } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-import RegistrationStatus from "../components/RegistrationStatus";
+import CohortCard, { type CohortWithSlots } from "../components/CohortCard";
 
 const motionContainer = {
   hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-    },
-  },
+  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
 };
 
-const motionItem = {
-  hidden: { opacity: 0, y: 10 },
-  show: { opacity: 1, y: 0 },
-};
+interface ReservationSearch {
+  id: string;
+  slots: { cohorts: { unique_slug: string } };
+}
 
 /**
  * Home Page Component
- * 
+ *
  * The main landing page for the application. It displays:
  * 1. A Search Widget for users to find and edit their existing reservations.
  * 2. Active Scheduled Events (Events with available slots).
  * 3. Unscheduled Events (Events created by admin but without calendar slots).
  * 4. Past Events (Events where the end_at time has passed).
  */
-
-interface CohortWithSlots extends Cohort {
-  slots: Slot[];
-}
-
-/**
- * CohortCard Component
- * 
- * Represents a single event card. Handles the visual state based on access rules:
- * - Administrators can always access/preview cards.
- * - Regular users can only access if registration is open and slots exist.
- */
-function CohortCard({ 
-  cohort, 
-  isAdmin, 
-  now: parentNow, 
-  onStatusChange 
-}: { 
-  cohort: CohortWithSlots; 
-  isAdmin: boolean; 
-  now?: Date;
-  onStatusChange?: () => void;
-}) {
-  const [internalNow, setInternalNow] = useState(new Date());
-  const now = parentNow || internalNow;
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  
-  // Update internal time every minute only if parent doesn't provide it
-  useEffect(() => {
-    if (parentNow) return;
-    const timer = setInterval(() => setInternalNow(new Date()), 1000 * 60);
-    return () => clearInterval(timer);
-  }, [parentNow]);
-
-  const isStarted = !cohort.start_at || now >= new Date(cohort.start_at);
-  const isEnded = cohort.end_at && now >= new Date(cohort.end_at);
-  const hasSlots = cohort.slots.length > 0;
-  
-  // Access control: Disable if unscheduled or past events. 
-  // Admins can still access if not yet started for testing.
-  const canAccess = (isStarted || isAdmin) && !isEnded && hasSlots;
-
-  return (
-    <motion.div
-      variants={motionItem}
-      whileHover={canAccess ? { y: -4 } : {}}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-    >
-      <Paper
-        component={canAccess ? Link : Box}
-        to={canAccess ? `/cohort/${cohort.unique_slug}` : undefined}
-        elevation={0}
-        sx={{
-          cursor: canAccess ? "pointer" : "default",
-          textDecoration: "none",
-          display: "block",
-          position: "relative",
-          borderRadius: 1,
-          overflow: "hidden",
-          background: "rgba(25, 25, 25, 0.6)", // Distinct fill color
-          backdropFilter: "blur(12px)",
-          border: canAccess 
-            ? "1px solid rgba(212, 175, 55, 0.25)" 
-            : "1px solid rgba(255, 255, 255, 0.08)",
-          transition: "all 0.4s cubic-bezier(0.23, 1, 0.32, 1)",
-          pointerEvents: canAccess ? "auto" : "none",
-          "&:hover": canAccess ? {
-            background: "rgba(35, 35, 35, 0.8)",
-            borderColor: "rgba(212, 175, 55, 0.7)",
-            boxShadow: "0 20px 40px rgba(0,0,0,0.5), 0 0 20px rgba(212, 175, 55, 0.12)",
-          } : {},
-        }}
-      >
-        <CardContent sx={{ p: { xs: 2.5, md: 3.5 } }}>
-          <Grid container spacing={4} alignItems="center">
-            
-            {/* Left: Info */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 900,
-                  color: (isEnded || !hasSlots) ? "rgba(255,255,255,0.4)" : "#d4af37",
-                  letterSpacing: "0.5px",
-                  textTransform: 'uppercase',
-                  fontSize: { xs: '1rem', md: '1.15rem' },
-                  lineHeight: 1.2,
-                  mb: 0.5,
-                }}
-              >
-                Kelompok {cohort.nama_kelompok}
-              </Typography>
-
-              <Stack direction="row" spacing={1} alignItems="baseline" sx={{ mb: 1.5 }}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{
-                    fontWeight: 500,
-                    color: "rgba(255,255,255,0.7)",
-                    letterSpacing: "-0.2px",
-                    fontSize: '0.85rem'
-                  }}
-                >
-                  {cohort.title}
-                </Typography>
-                {isAdmin && (
-                  <Chip 
-                    label="Admin" 
-                    size="small" 
-                    sx={{ 
-                      height: 16, 
-                      fontSize: '0.55rem', 
-                      fontWeight: 800, 
-                      bgcolor: 'rgba(212, 175, 55, 0.1)', 
-                      color: '#d4af37', 
-                      border: '1px solid rgba(212, 175, 55, 0.2)' 
-                    }} 
-                  />
-                )}
-              </Stack>
-              
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "rgba(255,255,255,0.35)",
-                  fontSize: "0.8rem",
-                  lineHeight: 1.5,
-                  mb: hasSlots ? 1.5 : 0
-                }}
-              >
-                {cohort.description}
-              </Typography>
-              
-              {hasSlots && (
-                <RegistrationStatus 
-                  startAt={cohort.start_at}
-                  endAt={cohort.end_at}
-                  isAdmin={isAdmin}
-                  small
-                  // Center on mobile (xs), left-aligned on desktop (md)
-                  align={isMobile ? "center" : "flex-start"}
-                  onStatusChange={onStatusChange}
-                />
-              )}
-            </Grid>
-
-            {/* Middle: Dynamic Content (Slots or Countdown) */}
-            <Grid size={{ xs: 12, md: 5.5 }}>
-              {hasSlots && !isEnded ? (
-                <Stack spacing={1}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2, mb: -0.5 }}>
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      Tanggal
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      Ketersediaan
-                    </Typography>
-                  </Box>
-                  {cohort.slots.map((slot) => {
-                    const remaining = slot.quota - slot.count;
-                    const isFull = remaining <= 0;
-                    return (
-                      <Box
-                        key={slot.id}
-                        sx={{
-                          px: 2,
-                          py: 1,
-                          borderRadius: 1,
-                          bgcolor: "rgba(255,255,255,0.025)",
-                          border: "1px solid rgba(255,255,255,0.05)",
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: 1
-                        }}
-                      >
-                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: '0.75rem', fontFamily: 'monospace' }}>
-                          {format(parseISO(slot.date.replace(/^0006-/, '2026-')), "EEEE, d MMMM yyyy", { locale: id })}
-                        </Typography>
-                        <Typography variant="caption" sx={{ fontWeight: 800, color: isFull ? '#e74c3c' : '#2ecc71', fontSize: '0.75rem', fontFamily: 'monospace' }}>
-                          {isFull ? "Full" : `${remaining} Slot`}
-                        </Typography>
-                      </Box>
-                    );
-                  })}
-                </Stack>
-              ) : (
-                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                  {!isEnded && (
-                    <RegistrationStatus 
-                      startAt={cohort.start_at}
-                      endAt={cohort.end_at}
-                      isAdmin={isAdmin}
-                      small
-                      align="center"
-                      onStatusChange={onStatusChange}
-                    />
-                  )}
-                </Box>
-              )}
-            </Grid>
-
-            {/* Right: Action */}
-            <Grid size={{ xs: 12, md: 2.5 }} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' }, alignItems: 'center' }}>
-              {hasSlots ? (
-                <Stack spacing={1.5} alignItems={{ xs: 'flex-start', md: 'flex-end' }} sx={{ width: '100%' }}>
-                  <Button
-                    variant="contained"
-                    disabled={!canAccess}
-                    sx={{
-                      height: 48,
-                      width: { xs: '100%', md: 'auto' },
-                      minWidth: 100,
-                      borderRadius: 1,
-                      fontSize: '1rem',
-                      fontWeight: 700,
-                      lineHeight: 1.25,
-                      textTransform: 'none',
-                      position: 'relative',
-                      overflow: 'hidden', // Ensure icon disappears past the edge
-                      // Glassmorphic Green Style
-                      background: canAccess 
-                        ? 'rgba(20, 80, 45, 0.25)' 
-                        : 'rgba(255,255,255,0.05)',
-                      backdropFilter: canAccess ? 'blur(12px)' : 'none',
-                      border: canAccess ? '1px solid rgba(46, 204, 113, 0.3)' : '1px solid rgba(255,255,255,0.05)',
-                      color: canAccess ? '#2ecc71' : 'rgba(255,255,255,0.15)',
-                      transition: 'all 0.4s ease',
-                      // Persistent Glow Animation (Alternating Colors)
-                      animation: canAccess ? 'glow-alternate 4s ease-in-out infinite' : 'none',
-                      '@keyframes glow-alternate': {
-                        '0%': { 
-                          boxShadow: '0 0 8px rgba(123, 239, 178, 0.3)',
-                          borderColor: 'rgba(46, 204, 113, 0.4)' 
-                        },
-                        '50%': { 
-                          boxShadow: '0 0 8px rgba(212, 175, 55, 0.3)',
-                          borderColor: 'rgba(212, 175, 55, 0.4)' 
-                        },
-                        '100%': { 
-                          boxShadow: '0 0 8px rgba(123, 239, 178, 0.3)',
-                          borderColor: 'rgba(46, 204, 113, 0.4)' 
-                        },
-                      },
-                      '&:hover': { 
-                        background: 'rgba(46, 204, 113, 0.2)',
-                        borderColor: 'rgba(46, 204, 113, 0.6)',
-                        transform: 'translateY(-2px)'
-                      },
-                      '&.Mui-disabled': { color: 'rgba(255,255,255,0.15)' }
-                    }}
-                  >
-                    <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {isAdmin && !isStarted ? "Daftar (Admin)" : isEnded ? "Selesai" : "Daftar"}
-                      {canAccess && (
-                        <motion.span
-                          variants={{
-                            initial: { x: 0, opacity: 1 },
-                            hover: { 
-                              x: [0, 4, 4, 40], 
-                              opacity: [1, 1, 1, 0],
-                              transition: { 
-                                repeat: Infinity, 
-                                duration: 1.2,
-                                times: [0, 0.2, 0.5, 1],
-                                ease: "easeIn"
-                              }
-                            }
-                          }}
-                          initial="initial"
-                          whileHover="hover"
-                          style={{ display: 'inline-flex' }}
-                        >
-                          <CircleChevronRight size={21} />
-                        </motion.span>
-                      )}
-                    </Box>
-                  </Button>
-                </Stack>
-              ) : (
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
-                    color: 'rgba(255,255,255,0.25)', 
-                    fontWeight: 600, 
-                    fontStyle: 'italic',
-                    border: '1px solid rgba(255,255,255,0.05)',
-                    px: 2,
-                    py: 1,
-                    borderRadius: 1,
-                    bgcolor: 'rgba(255,255,255,0.02)'
-                  }}
-                >
-                  Jadwal belum tersedia
-                </Typography>
-              )}
-            </Grid>
-
-          </Grid>
-        </CardContent>
-      </Paper>
-    </motion.div>
-  );
-}
-
-interface ReservationSearch {
-  id: string;
-  slots: {
-    cohorts: {
-      unique_slug: string;
-    }
-  }
-}
-
 export default function Home() {
   const [cohorts, setCohorts] = useState<CohortWithSlots[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -392,16 +55,12 @@ export default function Home() {
     return () => clearInterval(timer);
   }, []);
 
-  /**
-   * Search State & Handlers
-   * Allows users to quickly find their booking by a 6-character access code.
-   */
+  // --- Search Widget State & Handlers ---
   const [searchCode, setSearchCode] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [searchStatus, setSearchStatus] = useState<
-    "idle" | "success" | "error"
-  >("idle");
+  const [searchStatus, setSearchStatus] = useState<"idle" | "success" | "error">("idle");
 
+  /** Validates an access code exists without navigating (used on input change). */
   const checkCodeExists = async (code: string) => {
     setIsSearching(true);
     const { data, error } = await supabase
@@ -409,17 +68,11 @@ export default function Home() {
       .select("id")
       .eq("access_code", code.toUpperCase())
       .maybeSingle();
-
     setIsSearching(false);
-    if (error || !data) {
-      setSearchStatus("error");
-    } else {
-      setSearchStatus("success");
-    }
+    setSearchStatus(error || !data ? "error" : "success");
   };
 
-  const [, startTransitionSearch] = useTransition();
-
+  /** Navigates to the cohort edit page when the form is submitted. */
   const handleSearchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (searchCode.length !== 6) return;
@@ -430,21 +83,17 @@ export default function Home() {
       .select("*, slots(cohorts(unique_slug))")
       .eq("access_code", searchCode.toUpperCase())
       .maybeSingle();
-
     setIsSearching(false);
+
     if (error || !data) {
       setSearchStatus("error");
     } else {
       const reservation = data as unknown as ReservationSearch;
-      const slug = reservation.slots.cohorts.unique_slug;
-      navigate(`/cohort/${slug}?edit=${searchCode.toUpperCase()}`);
+      navigate(`/cohort/${reservation.slots.cohorts.unique_slug}?edit=${searchCode.toUpperCase()}`);
     }
   };
 
-  /**
-   * Data Fetching
-   * Retrieves all cohorts and their associated slots from Supabase.
-   */
+  // --- Data Fetching ---
   useEffect(() => {
     const fetchCohorts = async () => {
       setIsLoading(true);
@@ -457,7 +106,9 @@ export default function Home() {
         // Ensure slots are strictly sorted by date client-side as well
         const sortedData = data.map((cohort: CohortWithSlots) => ({
           ...cohort,
-          slots: (cohort.slots || []).sort((a: Slot, b: Slot) => new Date(a.date).getTime() - new Date(b.date).getTime())
+          slots: (cohort.slots || []).sort(
+            (a: Slot, b: Slot) => new Date(a.date).getTime() - new Date(b.date).getTime()
+          ),
         }));
         setCohorts(sortedData as CohortWithSlots[]);
       }
@@ -467,10 +118,9 @@ export default function Home() {
     fetchCohorts();
   }, []);
 
+  // --- Cohort Grouping ---
   const { scheduled, unscheduled, past } = useMemo(() => {
-    const now = new Date();
-    const isPast = (c: Cohort) => c.end_at && now >= new Date(c.end_at);
-
+    const isPast = (c: CohortWithSlots) => c.end_at && new Date() >= new Date(c.end_at);
     return {
       scheduled: cohorts.filter((c) => c.slots.length > 0 && !isPast(c)),
       unscheduled: cohorts.filter((c) => c.slots.length === 0 && !isPast(c)),
@@ -480,117 +130,47 @@ export default function Home() {
 
   return (
     <Container maxWidth="md" sx={{ pt: 0, pb: 4 }}>
+
       {/* Search Widget */}
-      <motion.div
-        initial={{ opacity: 0, y: 0 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
+      <motion.div initial={{ opacity: 0, y: 0 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <Paper
           className="refined-card"
           sx={{
-            p: 1.5,
-            px: 2,
-            mb: 3,
+            p: 1.5, px: 2, mb: 3,
             bgcolor: "rgba(255, 255, 255, 0.02) !important",
             border: "1px solid",
             borderColor:
-              searchStatus === "success"
-                ? "rgba(46, 204, 113, 0.4)"
-                : searchStatus === "error"
-                  ? "rgba(231, 76, 60, 0.4)"
-                  : "rgba(255, 255, 255, 0.05)",
+              searchStatus === "success" ? "rgba(46, 204, 113, 0.4)"
+              : searchStatus === "error" ? "rgba(231, 76, 60, 0.4)"
+              : "rgba(255, 255, 255, 0.05)",
             transition: "all 0.3s ease",
           }}
         >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              alignItems: { xs: "stretch", md: "center" },
-              gap: 2,
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1.5,
-                minWidth: "fit-content",
-              }}
-            >
+          <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, alignItems: { xs: "stretch", md: "center" }, gap: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: "fit-content" }}>
               <Box
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  bgcolor:
-                    searchStatus === "success"
-                      ? "rgba(46, 204, 113, 0.1)"
-                      : searchStatus === "error"
-                        ? "rgba(231, 76, 60, 0.1)"
-                        : "rgba(212, 175, 55, 0.1)",
-                  color:
-                    searchStatus === "success"
-                      ? "#2ecc71"
-                      : searchStatus === "error"
-                        ? "#e74c3c"
-                        : "#d4af37",
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  transition: "all 0.3s ease",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  bgcolor: searchStatus === "success" ? "rgba(46, 204, 113, 0.1)" : searchStatus === "error" ? "rgba(231, 76, 60, 0.1)" : "rgba(212, 175, 55, 0.1)",
+                  color: searchStatus === "success" ? "#2ecc71" : searchStatus === "error" ? "#e74c3c" : "#d4af37",
+                  width: 32, height: 32, borderRadius: "50%", transition: "all 0.3s ease",
                 }}
               >
-                {isSearching ? (
-                  <CircularProgress size={16} color="inherit" />
-                ) : (
-                  <Search size={16} />
-                )}
+                {isSearching ? <CircularProgress size={16} color="inherit" /> : <Search size={16} />}
               </Box>
               <Box>
-                <Typography
-                  variant="subtitle2"
-                  sx={{ 
-                    fontWeight: 500, 
-                    color: "#ffffff", 
-                    lineHeight: 1.1, 
-                    fontSize: '0.85rem',
-                    fontStyle: 'italic',
-                    letterSpacing: '-0.2px'
-                  }}
-                >
+                <Typography variant="subtitle2" sx={{ fontWeight: 500, color: "#ffffff", lineHeight: 1.1, fontSize: "0.85rem", fontStyle: "italic", letterSpacing: "-0.2px" }}>
                   Sudah punya jadwal?
                 </Typography>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: "rgba(255,255,255,0.4)",
-                    display: "block",
-                    fontSize: '0.7rem',
-                    fontWeight: 400,
-                    fontStyle: 'italic',
-                    letterSpacing: '-0.1px'
-                  }}
-                >
+                <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.4)", display: "block", fontSize: "0.7rem", fontWeight: 400, fontStyle: "italic", letterSpacing: "-0.1px" }}>
                   Masukkan kode akses untuk mengubah.
                 </Typography>
               </Box>
             </Box>
 
-            <Box
-              component="form"
-              onSubmit={handleSearchSubmit}
-              sx={{
-                display: "flex",
-                flexGrow: 1,
-                gap: 1.5,
-                alignItems: "flex-start",
-              }}
-            >
+            <Box component="form" onSubmit={handleSearchSubmit} sx={{ display: "flex", flexGrow: 1, gap: 1.5, alignItems: "flex-start" }}>
               <TextField
-                fullWidth
-                size="small"
+                fullWidth size="small"
                 placeholder="Kode Akses (6 digit)..."
                 value={searchCode}
                 onChange={(e) => {
@@ -598,10 +178,8 @@ export default function Home() {
                   setSearchCode(val);
                   if (val.length === 6) {
                     void checkCodeExists(val);
-                  } else {
-                    startTransitionSearch(() => {
-                      setSearchStatus((prev) => prev !== "idle" ? "idle" : prev);
-                    });
+                  } else if (searchStatus !== "idle") {
+                    setSearchStatus("idle");
                   }
                 }}
                 error={searchStatus === "error"}
@@ -609,48 +187,29 @@ export default function Home() {
                   input: {
                     endAdornment: (
                       <InputAdornment position="end">
-                        {isSearching ? (
-                          <CircularProgress size={14} />
-                        ) : searchStatus === "success" ? (
-                          <CheckCircle2 size={14} color="#2ecc71" />
-                        ) : searchStatus === "error" ? (
-                          <XCircle size={14} color="#e74c3c" />
-                        ) : null}
+                        {isSearching ? <CircularProgress size={14} />
+                          : searchStatus === "success" ? <CheckCircle2 size={14} color="#2ecc71" />
+                          : searchStatus === "error" ? <XCircle size={14} color="#e74c3c" />
+                          : null}
                       </InputAdornment>
                     ),
                     sx: {
-                      borderRadius: 2.5,
-                      textTransform: "uppercase",
-                      fontWeight: 500,
-                      fontSize: '0.85rem',
-                      fontStyle: 'italic',
-                      letterSpacing: '-0.3px',
-                      bgcolor: "rgba(0,0,0,0.3)",
-                      height: 38,
-                      "& fieldset": {
-                        borderColor: "rgba(255,255,255,0.1) !important",
-                      },
+                      borderRadius: 2.5, textTransform: "uppercase", fontWeight: 500,
+                      fontSize: "0.85rem", fontStyle: "italic", letterSpacing: "-0.3px",
+                      bgcolor: "rgba(0,0,0,0.3)", height: 38,
+                      "& fieldset": { borderColor: "rgba(255,255,255,0.1) !important" },
                     },
                   },
                 }}
               />
               <Button
-                type="submit"
-                variant="contained"
+                type="submit" variant="contained"
                 disabled={searchStatus !== "success" || isSearching}
                 startIcon={<Edit2 size={14} />}
                 sx={{
-                  height: 38,
-                  px: 3,
-                  whiteSpace: 'nowrap',
-                  borderRadius: 1,
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  fontStyle: 'italic',
-                  letterSpacing: '-0.2px',
-                  boxShadow: searchStatus === "success" 
-                    ? "0 4px 12px 0 rgba(46, 204, 113, 0.2)" 
-                    : "none",
+                  height: 38, px: 3, whiteSpace: "nowrap", borderRadius: 1,
+                  fontSize: "0.8rem", fontWeight: 600, fontStyle: "italic", letterSpacing: "-0.2px",
+                  boxShadow: searchStatus === "success" ? "0 4px 12px 0 rgba(46, 204, 113, 0.2)" : "none",
                 }}
               >
                 Ubah Jadwal
@@ -665,47 +224,27 @@ export default function Home() {
       {/* Main Scheduled Events */}
       <motion.div variants={motionContainer} initial="hidden" animate="show">
         <Grid container spacing={2.5}>
-          {isLoading ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <Grid size={{ xs: 12 }} key={i}>
-                <Skeleton 
-                  variant="rectangular" 
-                  height={180} 
-                  sx={{ borderRadius: 4, bgcolor: "rgba(255,255,255,0.05)" }} 
-                />
-              </Grid>
-            ))
-          ) : (
-            scheduled.map((cohort) => (
-              <Grid size={{ xs: 12 }} key={cohort.id}>
-                <CohortCard cohort={cohort} isAdmin={isAdmin} now={now} onStatusChange={() => setNow(new Date())} />
-              </Grid>
-            ))
-          )}
+          {isLoading
+            ? Array.from({ length: 3 }).map((_, i) => (
+                <Grid size={{ xs: 12 }} key={i}>
+                  <Skeleton variant="rectangular" height={180} sx={{ borderRadius: 4, bgcolor: "rgba(255,255,255,0.05)" }} />
+                </Grid>
+              ))
+            : scheduled.map((cohort) => (
+                <Grid size={{ xs: 12 }} key={cohort.id}>
+                  <CohortCard cohort={cohort} isAdmin={isAdmin} now={now} onStatusChange={() => setNow(new Date())} />
+                </Grid>
+              ))}
         </Grid>
 
         {/* Unscheduled Events Accordion */}
         {!isLoading && unscheduled.length > 0 && (
           <Box sx={{ mt: 6 }}>
-            <Accordion
-              sx={{
-                background: "#1a1a1a !important",
-                border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: "12px !important",
-                overflow: "hidden",
-                "&:before": { display: "none" },
-              }}
-            >
+            <Accordion sx={{ background: "#1a1a1a !important", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "12px !important", overflow: "hidden", "&:before": { display: "none" } }}>
               <AccordionSummary expandIcon={<ChevronDown color="white" />}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                   <Info size={18} color="rgba(255,255,255,0.5)" />
-                  <Typography
-                    sx={{
-                      fontWeight: 700,
-                      color: "rgba(255,255,255,0.7)",
-                      fontSize: "0.9rem",
-                    }}
-                  >
+                  <Typography sx={{ fontWeight: 700, color: "rgba(255,255,255,0.7)", fontSize: "0.9rem" }}>
                     Event yang belum terjadwal ({unscheduled.length})
                   </Typography>
                 </Box>
@@ -726,25 +265,11 @@ export default function Home() {
         {/* Past Events Accordion */}
         {!isLoading && past.length > 0 && (
           <Box sx={{ mt: unscheduled.length > 0 ? 2 : 6 }}>
-            <Accordion
-              sx={{
-                background: "#1a1a1a !important",
-                border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: "12px !important",
-                overflow: "hidden",
-                "&:before": { display: "none" },
-              }}
-            >
+            <Accordion sx={{ background: "#1a1a1a !important", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "12px !important", overflow: "hidden", "&:before": { display: "none" } }}>
               <AccordionSummary expandIcon={<ChevronDown color="white" />}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                   <History size={18} color="rgba(255,255,255,0.5)" />
-                  <Typography
-                    sx={{
-                      fontWeight: 700,
-                      color: "rgba(255,255,255,0.7)",
-                      fontSize: "0.9rem",
-                    }}
-                  >
+                  <Typography sx={{ fontWeight: 700, color: "rgba(255,255,255,0.7)", fontSize: "0.9rem" }}>
                     Event yang telah usai ({past.length})
                   </Typography>
                 </Box>
