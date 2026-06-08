@@ -184,9 +184,9 @@ export default function TopNav() {
                         sx={{
                           borderRadius: 2,
                           bgcolor: isActive("/")
-                            ? "rgba(52, 152, 219, 0.15)"
+                            ? "rgba(212, 175, 55, 0.15)"
                             : "transparent",
-                          color: isActive("/") ? "#3498db" : "#ffffff",
+                          color: isActive("/") ? "#d4af37" : "#ffffff",
                         }}
                       >
                         <ListItemIcon sx={{ color: "inherit", minWidth: 40 }}>
@@ -208,9 +208,9 @@ export default function TopNav() {
                           sx={{
                             borderRadius: 2,
                             bgcolor: isActive("/admin")
-                              ? "rgba(52, 152, 219, 0.15)"
+                              ? "rgba(212, 175, 55, 0.15)"
                               : "transparent",
-                            color: isActive("/admin") ? "#3498db" : "#ffffff",
+                            color: isActive("/admin") ? "#d4af37" : "#ffffff",
                           }}
                         >
                           <ListItemIcon sx={{ color: "inherit", minWidth: 40 }}>
@@ -264,12 +264,12 @@ export default function TopNav() {
                 startIcon={<Home size={18} />}
                 sx={{
                   bgcolor: isActive("/")
-                    ? "rgba(52, 152, 219, 0.2) !important"
+                    ? "rgba(212, 175, 55, 0.2) !important"
                     : "rgba(255, 255, 255, 0.08)",
                   borderColor: isActive("/")
-                    ? "rgba(52, 152, 219, 0.5) !important"
+                    ? "rgba(212, 175, 55, 0.5) !important"
                     : "rgba(255, 255, 255, 0.1)",
-                  color: isActive("/") ? "#3498db" : "#ffffff",
+                  color: isActive("/") ? "#d4af37" : "#ffffff",
                   border: "1px solid",
                   lineHeight: 1.25,
                   textAlign: "center",
@@ -287,12 +287,12 @@ export default function TopNav() {
                     startIcon={<Settings size={18} />}
                     sx={{
                       bgcolor: isActive("/admin")
-                        ? "rgba(52, 152, 219, 0.2) !important"
+                        ? "rgba(212, 175, 55, 0.2) !important"
                         : "rgba(255, 255, 255, 0.08)",
                       borderColor: isActive("/admin")
-                        ? "rgba(52, 152, 219, 0.5) !important"
+                        ? "rgba(212, 175, 55, 0.5) !important"
                         : "rgba(255, 255, 255, 0.1)",
-                      color: isActive("/admin") ? "#3498db" : "#ffffff",
+                      color: isActive("/admin") ? "#d4af37" : "#ffffff",
                       border: "1px solid",
                       lineHeight: 1.25,
                       textAlign: "center",

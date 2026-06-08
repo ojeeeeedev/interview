@@ -255,7 +255,7 @@ export default function Landing() {
                   variant="overline"
                   sx={{
                     fontWeight: 900,
-                    color: "#3498db",
+                    color: "#d4af37",
                     letterSpacing: "2px",
                     display: 'block',
                     lineHeight: 1,

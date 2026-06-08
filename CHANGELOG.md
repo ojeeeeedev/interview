@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.8.0] - 2026-06-08T13:24:00+07:00
+### Changed
+- **Accent Color Redesign**: Replaced the previous Action Blue accent colors with a premium and elegant Gold/Amber color system (`#d4af37`, `#aa8010`, and `rgba(212, 175, 55, X)`) across all pages, components, calendar pickers, dialogs, buttons, and PDF templates.
+- **Cohort Card Layout Refactor**: 
+  - Restructured typography hierarchy by swapping font weights and sizes so the group name (`Kelompok {nama_kelompok}`) is prominently displayed as the main heading in gold, and the event title (`{title}`) is secondary in a softer off-white color.
+  - Replaced the left vertical "fingernail" border stripe with a clean, fully-enclosed gold border outline that glows and scales on card hover.
+
 ## [1.7.1] - 2026-06-08T12:47:00+07:00
 ### Fixed
 - **Atur Peserta grouping bug**: Fixed an issue where whitelisted names from different cohorts with the same event title were combined under the same group. Now, names are grouped by their unique `cohort_id` rather than their event title.

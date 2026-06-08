@@ -84,8 +84,8 @@ export default function Footer() {
             startIcon={isAdmin ? <Settings size={14} /> : <Lock size={14} />}
             sx={{
               color: "#ffffff",
-              bgcolor: "rgba(52, 152, 219, 0.15)", // Dark blue tint
-              borderColor: "rgba(52, 152, 219, 0.4)", // Border color
+              bgcolor: "rgba(212, 175, 55, 0.15)", // Dark gold tint
+              borderColor: "rgba(212, 175, 55, 0.4)", // Border color
               borderRadius: 1,
               fontSize: "0.7rem",
               textTransform: "none",
@@ -94,8 +94,8 @@ export default function Footer() {
               py: 0.3, // Reduced vertical padding
               maxHeight: "32px", // Ensure button doesn't get too tall
               "&:hover": {
-                bgcolor: "rgba(52, 152, 219, 0.25)",
-                borderColor: "rgba(52, 152, 219, 0.6)",
+                bgcolor: "rgba(212, 175, 55, 0.25)",
+                borderColor: "rgba(212, 175, 55, 0.6)",
               },
             }}
           >

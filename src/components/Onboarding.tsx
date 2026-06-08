@@ -188,7 +188,7 @@ export default function Onboarding() {
                 bgcolor: "rgba(255,255,255,0.2)",
               },
               "& .MuiMobileStepper-dotActive": {
-                bgcolor: "#3498db",
+                bgcolor: "#d4af37",
               }
             }}
             nextButton={null}

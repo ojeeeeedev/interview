@@ -62,7 +62,7 @@ export default function CountdownTimer({
         minute: '2-digit' 
     });
 
-    const labelColor = color || (targetLabel.toUpperCase().includes("DIBUKA") ? "#3498db" : (targetLabel.toUpperCase().includes("BATAS") || targetLabel.toUpperCase().includes("DITUTUP") ? "#e74c3c" : "inherit"));
+    const labelColor = color || (targetLabel.toUpperCase().includes("DIBUKA") ? "#d4af37" : (targetLabel.toUpperCase().includes("BATAS") || targetLabel.toUpperCase().includes("DITUTUP") ? "#e74c3c" : "inherit"));
 
     const targetDateElement = showTarget && (
         <Box sx={{ mb: small ? 1 : 1.5, textAlign: align === "flex-start" ? "left" : "center" }}>

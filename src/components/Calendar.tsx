@@ -80,15 +80,15 @@ export default function Calendar({ slots, onSelect, selected }: Props) {
             fontWeight: 700,
             borderRadius: "10px !important",
             "&.Mui-selected": {
-              backgroundColor: "#3498db !important",
+              backgroundColor: "#d4af37 !important",
               color: "#ffffff !important",
-              boxShadow: "0 0 20px rgba(52, 152, 219, 0.4)",
+              boxShadow: "0 0 20px rgba(212, 175, 55, 0.4)",
             },
             "&:hover": {
               backgroundColor: "rgba(255, 255, 255, 0.05) !important",
             },
             "&.MuiPickersDay-today": {
-              borderColor: "rgba(52, 152, 219, 0.5) !important",
+              borderColor: "rgba(212, 175, 55, 0.5) !important",
             },
           }}
         />
@@ -194,11 +194,11 @@ export default function Calendar({ slots, onSelect, selected }: Props) {
               display: "flex",
               alignItems: "center",
               gap: 1.2,
-              bgcolor: "rgba(52, 152, 219, 0.1)",
+              bgcolor: "rgba(212, 175, 55, 0.1)",
               px: 2.5,
               py: 0.75,
               borderRadius: "50px",
-              border: `1px solid rgba(52, 152, 219, 0.3)`,
+              border: `1px solid rgba(212, 175, 55, 0.3)`,
               animation: "fadeIn 0.3s ease",
               "@keyframes fadeIn": {
                 from: { opacity: 0, transform: "translateY(5px)" },

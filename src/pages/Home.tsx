@@ -125,62 +125,65 @@ function CohortCard({
           overflow: "hidden",
           background: "rgba(25, 25, 25, 0.6)", // Distinct fill color
           backdropFilter: "blur(12px)",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
+          border: canAccess 
+            ? "1px solid rgba(212, 175, 55, 0.25)" 
+            : "1px solid rgba(255, 255, 255, 0.08)",
           transition: "all 0.4s cubic-bezier(0.23, 1, 0.32, 1)",
           pointerEvents: canAccess ? "auto" : "none",
           "&:hover": canAccess ? {
             background: "rgba(35, 35, 35, 0.8)",
-            borderColor: "rgba(52, 152, 219, 0.4)",
-            boxShadow: "0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(52, 152, 219, 0.1)",
+            borderColor: "rgba(212, 175, 55, 0.7)",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.5), 0 0 20px rgba(212, 175, 55, 0.12)",
           } : {},
         }}
       >
-        <Box 
-          sx={{ 
-            position: 'absolute', 
-            top: 0, 
-            left: 0, 
-            width: '4px', 
-            height: '100%', 
-            background: (isEnded || !hasSlots) ? 'rgba(255,255,255,0.1)' : 'linear-gradient(to bottom, #3498db, #2980b9)',
-            opacity: 0.8
-          }} 
-        />
-
         <CardContent sx={{ p: { xs: 2.5, md: 3.5 } }}>
           <Grid container spacing={4} alignItems="center">
             
             {/* Left: Info */}
             <Grid size={{ xs: 12, md: 4 }}>
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    fontWeight: 800,
-                    color: (isEnded || !hasSlots) ? "rgba(255,255,255,0.3)" : "#3498db",
-                    letterSpacing: "0.5px",
-                    textTransform: 'uppercase',
-                    fontSize: '0.7rem'
-                  }}
-                >
-                  Kelompok {cohort.nama_kelompok}
-                </Typography>
-                {isAdmin && (
-                  <Chip label="Admin" size="small" sx={{ height: 18, fontSize: '0.6rem', fontWeight: 800, bgcolor: 'rgba(52, 152, 219, 0.1)', color: '#3498db', border: '1px solid rgba(52, 152, 219, 0.2)' }} />
-                )}
-              </Stack>
-              
               <Typography
                 variant="h6"
                 sx={{
-                  color: (isEnded || !hasSlots) ? "rgba(255,255,255,0.4)" : "#ffffff",
-                  fontWeight: 700,
-                  mb: 1,
+                  fontWeight: 900,
+                  color: (isEnded || !hasSlots) ? "rgba(255,255,255,0.4)" : "#d4af37",
+                  letterSpacing: "0.5px",
+                  textTransform: 'uppercase',
+                  fontSize: { xs: '1rem', md: '1.15rem' },
                   lineHeight: 1.2,
+                  mb: 0.5,
                 }}
               >
-                {cohort.title}
+                Kelompok {cohort.nama_kelompok}
               </Typography>
+
+              <Stack direction="row" spacing={1} alignItems="baseline" sx={{ mb: 1.5 }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    fontWeight: 500,
+                    color: "rgba(255,255,255,0.7)",
+                    letterSpacing: "-0.2px",
+                    fontSize: '0.85rem'
+                  }}
+                >
+                  {cohort.title}
+                </Typography>
+                {isAdmin && (
+                  <Chip 
+                    label="Admin" 
+                    size="small" 
+                    sx={{ 
+                      height: 16, 
+                      fontSize: '0.55rem', 
+                      fontWeight: 800, 
+                      bgcolor: 'rgba(212, 175, 55, 0.1)', 
+                      color: '#d4af37', 
+                      border: '1px solid rgba(212, 175, 55, 0.2)' 
+                    }} 
+                  />
+                )}
+              </Stack>
               
               <Typography
                 variant="body2"
@@ -297,8 +300,8 @@ function CohortCard({
                           borderColor: 'rgba(46, 204, 113, 0.4)' 
                         },
                         '50%': { 
-                          boxShadow: '0 0 8px rgba(52, 152, 219, 0.3)',
-                          borderColor: 'rgba(77, 161, 66, 0.4)' 
+                          boxShadow: '0 0 8px rgba(212, 175, 55, 0.3)',
+                          borderColor: 'rgba(212, 175, 55, 0.4)' 
                         },
                         '100%': { 
                           boxShadow: '0 0 8px rgba(123, 239, 178, 0.3)',
@@ -525,13 +528,13 @@ export default function Home() {
                       ? "rgba(46, 204, 113, 0.1)"
                       : searchStatus === "error"
                         ? "rgba(231, 76, 60, 0.1)"
-                        : "rgba(52, 152, 219, 0.1)",
+                        : "rgba(212, 175, 55, 0.1)",
                   color:
                     searchStatus === "success"
                       ? "#2ecc71"
                       : searchStatus === "error"
                         ? "#e74c3c"
-                        : "#3498db",
+                        : "#d4af37",
                   width: 32,
                   height: 32,
                   borderRadius: "50%",

@@ -152,7 +152,7 @@ export default function EditBooking({ reservation, slots, isEnded = false, onDon
           variant="overline"
           sx={{
             fontWeight: 900,
-            color: "#3498db",
+            color: "#d4af37",
             letterSpacing: "1.5px",
             lineHeight: 1,
           }}
@@ -233,9 +233,9 @@ export default function EditBooking({ reservation, slots, isEnded = false, onDon
         <Box
           sx={{
             p: 2.5,
-            bgcolor: "rgba(52, 152, 219, 0.08)",
+            bgcolor: "rgba(212, 175, 55, 0.08)",
             borderRadius: "12px",
-            border: "1px solid rgba(52, 152, 219, 0.2)",
+            border: "1px solid rgba(212, 175, 55, 0.2)",
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 800, color: "#ffffff", letterSpacing: '-0.3px' }}>
@@ -329,7 +329,7 @@ export default function EditBooking({ reservation, slots, isEnded = false, onDon
                 height: 56,
                 borderRadius: "12px",
                 fontWeight: 800,
-                bgcolor: "#3498db",
+                bgcolor: "#d4af37",
                 fontSize: "1rem",
                 textTransform: "none",
               }}
@@ -407,13 +407,13 @@ export default function EditBooking({ reservation, slots, isEnded = false, onDon
           </DialogContentText>
           <Box
             sx={{
-              bgcolor: "rgba(52, 152, 219, 0.1)",
+              bgcolor: "rgba(212, 175, 55, 0.1)",
               p: 2.5,
               borderRadius: "12px",
-              border: "1px solid rgba(52, 152, 219, 0.3)",
+              border: "1px solid rgba(212, 175, 55, 0.3)",
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 800, color: "#3498db" }}>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: "#d4af37" }}>
               {selectedDate &&
                 format(selectedDate, "EEEE, d MMMM yyyy", { locale: id })}
             </Typography>

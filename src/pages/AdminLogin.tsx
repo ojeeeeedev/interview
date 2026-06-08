@@ -35,8 +35,8 @@ export default function AdminLogin() {
                         <Box sx={{ 
                             p: 2, 
                             borderRadius: '50%', 
-                            bgcolor: 'rgba(52, 152, 219, 0.1)',
-                            color: '#3498db'
+                            bgcolor: 'rgba(212, 175, 55, 0.1)',
+                            color: '#d4af37'
                         }}>
                             <Lock size={32} />
                         </Box>

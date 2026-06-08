@@ -294,7 +294,7 @@ export default function Admin() {
     currentY += 15;
 
     doc.setFontSize(16);
-    doc.setTextColor(52, 152, 219);
+    doc.setTextColor(212, 175, 55);
     doc.text(`${cohort.nama_kelompok} - ${cohort.title}`, 14, currentY);
     currentY += 10;
 
@@ -338,7 +338,7 @@ export default function Admin() {
         head: [['Nama Peserta', 'Kode Akses', 'Waktu Daftar', 'Kehadiran']],
         body: tableRows,
         theme: 'grid',
-        headStyles: { fillColor: [52, 152, 219] },
+        headStyles: { fillColor: [212, 175, 55] },
         columnStyles: {
           0: { cellWidth: 72 }, // 40% of standard usable width (approx 182mm)
           1: { cellWidth: 25 },
@@ -722,7 +722,7 @@ export default function Admin() {
               },
               "& .MuiTabs-scrollButtons": {
                 "&.Mui-disabled": { opacity: 0.3 },
-                color: "#3498db",
+                color: "#d4af37",
               },
             }}
           >
@@ -1101,12 +1101,12 @@ export default function Admin() {
                                       color="primary"
                                       onClick={() => handleEditCohortClick(c)}
                                       sx={{
-                                        bgcolor: "rgba(52, 152, 219, 0.15)",
+                                        bgcolor: "rgba(212, 175, 55, 0.15)",
                                         borderRadius: "50%",
                                         width: 28,
                                         height: 28,
                                         "&:hover": {
-                                          bgcolor: "rgba(52, 152, 219, 0.25)",
+                                          bgcolor: "rgba(212, 175, 55, 0.25)",
                                         },
                                       }}
                                     >
@@ -1292,12 +1292,12 @@ export default function Admin() {
                               </Button>
                             )}
                             <Button
-                              variant="contained"
-                              onClick={editingSlotId ? handleUpdateSlot : handleCreateSlot}
-                              fullWidth
-                            >
-                              {editingSlotId ? "Simpan Perubahan" : "Tambah"}
-                            </Button>
+                                variant="contained"
+                                onClick={editingSlotId ? handleUpdateSlot : handleCreateSlot}
+                                fullWidth
+                              >
+                                {editingSlotId ? "Simpan Perubahan" : "Tambah"}
+                              </Button>
                           </Stack>
                         </Box>
                       </AccordionDetails>
@@ -1456,7 +1456,7 @@ export default function Admin() {
                           <TableCell sx={{ whiteSpace: "nowrap" }}>
                             <Typography
                               variant="body2"
-                              sx={{ color: "#3498db", fontWeight: 600 }}
+                              sx={{ color: "#d4af37", fontWeight: 600 }}
                             >
                               {s.cohorts?.nama_kelompok}
                             </Typography>
@@ -1478,12 +1478,12 @@ export default function Admin() {
                                   color="primary"
                                   onClick={() => handleEditSlotClick(s)}
                                   sx={{
-                                    bgcolor: "rgba(52, 152, 219, 0.15)",
+                                    bgcolor: "rgba(212, 175, 55, 0.15)",
                                     borderRadius: "50%",
                                     width: 32,
                                     height: 32,
                                     "&:hover": {
-                                      bgcolor: "rgba(52, 152, 219, 0.25)",
+                                      bgcolor: "rgba(212, 175, 55, 0.25)",
                                     },
                                   }}
                                 >
@@ -1622,7 +1622,7 @@ export default function Admin() {
                                 <Typography
                                   sx={{
                                     fontWeight: 900,
-                                    color: "#3498db",
+                                    color: "#d4af37",
                                     fontSize: { xs: "0.7rem", sm: "0.85rem" },
                                     letterSpacing: "1px",
                                   }}
@@ -1758,12 +1758,12 @@ export default function Admin() {
                                                 setEditNameDialogOpen(true);
                                               }}
                                               sx={{
-                                                bgcolor: "rgba(52, 152, 219, 0.15)",
+                                                bgcolor: "rgba(212, 175, 55, 0.15)",
                                                 borderRadius: "50%",
-                                                width: 24,
-                                                height: 24,
+                                                width: 28,
+                                                height: 28,
                                                 "&:hover": {
-                                                  bgcolor: "rgba(52, 152, 219, 0.25)",
+                                                  bgcolor: "rgba(212, 175, 55, 0.25)",
                                                 },
                                               }}
                                             >
@@ -1829,11 +1829,11 @@ export default function Admin() {
                           <Accordion key={cohort.id} className="refined-card">
                             <AccordionSummary expandIcon={<ChevronDown size={20} />}>
                               <Box display="flex" alignItems="center" gap={2} width="100%" pr={2}>
-                                <Box sx={{ p: 1, bgcolor: 'rgba(52, 152, 219, 0.1)', borderRadius: 2, color: '#3498db', display: { xs: 'none', sm: 'block' } }}>
+                                <Box sx={{ p: 1, bgcolor: 'rgba(212, 175, 55, 0.1)', borderRadius: 2, color: '#d4af37', display: { xs: 'none', sm: 'block' } }}>
                                   <FileText size={20} />
                                 </Box>
                                 <Box sx={{ flexGrow: 1 }}>
-                                  <Typography variant="caption" sx={{ fontWeight: 900, color: '#3498db', letterSpacing: 1, display: 'block' }}>
+                                  <Typography variant="caption" sx={{ fontWeight: 900, color: '#d4af37', letterSpacing: 1, display: 'block' }}>
                                     {cohort.nama_kelompok.toUpperCase()}
                                   </Typography>
                                   <Typography sx={{ fontWeight: 800 }}>{cohort.title}</Typography>
@@ -1853,11 +1853,11 @@ export default function Admin() {
                                       py: 0.5,
                                       px: 1.5,
                                       maxHeight: "32px",
-                                      borderColor: 'rgba(52, 152, 219, 0.4)',
-                                      color: '#3498db',
+                                      borderColor: 'rgba(212, 175, 55, 0.4)',
+                                      color: '#d4af37',
                                       '&:hover': {
-                                        borderColor: '#3498db',
-                                        bgcolor: 'rgba(52, 152, 219, 0.1)'
+                                        borderColor: '#d4af37',
+                                        bgcolor: 'rgba(212, 175, 55, 0.1)'
                                       }
                                     }}
                                   >

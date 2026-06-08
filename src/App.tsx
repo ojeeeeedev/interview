@@ -21,7 +21,7 @@ const theme = createTheme({
   palette: {
     mode: "dark",
     primary: {
-      main: "#3498db", // Action Blue
+      main: "#d4af37", // Elegant Gold
       contrastText: "#ffffff",
     },
     background: {
@@ -76,11 +76,11 @@ const theme = createTheme({
           },
         },
         containedPrimary: {
-          backgroundColor: "rgba(52, 152, 219, 0.15)",
-          borderColor: "rgba(52, 152, 219, 0.3)",
+          backgroundColor: "rgba(212, 175, 55, 0.15)",
+          borderColor: "rgba(212, 175, 55, 0.3)",
           "&:hover": {
-            backgroundColor: "rgba(52, 152, 219, 0.25)",
-            borderColor: "rgba(52, 152, 219, 0.4)",
+            backgroundColor: "rgba(212, 175, 55, 0.25)",
+            borderColor: "rgba(212, 175, 55, 0.4)",
           },
         },
         containedError: {
@@ -159,7 +159,7 @@ function App() {
               <Box sx={{ pt: 3, flexGrow: 1 }}>
                 <Suspense fallback={
                   <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
-                    <CircularProgress size={40} thickness={4} sx={{ color: '#3498db' }} />
+                    <CircularProgress size={40} thickness={4} sx={{ color: '#d4af37' }} />
                   </Box>
                 }>
                   <Routes>

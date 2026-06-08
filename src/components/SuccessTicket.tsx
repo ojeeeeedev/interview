@@ -155,13 +155,13 @@ export default function SuccessTicket({
 
             <Box
               sx={{
-                bgcolor: "rgba(52, 152, 219, 0.05)",
+                bgcolor: "rgba(212, 175, 55, 0.05)",
                 py: 2,
                 px: 4,
                 borderRadius: 3,
                 display: "inline-block",
                 mb: 2,
-                border: "1px dashed rgba(52, 152, 219, 0.4)",
+                border: "1px dashed rgba(212, 175, 55, 0.4)",
               }}
             >
               <Typography
@@ -169,7 +169,7 @@ export default function SuccessTicket({
                 sx={{
                   fontWeight: 900,
                   letterSpacing: 4,
-                  color: "#3498db",
+                  color: "#d4af37",
                   m: 0,
                 }}
               >
@@ -269,8 +269,8 @@ export default function SuccessTicket({
                   fontWeight: 800,
                   textTransform: "none",
                   fontSize: "0.8rem",
-                  background: "linear-gradient(45deg, #3498db, #2980b9)",
-                  boxShadow: "0 4px 14px 0 rgba(52, 152, 219, 0.39)",
+                  background: "linear-gradient(45deg, #d4af37, #aa8010)",
+                  boxShadow: "0 4px 14px 0 rgba(212, 175, 55, 0.39)",
                 }}
               >
                 Simpan Tiket

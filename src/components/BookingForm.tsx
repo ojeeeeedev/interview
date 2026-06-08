@@ -414,8 +414,8 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
                       color: "#fff !important"
                     },
                     '&[aria-selected="true"]': {
-                      bgcolor: "rgba(52, 152, 219, 0.2) !important",
-                      color: "#3498db !important"
+                      bgcolor: "rgba(212, 175, 55, 0.2) !important",
+                      color: "#d4af37 !important"
                     },
                   },
                 }}
@@ -517,10 +517,10 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
                   boxShadow: '0 0 8px rgba(123, 239, 178, 0.3)',
                   borderColor: 'rgba(46, 204, 113, 0.4)' 
                 },
-                '50%': { 
-                  boxShadow: '0 0 8px rgba(52, 152, 219, 0.3)',
-                  borderColor: 'rgba(52, 152, 219, 0.4)' 
-                },
+                 '50%': { 
+                   boxShadow: '0 0 8px rgba(212, 175, 55, 0.3)',
+                   borderColor: 'rgba(212, 175, 55, 0.4)' 
+                 },
                 '100%': { 
                   boxShadow: '0 0 8px rgba(123, 239, 178, 0.3)',
                   borderColor: 'rgba(46, 204, 113, 0.4)' 
