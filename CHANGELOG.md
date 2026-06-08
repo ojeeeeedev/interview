@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [1.8.0] - 2026-06-08T13:24:00+07:00
 ### Changed
+- **Onboarding Guide Button Label**: Converted the desktop help icon button in the top navigation header into a clearly labeled `"Panduan"` button next to the help icon to improve usability and feature awareness.
 - **Accent Color Redesign**: Replaced the previous Action Blue accent colors with a premium and elegant Gold/Amber color system (`#d4af37`, `#aa8010`, and `rgba(212, 175, 55, X)`) across all pages, components, calendar pickers, dialogs, buttons, and PDF templates.
 - **Cohort Card Layout Refactor**: 
   - Restructured typography hierarchy by swapping font weights and sizes so the group name (`Kelompok {nama_kelompok}`) is prominently displayed as the main heading in gold, and the event title (`{title}`) is secondary in a softer off-white color.

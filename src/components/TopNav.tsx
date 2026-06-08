@@ -250,13 +250,26 @@ export default function TopNav() {
             </Box>
           ) : (
             <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
-              <IconButton
+              <Button
                 color="inherit"
                 onClick={() => window.dispatchEvent(new Event("open-onboarding"))}
-                sx={{ bgcolor: 'rgba(255,255,255,0.08)', '&:hover': { bgcolor: 'rgba(255,255,255,0.15)' } }}
+                startIcon={<CircleHelp size={18} />}
+                sx={{
+                  bgcolor: 'rgba(255,255,255,0.08)',
+                  borderColor: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '0.8rem',
+                  lineHeight: 1.25,
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.15)',
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                  },
+                }}
               >
-                <CircleHelp size={20} />
-              </IconButton>
+                Panduan
+              </Button>
               <Button
                 component={Link}
                 to="/"
