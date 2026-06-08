@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] - 2026-06-08T15:40:00+07:00
+## [1.8.2] - 2026-06-08T15:40:00+07:00
 ### Refactored
 - **Consolidated TypeScript Types**:
   - Moved UI helper and extended interfaces (`ReservationExtended`, `AllowedNameExtended`, `SlotWithCohorts`, `SnackbarState`, `ReservationWithSlot`, `CohortWithSlots`, `ReservationSearch`) from local files to the centralized `src/types.ts` to allow proper type sharing and avoid redundancy.
