@@ -23,8 +23,7 @@ import { ChevronDown, FileDown, FileText, Trash2 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { supabase } from "../../../lib/supabase";
-import type { Cohort, Slot } from "../../../types";
-import type { ReservationExtended } from "../hooks/useAdminData";
+import type { Cohort, Slot, ReservationExtended } from "../../../types";
 
 // ---------------------------------------------------------------------------
 // Types

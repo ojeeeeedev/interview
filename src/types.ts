@@ -66,3 +66,65 @@ export interface AllowedName {
         nama_kelompok: string;
     };
 }
+
+// ---------------------------------------------------------------------------
+// Extended / Helper UI Types
+// ---------------------------------------------------------------------------
+
+export interface ReservationExtended {
+  id: string;
+  user_name: string;
+  access_code: string;
+  created_at: string;
+  slot_id: string;
+  slots: {
+    date: string;
+    cohort_id: string;
+    cohorts: {
+      title: string;
+      nama_kelompok: string;
+    };
+  };
+}
+
+export interface AllowedNameExtended {
+  id: string;
+  full_name: string;
+  cohort_id: string;
+  cohorts: {
+    title: string;
+    nama_kelompok: string;
+  };
+}
+
+export interface SlotWithCohorts extends Slot {
+  cohorts: {
+    title: string;
+    nama_kelompok: string;
+  };
+}
+
+export interface SnackbarState {
+  open: boolean;
+  message: string;
+  severity: "success" | "error" | "info" | "warning";
+}
+
+export interface ReservationWithSlot {
+  id: string;
+  user_name: string;
+  access_code: string;
+  created_at: string;
+  slot_id: string;
+  slots: Slot;
+}
+
+export interface CohortWithSlots extends Cohort {
+  slots: Slot[];
+}
+
+export interface ReservationSearch {
+  id: string;
+  slots: { cohorts: { unique_slug: string } };
+}
+

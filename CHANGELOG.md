@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-06-08T15:40:00+07:00
+### Refactored
+- **Consolidated TypeScript Types**:
+  - Moved UI helper and extended interfaces (`ReservationExtended`, `AllowedNameExtended`, `SlotWithCohorts`, `SnackbarState`, `ReservationWithSlot`, `CohortWithSlots`, `ReservationSearch`) from local files to the centralized `src/types.ts` to allow proper type sharing and avoid redundancy.
+  - Updated all dependent files (`useAdminData.ts`, `CohortCard.tsx`, `Home.tsx`, `Landing.tsx`, `RecapTab.tsx`, `ParticipantTab.tsx`, `SlotTab.tsx`) to import these unified interfaces directly from `src/types.ts`.
+  - Resolved `react-hooks/set-state-in-effect` lint check in `useAdminData.ts` and removed a stale A11y scanner comment in the admin shell `Admin.tsx`.
+
 ## [Unreleased] - 2026-06-08T15:36:00+07:00
 ### Refactored
 - **Project Cleanup & Code Separation** (major maintenance release):

@@ -12,7 +12,7 @@ import {
   Skeleton,
 } from "@mui/material";
 import { supabase } from "../lib/supabase";
-import type { Cohort, Slot } from "../types";
+import type { Cohort, Slot, ReservationWithSlot } from "../types";
 import BookingForm from "../components/BookingForm";
 import SuccessTicket from "../components/SuccessTicket";
 import EditBooking from "../components/EditBooking";
@@ -20,15 +20,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
 import { ArrowLeft } from "lucide-react";
 import RegistrationStatus from "../components/RegistrationStatus";
-
-interface ReservationWithSlot {
-    id: string;
-    user_name: string;
-    access_code: string;
-    created_at: string;
-    slot_id: string;
-    slots: Slot;
-}
 
 export default function Landing() {
   const { slug } = useParams<{ slug: string }>();

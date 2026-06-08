@@ -17,12 +17,8 @@ import { id } from "date-fns/locale";
 import { motion } from "framer-motion";
 import { CircleChevronRight } from "lucide-react";
 
-import type { Cohort, Slot } from "../types";
+import type { CohortWithSlots } from "../types";
 import RegistrationStatus from "./RegistrationStatus";
-
-export interface CohortWithSlots extends Cohort {
-  slots: Slot[];
-}
 
 const motionItem = {
   hidden: { opacity: 0, y: 10 },

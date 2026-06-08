@@ -21,8 +21,7 @@ import {
 } from "@mui/material";
 import { ChevronDown, Edit2, Trash2 } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
-import type { Cohort } from "../../../types";
-import type { SlotWithCohorts } from "../hooks/useAdminData";
+import type { Cohort, SlotWithCohorts } from "../../../types";
 import TableSkeleton from "../components/TableSkeleton";
 
 // ---------------------------------------------------------------------------

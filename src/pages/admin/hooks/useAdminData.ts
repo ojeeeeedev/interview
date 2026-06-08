@@ -1,49 +1,13 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "../../../lib/supabase";
-import type { Cohort, Slot } from "../../../types";
-
-// ---------------------------------------------------------------------------
-// Extended Types (exported so tab components can import them)
-// ---------------------------------------------------------------------------
-
-export interface ReservationExtended {
-  id: string;
-  user_name: string;
-  access_code: string;
-  created_at: string;
-  slot_id: string;
-  slots: {
-    date: string;
-    cohort_id: string;
-    cohorts: {
-      title: string;
-      nama_kelompok: string;
-    };
-  };
-}
-
-export interface AllowedNameExtended {
-  id: string;
-  full_name: string;
-  cohort_id: string;
-  cohorts: {
-    title: string;
-    nama_kelompok: string;
-  };
-}
-
-export interface SlotWithCohorts extends Slot {
-  cohorts: {
-    title: string;
-    nama_kelompok: string;
-  };
-}
-
-export interface SnackbarState {
-  open: boolean;
-  message: string;
-  severity: "success" | "error" | "info" | "warning";
-}
+import type {
+  Cohort,
+  Slot,
+  ReservationExtended,
+  AllowedNameExtended,
+  SlotWithCohorts,
+  SnackbarState,
+} from "../../../types";
 
 // ---------------------------------------------------------------------------
 // Hook
@@ -105,6 +69,7 @@ export function useAdminData() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAll();
   }, [fetchAll]);
 

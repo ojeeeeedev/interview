@@ -17,21 +17,16 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import type { Slot } from "../types";
+import type { Slot, CohortWithSlots, ReservationSearch } from "../types";
 import { motion } from "framer-motion";
 import { Search, ChevronDown, Info, History, Edit2, CheckCircle2, XCircle } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-import CohortCard, { type CohortWithSlots } from "../components/CohortCard";
+import CohortCard from "../components/CohortCard";
 
 const motionContainer = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.05 } },
 };
-
-interface ReservationSearch {
-  id: string;
-  slots: { cohorts: { unique_slug: string } };
-}
 
 /**
  * Home Page Component

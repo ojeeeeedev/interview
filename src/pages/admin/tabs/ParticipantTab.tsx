@@ -26,7 +26,7 @@ import {
 } from "@mui/material";
 import { ChevronDown, UserMinus, Edit2, Trash2 } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
-import type { AllowedNameExtended } from "../hooks/useAdminData";
+import type { AllowedNameExtended } from "../../../types";
 
 // ---------------------------------------------------------------------------
 // Props
