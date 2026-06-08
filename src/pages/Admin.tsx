@@ -245,9 +245,9 @@ export default function Admin() {
   const groupedNames = useMemo(() => {
     const groups: Record<string, AllowedNameExtended[]> = {};
     allowedNames.forEach((an) => {
-      const cohortTitle = an.cohorts?.title || "Tanpa Event";
-      if (!groups[cohortTitle]) groups[cohortTitle] = [];
-      groups[cohortTitle].push(an);
+      const key = an.cohort_id || "Tanpa Event";
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(an);
     });
     return groups;
   }, [allowedNames]);
@@ -656,8 +656,8 @@ export default function Admin() {
     );
   };
 
-  const toggleCohortSelection = (cohortTitle: string, checked: boolean) => {
-    const idsInCohort = groupedNames[cohortTitle].map((an) => an.id);
+  const toggleCohortSelection = (cohortId: string, checked: boolean) => {
+    const idsInCohort = (groupedNames[cohortId] || []).map((an) => an.id);
     if (checked) {
       setSelectedNameIds((prev) => [...new Set([...prev, ...idsInCohort])]);
     } else {
@@ -1574,11 +1574,13 @@ export default function Admin() {
                       </Typography>
                     )}
 
-                    {Object.entries(groupedNames).map(([cohortTitle, names]) => {
-                      const namaKelompok = names[0]?.cohorts?.nama_kelompok || "";
+                    {Object.entries(groupedNames).map(([cohortId, names]) => {
+                      const firstAllowedName = names[0];
+                      const cohortTitle = firstAllowedName?.cohorts?.title || "Tanpa Event";
+                      const namaKelompok = firstAllowedName?.cohorts?.nama_kelompok || "";
                       return (
                         <Accordion
-                          key={cohortTitle}
+                          key={cohortId}
                           className="refined-card"
                           sx={{ mb: 1.5 }}
                         >
@@ -1602,7 +1604,7 @@ export default function Admin() {
                                 }
                                 onChange={(e) =>
                                   toggleCohortSelection(
-                                    cohortTitle,
+                                    cohortId,
                                     e.target.checked,
                                   )
                                 }

@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.1] - 2026-06-08T12:47:00+07:00
+### Fixed
+- **Atur Peserta grouping bug**: Fixed an issue where whitelisted names from different cohorts with the same event title were combined under the same group. Now, names are grouped by their unique `cohort_id` rather than their event title.
+
 ## [1.7.0] - 2026-06-07T21:35:00+07:00
 ### Added
 - **Enter/Return Key validation**: Instantly queries the database to verify the name when Enter/Return is pressed on the keyboard, bypassing the 600ms debounce timer.
