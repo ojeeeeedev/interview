@@ -100,4 +100,5 @@ VITE_ADMIN_PASSWORD=your_admin_password
 - After every change is made, store the details of the change into a logfile (`CHANGELOG.md`) complete with the timestamp.
 - After every change is made, ask the user whether to bump the version of the app: small changes -> bump by 0.0.1, significant changes -> bump by 0.1.0, monumental changes -> bump by 1.0.0. Wait for the user to confirm the version bump and increment.
 - After every change or version bump, ensure the version is dynamically reflected in the frontend (such as in `src/components/Footer.tsx`).
+- For every code change, always consult first with superpower skills (such as `using-superpowers`, `brainstorming`, `test-driven-development`, `writing-plans`, etc.), then the rest of the skills specific to the changes needed. Spawn subagents/agents as needed to solve big, mission-critical problems.
 

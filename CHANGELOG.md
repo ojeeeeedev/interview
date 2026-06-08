@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-06-08T16:01:00+07:00
+### Changed
+- **Global Memory Guidelines Updated**: Added a new instruction to `GEMINI.md` to enforce consulting superpower skills first before other specific skills, and spawning subagents/agents as needed for big, mission-critical problems.
+
 ## [1.8.2] - 2026-06-08T15:40:00+07:00
 ### Refactored
 - **Consolidated TypeScript Types**:
