@@ -1,6 +1,6 @@
 import { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { ThemeProvider, createTheme, CssBaseline, Box, CircularProgress } from "@mui/material";
+import { ThemeProvider, createTheme, CssBaseline, Box, CircularProgress, Button } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { id } from "date-fns/locale";
@@ -155,8 +155,25 @@ function App() {
                 minHeight: "100vh",
               }}
             >
+              <Button
+                href="#main-content"
+                sx={{
+                  position: "absolute",
+                  left: "-9999px",
+                  top: "16px",
+                  zIndex: 9999,
+                  "&:focus": {
+                    left: "16px",
+                    backgroundColor: "background.paper",
+                    color: "primary.main",
+                    border: (t) => `2px solid ${t.palette.primary.main}`,
+                  },
+                }}
+              >
+                Langsung ke konten utama
+              </Button>
               <TopNav />
-              <Box sx={{ pt: 3, flexGrow: 1 }}>
+              <Box component="main" id="main-content" role="main" sx={{ pt: 3, flexGrow: 1 }}>
                 <Suspense fallback={
                   <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
                     <CircularProgress size={40} thickness={4} sx={{ color: '#d4af37' }} />

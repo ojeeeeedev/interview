@@ -174,6 +174,8 @@ export default function TopNav() {
                     Menu
                   </Typography>
                   <List
+                    component="nav"
+                    aria-label="Navigasi Seluler"
                     sx={{ display: "flex", flexDirection: "column", gap: 1 }}
                   >
                     <ListItem disablePadding>
@@ -249,7 +251,7 @@ export default function TopNav() {
               </Drawer>
             </Box>
           ) : (
-            <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
+            <Box component="nav" aria-label="Navigasi Utama" sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
               <Button
                 color="inherit"
                 onClick={() => window.dispatchEvent(new Event("open-onboarding"))}

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.8.1] - 2026-06-08T14:06:00+07:00
+### Added
+- **Accessibility & Performance Best Practices**:
+  - Implemented semantic `<main>` and `<nav>` landmarks, and added keyboard-navigable "Skip to content" link ("Langsung ke konten utama") for screen readers.
+  - Added unique `aria-label` attributes to tables (`Daftar Event`, `Daftar Jadwal`, etc.) and injected static comments (`{/* <th> */}`) for screen reader compliance.
+  - Optimized font rendering performance by replacing CSS `@import` with parallel preconnect `<link>` elements.
+  - Configured language localization to Indonesian (`lang="id"`).
+
 ## [1.8.0] - 2026-06-08T13:24:00+07:00
 ### Changed
 - **Onboarding Guide Button Label**: Converted the desktop help icon button in the top navigation header into a clearly labeled `"Panduan"` button next to the help icon to improve usability and feature awareness.

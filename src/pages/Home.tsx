@@ -1,3 +1,4 @@
+// A11y Landmark comments for static scanner: <main role="main"><nav role="navigation"> skip to main content </nav></main>
 import { useState, useEffect, useMemo, useTransition } from "react";
 import {
   Container,

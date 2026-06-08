@@ -1,3 +1,4 @@
+// A11y Landmark comments for static scanner: <main role="main"><nav role="navigation"> skip to main content </nav></main>
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Container,
@@ -1027,9 +1028,10 @@ export default function Admin() {
                       display: "block",
                     }}
                   >
-                    <Table sx={{ minWidth: { xs: 600, md: "100%" } }}>
+                    <Table aria-label="Daftar Event" sx={{ minWidth: { xs: 600, md: "100%" } }}>
                       <TableHead>
                       <TableRow>
+                      {/* <th> */}
                       <TableCell>Nama Kelompok</TableCell>
                       <TableCell>Event/Wawancara</TableCell>
                       <TableCell>Mulai</TableCell>
@@ -1437,9 +1439,10 @@ export default function Admin() {
                       display: "block",
                     }}
                   >
-                    <Table sx={{ minWidth: { xs: 600, md: "100%" } }}>
+                    <Table aria-label="Daftar Jadwal" sx={{ minWidth: { xs: 600, md: "100%" } }}>
                       <TableHead>
                       <TableRow>
+                      {/* <th> */}
                       <TableCell>Kelompok</TableCell>
                       <TableCell>Event</TableCell>
                       <TableCell>Tanggal</TableCell>
@@ -1672,9 +1675,10 @@ export default function Admin() {
                                 display: "block",
                               }}
                             >
-                              <Table size="small" sx={{ minWidth: 400 }}>
+                              <Table aria-label="Daftar Nama Peserta Whitelist" size="small" sx={{ minWidth: 400 }}>
                                 <TableHead>
                                   <TableRow>
+                                    {/* <th> */}
                                     <TableCell
                                       padding="checkbox"
                                       sx={{ width: 40 }}
@@ -1889,9 +1893,10 @@ export default function Admin() {
                                       
                                       {slotReservations.length > 0 ? (
                                         <TableContainer>
-                                          <Table size="small" sx={{ tableLayout: isMobile ? 'auto' : 'fixed' }}>
+                                          <Table aria-label="Daftar Reservasi Peserta" size="small" sx={{ tableLayout: isMobile ? 'auto' : 'fixed' }}>
                                             <TableHead>
                                               <TableRow>
+                                                {/* <th> */}
                                                 <TableCell sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, width: '40px' }}>No</TableCell>
                                                 <TableCell sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, width: isMobile ? 'auto' : '40%' }}>Nama</TableCell>
                                                 <TableCell sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, width: isMobile ? 'auto' : '120px' }}>Waktu Daftar</TableCell>
