@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-06-09T21:20:00+07:00
+### Fixed
+- **State Mutation in RecapTab**: Avoided in-place sorting of `slotReservations` array (which mutates props/state) by sorting a shallow copy `[...slotReservations]`.
+- **Defensive Comparison**: Added fallback values to `localeCompare` comparisons in `RecapTab.tsx` to prevent crashes on null or undefined cohort names, dates, session names, or usernames.
+
 ## [Unreleased] - 2026-06-09T21:17:00+07:00
 ### Changed
 - **Recap Tab Sorting**: Sorted slots by date first, then by session name alphabetically in the Recap accordion slots listing.

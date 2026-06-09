@@ -91,9 +91,9 @@ export default function RecapTab({
     currentY += 10;
 
     const sortedSlots = Object.values(cohortSlots).sort((a, b) => {
-      const dateCompare = a.slot.date.localeCompare(b.slot.date);
+      const dateCompare = (a.slot.date || "").localeCompare(b.slot.date || "");
       if (dateCompare !== 0) return dateCompare;
-      return a.slot.session_name.localeCompare(b.slot.session_name);
+      return (a.slot.session_name || "").localeCompare(b.slot.session_name || "");
     });
     let hasAnyData = false;
 
@@ -114,8 +114,8 @@ export default function RecapTab({
       doc.text(headerText, 14, currentY);
       currentY += 5;
 
-      const tableRows = slotReservations
-        .sort((a, b) => a.user_name.localeCompare(b.user_name))
+      const tableRows = [...slotReservations]
+        .sort((a, b) => (a.user_name || "").localeCompare(b.user_name || ""))
         .map((r) => [
           r.user_name,
           r.access_code,
@@ -205,7 +205,7 @@ export default function RecapTab({
         ) : (
           Object.values(reportData)
             .sort((a, b) =>
-              a.cohort.nama_kelompok.localeCompare(b.cohort.nama_kelompok),
+              (a.cohort.nama_kelompok || "").localeCompare(b.cohort.nama_kelompok || ""),
             )
             .map(({ cohort, slots: cohortSlots }) => {
               const totalReservations = Object.values(cohortSlots).reduce(
@@ -309,9 +309,9 @@ export default function RecapTab({
                     <Stack spacing={3}>
                       {Object.values(cohortSlots)
                         .sort((a, b) => {
-                          const dateCompare = a.slot.date.localeCompare(b.slot.date);
+                          const dateCompare = (a.slot.date || "").localeCompare(b.slot.date || "");
                           if (dateCompare !== 0) return dateCompare;
-                          return a.slot.session_name.localeCompare(b.slot.session_name);
+                          return (a.slot.session_name || "").localeCompare(b.slot.session_name || "");
                         })
                         .map(({ slot, reservations: slotReservations }) => (
                           <Box
@@ -414,9 +414,9 @@ export default function RecapTab({
                                     </TableRow>
                                   </TableHead>
                                   <TableBody>
-                                    {slotReservations
+                                    {[...slotReservations]
                                       .sort((a, b) =>
-                                        a.user_name.localeCompare(b.user_name),
+                                        (a.user_name || "").localeCompare(b.user_name || ""),
                                       )
                                       .map((r, idx) => (
                                         <TableRow
