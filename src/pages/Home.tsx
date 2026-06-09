@@ -17,11 +17,12 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import type { Slot, CohortWithSlots, ReservationSearch } from "../types";
+import type { CohortWithSlots, ReservationSearch } from "../types";
 import { motion } from "framer-motion";
 import { Search, ChevronDown, Info, History, Edit2, CheckCircle2, XCircle } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import CohortCard from "../components/CohortCard";
+import { compareSlots } from "../lib/utils";
 
 const motionContainer = {
   hidden: { opacity: 0 },
@@ -101,9 +102,7 @@ export default function Home() {
         // Ensure slots are strictly sorted by date client-side as well
         const sortedData = data.map((cohort: CohortWithSlots) => ({
           ...cohort,
-          slots: (cohort.slots || []).sort(
-            (a: Slot, b: Slot) => new Date(a.date).getTime() - new Date(b.date).getTime()
-          ),
+          slots: [...(cohort.slots || [])].sort(compareSlots),
         }));
         setCohorts(sortedData as CohortWithSlots[]);
       }

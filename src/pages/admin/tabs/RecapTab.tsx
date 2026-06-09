@@ -24,6 +24,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { supabase } from "../../../lib/supabase";
 import type { Cohort, Slot, ReservationExtended } from "../../../types";
+import { compareSlots } from "../../../lib/utils";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -90,11 +91,7 @@ export default function RecapTab({
     doc.text(`${cohort.nama_kelompok} - ${cohort.title}`, 14, currentY);
     currentY += 10;
 
-    const sortedSlots = Object.values(cohortSlots).sort((a, b) => {
-      const dateCompare = (a.slot.date || "").localeCompare(b.slot.date || "");
-      if (dateCompare !== 0) return dateCompare;
-      return (a.slot.session_name || "").localeCompare(b.slot.session_name || "");
-    });
+    const sortedSlots = Object.values(cohortSlots).sort((a, b) => compareSlots(a.slot, b.slot));
     let hasAnyData = false;
 
     sortedSlots.forEach(({ slot, reservations: slotReservations }) => {
@@ -308,11 +305,7 @@ export default function RecapTab({
                     <Divider sx={{ mb: 2, opacity: 0.1 }} />
                     <Stack spacing={3}>
                       {Object.values(cohortSlots)
-                        .sort((a, b) => {
-                          const dateCompare = (a.slot.date || "").localeCompare(b.slot.date || "");
-                          if (dateCompare !== 0) return dateCompare;
-                          return (a.slot.session_name || "").localeCompare(b.slot.session_name || "");
-                        })
+                        .sort((a, b) => compareSlots(a.slot, b.slot))
                         .map(({ slot, reservations: slotReservations }) => (
                           <Box
                             key={slot.id}

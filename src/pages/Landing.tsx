@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
 import { ArrowLeft } from "lucide-react";
 import RegistrationStatus from "../components/RegistrationStatus";
+import { compareSlots } from "../lib/utils";
 
 export default function Landing() {
   const { slug } = useParams<{ slug: string }>();
@@ -72,7 +73,7 @@ export default function Landing() {
     if (slotsError) {
       setError("Gagal memuat jadwal");
     } else {
-      setSlots(slotsData);
+      setSlots([...slotsData].sort(compareSlots));
     }
     setLoading(false);
 

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-06-09T22:40:00+07:00
+### Changed
+- **Session Sorting**: Introduced custom slot sorting based on Indonesian session priority: `Pagi > Siang > Sore > Malam` (integrated in homepage lists, landing booking forms, rescheduling pickers, admin panels, and PDF reports).
+
+## [Unreleased] - 2026-06-09T22:11:00+07:00
+### Changed
+- **Cohort Card Layout**: Render the session name below the date on homepage cohort cards if the session is not the default `"Sesi Utama"`.
+
 ## [Unreleased] - 2026-06-09T21:20:00+07:00
 ### Fixed
 - **State Mutation in RecapTab**: Avoided in-place sorting of `slotReservations` array (which mutates props/state) by sorting a shallow copy `[...slotReservations]`.

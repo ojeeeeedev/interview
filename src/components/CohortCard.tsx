@@ -173,9 +173,27 @@ export default function CohortCard({ cohort, isAdmin, now: parentNow, onStatusCh
                           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1,
                         }}
                       >
-                        <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.7)", fontWeight: 600, fontSize: "0.75rem", fontFamily: "monospace" }}>
-                          {format(parseISO(slot.date.replace(/^0006-/, "2026-")), "EEEE, d MMMM yyyy", { locale: id })}
-                        </Typography>
+                        <Box sx={{ display: "flex", flexDirection: "column" }}>
+                          <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.7)", fontWeight: 600, fontSize: "0.75rem", fontFamily: "monospace" }}>
+                            {format(parseISO(slot.date.replace(/^0006-/, "2026-")), "EEEE, d MMMM yyyy", { locale: id })}
+                          </Typography>
+                          {slot.session_name && slot.session_name !== "Sesi Utama" && (
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: "#d4af37",
+                                fontWeight: 800,
+                                fontSize: "0.6rem",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.5px",
+                                mt: 0.25,
+                                fontFamily: "monospace",
+                              }}
+                            >
+                              {slot.session_name}
+                            </Typography>
+                          )}
+                        </Box>
                         <Typography variant="caption" sx={{ fontWeight: 800, color: isFull ? "#e74c3c" : "#2ecc71", fontSize: "0.75rem", fontFamily: "monospace" }}>
                           {isFull ? "Full" : `${remaining} Slot`}
                         </Typography>

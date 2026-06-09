@@ -32,3 +32,34 @@ export const generateSlug = (namaKelompok: string, title: string): string => {
     .replace(/[\s_-]+/g, "-")
     .replace(/^-+|-+$/g, "");
 };
+
+/**
+ * Returns a priority number for sorting sessions:
+ * Pagi (1) > Siang (2) > Sore (3) > Malam (4) > others (5)
+ */
+export const getSessionPriority = (sessionName: string): number => {
+  const name = (sessionName || "").toLowerCase();
+  if (name.includes("pagi")) return 1;
+  if (name.includes("siang")) return 2;
+  if (name.includes("sore")) return 3;
+  if (name.includes("malam")) return 4;
+  return 5;
+};
+
+/**
+ * Compare function to sort slots chronologically, then by session priority
+ */
+export const compareSlots = (
+  a: { date: string; session_name?: string },
+  b: { date: string; session_name?: string }
+): number => {
+  const dateCompare = (a.date || "").localeCompare(b.date || "");
+  if (dateCompare !== 0) return dateCompare;
+
+  const pA = getSessionPriority(a.session_name || "");
+  const pB = getSessionPriority(b.session_name || "");
+  if (pA !== pB) return pA - pB;
+
+  return (a.session_name || "").localeCompare(b.session_name || "");
+};
+

@@ -8,6 +8,7 @@ import type {
   SlotWithCohorts,
   SnackbarState,
 } from "../../../types";
+import { compareSlots } from "../../../lib/utils";
 
 // ---------------------------------------------------------------------------
 // Hook
@@ -62,7 +63,7 @@ export function useAdminData() {
     ]);
 
     if (c) setCohorts(c);
-    if (s) setSlots(s as unknown as SlotWithCohorts[]);
+    if (s) setSlots((s as unknown as SlotWithCohorts[]).sort(compareSlots));
     if (r) setReservations(r as unknown as ReservationExtended[]);
     if (an) setAllowedNames(an as unknown as AllowedNameExtended[]);
     setLoading(false);
