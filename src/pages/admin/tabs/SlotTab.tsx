@@ -45,7 +45,7 @@ interface Props {
 // Constants
 // ---------------------------------------------------------------------------
 
-const EMPTY_SLOT = { cohort_id: "", date: "", quota: 10 };
+const EMPTY_SLOT = { cohort_id: "", date: "", quota: 10, session_name: "" };
 
 // ---------------------------------------------------------------------------
 // Component
@@ -96,6 +96,7 @@ export default function SlotTab({
         cohort_id: newSlot.cohort_id,
         date: newSlot.date,
         quota: newSlot.quota,
+        session_name: newSlot.session_name.trim() || "Sesi Utama",
       },
     ]);
     if (error) {
@@ -115,6 +116,7 @@ export default function SlotTab({
       cohort_id: slot.cohort_id,
       date: slot.date,
       quota: slot.quota,
+      session_name: slot.session_name || "Sesi Utama",
     });
     showToast("Mode ubah jadwal aktif", "info");
   };
@@ -136,6 +138,7 @@ export default function SlotTab({
         cohort_id: newSlot.cohort_id,
         date: newSlot.date,
         quota: newSlot.quota,
+        session_name: newSlot.session_name.trim() || "Sesi Utama",
       })
       .eq("id", editingSlotId);
     if (error) {
@@ -227,6 +230,15 @@ export default function SlotTab({
         error={showErrors && !newSlot.date}
         helperText={showErrors && !newSlot.date ? "Wajib pilih tanggal" : ""}
         onChange={(e) => setNewSlot({ ...newSlot, date: e.target.value })}
+      />
+
+      <TextField
+        fullWidth
+        label="Nama Sesi (Opsional)"
+        margin="normal"
+        placeholder="Contoh: Pagi, Sore, 08:00 - 10:00"
+        value={newSlot.session_name}
+        onChange={(e) => setNewSlot({ ...newSlot, session_name: e.target.value })}
       />
 
       <TextField
@@ -330,12 +342,13 @@ export default function SlotTab({
                 <TableCell>Kelompok</TableCell>
                 <TableCell>Event</TableCell>
                 <TableCell>Tanggal</TableCell>
+                <TableCell>Sesi</TableCell>
                 <TableCell>Kapasitas</TableCell>
                 <TableCell align="right" />
               </TableRow>
             </TableHead>
             {loading ? (
-              <TableSkeleton cols={5} />
+              <TableSkeleton cols={6} />
             ) : (
               <TableBody>
                 {slots.map((s) => (
@@ -353,6 +366,9 @@ export default function SlotTab({
                     </TableCell>
                     <TableCell sx={{ whiteSpace: "nowrap" }}>
                       {s.date}
+                    </TableCell>
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      {s.session_name}
                     </TableCell>
                     <TableCell sx={{ whiteSpace: "nowrap" }}>
                       {s.count} / {s.quota}

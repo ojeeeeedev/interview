@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-06-09T21:06:53+07:00
+### Changed
+- **Admin Slot UI**: Added `session_name` form input and table column in `SlotTab.tsx` to support the new optional session name field.
+
 ## [Unreleased] - 2026-06-09T21:05:00+07:00
 ### Changed
 - **Database Schema**: Added `session_name` column to the `slots` table, dropped the old `cohort_id` + `date` unique constraint, and added a new unique constraint including `session_name` (`cohort_id`, `date`, `session_name`).
