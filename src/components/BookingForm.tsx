@@ -14,6 +14,8 @@ import {
   DialogActions,
   Stack,
   CircularProgress,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 import { supabase } from "../lib/supabase";
 import type { Slot } from "../types";
@@ -50,6 +52,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
   const [name, setName] = useState("");
   const [allowedNames, setAllowedNames] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -60,6 +63,25 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
   const [isNameVerified, setIsNameVerified] = useState(false);
   const [nameCheckError, setNameCheckError] = useState<string | null>(null);
   const [forceShowError, setForceShowError] = useState(false);
+
+  useEffect(() => {
+    if (!selectedDate) {
+      startTransition(() => {
+        setSelectedSlot(null);
+      });
+      return;
+    }
+    const dateFormatted = format(selectedDate, "yyyy-MM-dd");
+    const daySlots = slots.filter((s) => s.date === dateFormatted);
+    
+    startTransition(() => {
+      if (daySlots.length === 1) {
+        setSelectedSlot(daySlots[0]);
+      } else {
+        setSelectedSlot(null); // Force user to manually pick the session
+      }
+    });
+  }, [selectedDate, slots]);
 
   /**
    * Smart Error Suppression Logic
@@ -245,7 +267,12 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
   const bookingAction = async (_prevState: ActionState | null, formData: FormData): Promise<ActionState> => {
     const userName = formData.get("userName") as string;
     const dateStr = formData.get("dateStr") as string;
+    const slotId = formData.get("slotId") as string;
     const selectedDateObj = new Date(dateStr);
+
+    if (!slotId) {
+      return { error: "Sesi belum dipilih.", success: false };
+    }
 
     // 1. Check for double booking
     const { data: existing, error: checkError } = await supabase
@@ -275,11 +302,19 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
       return { error: "Nama Anda tidak terdaftar untuk event ini.", success: false };
     }
 
-    // 3. Find slot
-    const dateFormatted = format(selectedDateObj, "yyyy-MM-dd");
-    const slot = slots.find((s) => s.date === dateFormatted);
-    if (!slot) {
-      return { error: "Tanggal yang dipilih tidak tersedia.", success: false };
+    // 3. Find slot in DB and lock/verify
+    const { data: slot, error: slotError } = await supabase
+      .from("slots")
+      .select("*")
+      .eq("id", slotId)
+      .single();
+
+    if (slotError || !slot) {
+      return { error: "Slot yang dipilih tidak ditemukan.", success: false };
+    }
+
+    if (slot.count >= slot.quota) {
+      return { error: "Slot yang dipilih sudah penuh.", success: false };
     }
 
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -295,12 +330,16 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
     }
 
     const formattedDate = format(selectedDateObj, "EEEE, d MMMM yyyy", { locale: id });
+    const finalDateStr = slot.session_name !== "Sesi Utama"
+      ? `${formattedDate} (${slot.session_name})`
+      : formattedDate;
+
     return {
       success: true,
       error: null,
       code,
       userName: userName.trim(),
-      dateStr: formattedDate,
+      dateStr: finalDateStr,
       rawDate: selectedDateObj
     };
   };
@@ -317,7 +356,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (isNameVerified && selectedDate) {
+    if (isNameVerified && selectedSlot) {
       setConfirmOpen(true);
     }
   };
@@ -327,11 +366,16 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
     const formData = new FormData();
     formData.append("userName", name);
     formData.append("dateStr", selectedDate!.toISOString());
+    formData.append("slotId", selectedSlot!.id);
     
     startTransition(() => {
       formAction(formData);
     });
   };
+
+  const daySlots = selectedDate
+    ? slots.filter((s) => s.date === format(selectedDate, "yyyy-MM-dd"))
+    : [];
 
   return (
     <Stack spacing={3} component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
@@ -480,18 +524,128 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
           onSelect={setSelectedDate}
           selected={selectedDate}
         />
+        {selectedDate && daySlots.length > 0 && (
+          <Stack spacing={1} sx={{ mt: 1.5 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 900,
+                color: "rgba(255, 255, 255, 0.6)",
+                textTransform: "uppercase",
+                fontSize: "0.75rem",
+                letterSpacing: "0.5px",
+              }}
+            >
+              Pilih Sesi Wawancara:
+            </Typography>
+            <ToggleButtonGroup
+              value={selectedSlot?.id || null}
+              exclusive
+              onChange={(_, value) => {
+                if (value !== null) {
+                  const found = slots.find((s) => s.id === value);
+                  setSelectedSlot(found || null);
+                }
+              }}
+              fullWidth
+              sx={{
+                display: "grid",
+                gridTemplateColumns: daySlots.length > 2 ? "1fr 1fr" : "repeat(auto-fit, minmax(100px, 1fr))",
+                gap: 1.5,
+                "& .MuiToggleButtonGroup-grouped": {
+                  border: "1px solid rgba(255, 255, 255, 0.1) !important",
+                  borderRadius: "12px !important",
+                  color: "rgba(255, 255, 255, 0.6)",
+                  bgcolor: "rgba(0, 0, 0, 0.2)",
+                  py: 1.25,
+                  px: 2,
+                  textTransform: "none",
+                  fontWeight: 600,
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    bgcolor: "rgba(255, 255, 255, 0.05)",
+                    color: "#fff",
+                  },
+                  "&.Mui-selected": {
+                    bgcolor: "rgba(46, 204, 113, 0.15) !important",
+                    color: "#2ecc71 !important",
+                    borderColor: "rgba(46, 204, 113, 0.4) !important",
+                    boxShadow: "0 0 10px rgba(46, 204, 113, 0.15)",
+                    fontWeight: 800,
+                    "&:hover": {
+                      bgcolor: "rgba(46, 204, 113, 0.2) !important",
+                    }
+                  },
+                  "&.Mui-disabled": {
+                    color: "rgba(255, 255, 255, 0.15)",
+                    bgcolor: "rgba(255, 255, 255, 0.02)",
+                    borderColor: "rgba(255, 255, 255, 0.05) !important",
+                  }
+                },
+              }}
+            >
+              {daySlots.map((s) => {
+                const isFull = s.count >= s.quota;
+                return (
+                  <ToggleButton
+                    key={s.id}
+                    value={s.id}
+                    disabled={isFull}
+                  >
+                    <Stack spacing={0.25} alignItems="center">
+                      <Typography variant="body2" sx={{ fontWeight: "inherit", fontSize: '0.9rem' }}>
+                        {s.session_name}
+                      </Typography>
+                      {isFull ? (
+                        <Typography variant="caption" sx={{ fontSize: "0.65rem", color: "#ff8a80", fontWeight: 700 }}>
+                          Penuh
+                        </Typography>
+                      ) : (
+                        <Typography variant="caption" sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)" }}>
+                          {s.quota - s.count} slot
+                        </Typography>
+                      )}
+                    </Stack>
+                  </ToggleButton>
+                );
+              })}
+            </ToggleButtonGroup>
+          </Stack>
+        )}
+        {selectedSlot && (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              bgcolor: "rgba(255, 255, 255, 0.03)",
+              border: "1px solid rgba(255, 255, 255, 0.05)",
+              borderRadius: "10px",
+              px: 2,
+              py: 1,
+              mt: 1.5,
+            }}
+          >
+            <Typography variant="caption" sx={{ color: "rgba(255, 255, 255, 0.5)", fontWeight: 500 }}>
+              Sisa Kuota Sesi:
+            </Typography>
+            <Typography variant="caption" sx={{ color: selectedSlot.quota - selectedSlot.count <= 2 ? "#ff8a80" : "#2ecc71", fontWeight: 800 }}>
+              {selectedSlot.quota - selectedSlot.count} / {selectedSlot.quota} slot tersedia
+            </Typography>
+          </Box>
+        )}
       </Stack>
 
       <Box sx={{ pt: 2, textAlign: "center" }}>
         <motion.div 
-          whileHover={!isPending && selectedDate && isNameVerified && !isValidatingName ? { scale: 1.02, y: -4 } : {}} 
-          whileTap={!isPending && selectedDate && isNameVerified && !isValidatingName ? { scale: 0.98 } : {}}
+          whileHover={!isPending && selectedSlot && isNameVerified && !isValidatingName ? { scale: 1.02, y: -4 } : {}} 
+          whileTap={!isPending && selectedSlot && isNameVerified && !isValidatingName ? { scale: 0.98 } : {}}
         >
           <Button
             type="submit"
             variant="contained"
             size="large"
-            disabled={isPending || !selectedDate || !isNameVerified || isValidatingName}
+            disabled={isPending || !selectedSlot || !isNameVerified || isValidatingName}
             fullWidth
             startIcon={isPending ? <CircularProgress size={20} color="inherit" /> : null}
             sx={{
@@ -503,15 +657,15 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
               textTransform: 'none',
               position: 'relative',
               // Glassmorphic Green Style
-              background: (!isPending && !isValidatingName && isNameVerified && selectedDate) 
+              background: (!isPending && !isValidatingName && isNameVerified && selectedSlot) 
                 ? 'rgba(20, 80, 45, 0.25)' 
                 : 'rgba(255,255,255,0.05)',
-              backdropFilter: (!isPending && !isValidatingName && isNameVerified && selectedDate) ? 'blur(12px)' : 'none',
-              border: (!isPending && !isValidatingName && isNameVerified && selectedDate) ? '1px solid rgba(46, 204, 113, 0.3)' : '1px solid rgba(255,255,255,0.05)',
-              color: (!isPending && !isValidatingName && isNameVerified && selectedDate) ? '#2ecc71' : 'rgba(255,255,255,0.15)',
+              backdropFilter: (!isPending && !isValidatingName && isNameVerified && selectedSlot) ? 'blur(12px)' : 'none',
+              border: (!isPending && !isValidatingName && isNameVerified && selectedSlot) ? '1px solid rgba(46, 204, 113, 0.3)' : '1px solid rgba(255,255,255,0.05)',
+              color: (!isPending && !isValidatingName && isNameVerified && selectedSlot) ? '#2ecc71' : 'rgba(255,255,255,0.15)',
               transition: 'all 0.4s ease',
               // Persistent Glow Animation (Alternating Colors)
-              animation: (!isPending && !isValidatingName && isNameVerified && selectedDate) ? 'glow-alternate-btn 4s ease-in-out infinite' : 'none',
+              animation: (!isPending && !isValidatingName && isNameVerified && selectedSlot) ? 'glow-alternate-btn 4s ease-in-out infinite' : 'none',
               '@keyframes glow-alternate-btn': {
                 '0%': { 
                   boxShadow: '0 0 8px rgba(123, 239, 178, 0.3)',
@@ -583,6 +737,7 @@ export default function BookingForm({ cohortId, slots, onSuccess }: Props) {
             <Typography variant="h6" sx={{ fontWeight: 800, color: "#2ecc71" }}>
               {selectedDate &&
                 format(selectedDate, "EEEE, d MMMM yyyy", { locale: id })}
+              {selectedSlot && selectedSlot.session_name !== "Sesi Utama" && ` (${selectedSlot.session_name})`}
             </Typography>
             <Typography
               variant="body2"

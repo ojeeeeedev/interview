@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-06-09T21:12:00+07:00
+### Changed
+- **Booking Form**: Modified `BookingForm.tsx` to handle session selection using a glass-themed MUI `ToggleButtonGroup`.
+- **Session Auto-Selection**: Added a React `useEffect` to automatically pre-select the session slot if a selected date contains exactly one slot.
+- **Safety Quota Verification**: Updated the server-side RPC flow in `bookingAction` to verify slot existence and quota availability (`slot.count < slot.quota`) before calling `book_reservation`.
+- **Session Labeling**: Appended the session name to the successful reservation date string and the confirmation dialog text if the session is not the default `"Sesi Utama"`.
+
 ## [Unreleased] - 2026-06-09T21:10:00+07:00
 ### Changed
 - **Calendar Component**: Updated `Calendar.tsx` to support multiple slots on the same date by aggregating slot quotas and counts, and rendering aggregate status badge colors (red for all slots full, orange for >= 80% occupancy, green otherwise).
