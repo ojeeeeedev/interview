@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, startTransition } from "react";
 import {
   Box,
   Typography,
@@ -15,6 +15,8 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import { supabase } from "../lib/supabase";
 import type { Slot, Reservation } from "../types";
@@ -47,6 +49,36 @@ export default function EditBooking({ reservation, slots, isEnded = false, onDon
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const openMenu = Boolean(anchorEl);
+
+  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+
+  const daySlots = selectedDate
+    ? slots.filter((s) => s.date === format(selectedDate, "yyyy-MM-dd"))
+    : [];
+
+  useEffect(() => {
+    if (!selectedDate) {
+      startTransition(() => {
+        setSelectedSlot(null);
+      });
+      return;
+    }
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    const daySlots = slots.filter((s) => s.date === dateStr);
+    startTransition(() => {
+      if (daySlots.length === 1) {
+        setSelectedSlot(daySlots[0]);
+      } else {
+        // If it is the original slot's date, preset the original slot
+        const originalSlot = daySlots.find(s => s.id === reservation.slots.id);
+        if (originalSlot) {
+          setSelectedSlot(originalSlot);
+        } else {
+          setSelectedSlot(null);
+        }
+      }
+    });
+  }, [selectedDate, slots, reservation.slots.id]);
 
   const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -83,14 +115,7 @@ export default function EditBooking({ reservation, slots, isEnded = false, onDon
   };
 
   const handleUpdate = async () => {
-    if (!selectedDate) return;
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-
-    const newSlot = slots.find((s) => s.date === dateStr);
-    if (!newSlot) {
-      setError("Tanggal yang dipilih tidak tersedia.");
-      return;
-    }
+    if (!selectedSlot) return;
 
     setConfirmOpen(false);
     setLoading(true);
@@ -98,7 +123,7 @@ export default function EditBooking({ reservation, slots, isEnded = false, onDon
 
     const { error: rpcError } = await supabase.rpc("change_reservation", {
       p_access_code: reservation.access_code,
-      p_new_slot_id: newSlot.id,
+      p_new_slot_id: selectedSlot.id,
     });
 
     if (rpcError) {
@@ -131,9 +156,9 @@ export default function EditBooking({ reservation, slots, isEnded = false, onDon
     }
   };
 
-  const isSameDate = !!(
-    selectedDate &&
-    format(selectedDate, "yyyy-MM-dd") === reservation.slots.date
+  const isSlotChanged = !!(
+    selectedSlot &&
+    selectedSlot.id !== reservation.slots.id
   );
 
   const maskName = (name: string) => {
@@ -312,6 +337,97 @@ export default function EditBooking({ reservation, slots, isEnded = false, onDon
             onSelect={setSelectedDate}
             selected={selectedDate}
           />
+          {selectedDate && daySlots.length > 0 && (
+            <Stack spacing={1} sx={{ mt: 1.5 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 900,
+                  color: "rgba(255, 255, 255, 0.6)",
+                  textTransform: "uppercase",
+                  fontSize: "0.75rem",
+                  letterSpacing: "0.5px",
+                  px: 0.5
+                }}
+              >
+                Pilih Sesi Wawancara:
+              </Typography>
+              <ToggleButtonGroup
+                value={selectedSlot?.id || null}
+                exclusive
+                onChange={(_, value) => {
+                  if (value !== null) {
+                    const found = slots.find((s) => s.id === value);
+                    setSelectedSlot(found || null);
+                  }
+                }}
+                fullWidth
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: daySlots.length > 2 ? "1fr 1fr" : "repeat(auto-fit, minmax(100px, 1fr))",
+                  gap: 1.5,
+                  "& .MuiToggleButtonGroup-grouped": {
+                    border: "1px solid rgba(255, 255, 255, 0.1) !important",
+                    borderRadius: "12px !important",
+                    color: "rgba(255, 255, 255, 0.6)",
+                    bgcolor: "rgba(0, 0, 0, 0.2)",
+                    py: 1.25,
+                    px: 2,
+                    textTransform: "none",
+                    fontWeight: 600,
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      bgcolor: "rgba(255, 255, 255, 0.05)",
+                      color: "#fff",
+                    },
+                    "&.Mui-selected": {
+                      bgcolor: "rgba(46, 204, 113, 0.15) !important",
+                      color: "#2ecc71 !important",
+                      borderColor: "rgba(46, 204, 113, 0.4) !important",
+                      boxShadow: "0 0 10px rgba(46, 204, 113, 0.15)",
+                      fontWeight: 800,
+                      "&:hover": {
+                        bgcolor: "rgba(46, 204, 113, 0.2) !important",
+                      }
+                    },
+                    "&.Mui-disabled": {
+                      color: "rgba(255, 255, 255, 0.15)",
+                      bgcolor: "rgba(255, 255, 255, 0.02)",
+                      borderColor: "rgba(255, 255, 255, 0.05) !important",
+                    }
+                  },
+                }}
+              >
+                {daySlots.map((s) => {
+                  const isFull = s.count >= s.quota;
+                  const isOriginal = s.id === reservation.slots.id;
+                  const isDisable = isFull && !isOriginal;
+                  return (
+                    <ToggleButton
+                      key={s.id}
+                      value={s.id}
+                      disabled={isDisable}
+                    >
+                      <Stack spacing={0.25} alignItems="center">
+                        <Typography variant="body2" sx={{ fontWeight: "inherit", fontSize: '0.9rem' }}>
+                          {s.session_name}
+                        </Typography>
+                        {isDisable ? (
+                          <Typography variant="caption" sx={{ fontSize: "0.65rem", color: "#ff8a80", fontWeight: 700 }}>
+                            Penuh
+                          </Typography>
+                        ) : (
+                          <Typography variant="caption" sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)" }}>
+                            {s.quota - s.count} slot
+                          </Typography>
+                        )}
+                      </Stack>
+                    </ToggleButton>
+                  );
+                })}
+              </ToggleButtonGroup>
+            </Stack>
+          )}
         </Stack>
       )}
 
@@ -319,15 +435,15 @@ export default function EditBooking({ reservation, slots, isEnded = false, onDon
       <Stack spacing={2} sx={{ pt: 1 }}>
         {!isEnded && (
           <motion.div
-            whileHover={!isSameDate ? { scale: 1.02, y: -4 } : {}}
-            whileTap={!isSameDate ? { scale: 0.98 } : {}}
+            whileHover={isSlotChanged ? { scale: 1.02, y: -4 } : {}}
+            whileTap={isSlotChanged ? { scale: 0.98 } : {}}
           >
             <Button
               variant="contained"
               fullWidth
               startIcon={loading ? <RefreshCcw size={18} className="animate-spin" /> : <RefreshCcw size={18} />}
               onClick={() => setConfirmOpen(true)}
-              disabled={loading || !selectedDate || isSameDate}
+              disabled={loading || !selectedSlot || !isSlotChanged}
               sx={{
                 height: 56,
                 borderRadius: "12px",
@@ -420,6 +536,11 @@ export default function EditBooking({ reservation, slots, isEnded = false, onDon
               {selectedDate &&
                 format(selectedDate, "EEEE, d MMMM yyyy", { locale: id })}
             </Typography>
+            {selectedSlot && (
+              <Typography variant="body2" sx={{ color: "#ffffff", mt: 0.5, fontWeight: 600 }}>
+                Sesi: {selectedSlot.session_name}
+              </Typography>
+            )}
           </Box>
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 1 }}>

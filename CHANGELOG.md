@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-06-09T21:15:00+07:00
+### Changed
+- **Edit Booking**: Modified `EditBooking.tsx` to support session selection during rescheduling using an MUI `ToggleButtonGroup`.
+- **Rescheduling State Management**: Added a React `useEffect` to dynamically resolve the default slot (presetting the original session slot or auto-selecting if only one exists) when changing dates.
+- **Rescheduling API Payload**: Updated `handleUpdate` to pass the specific slot ID (`selectedSlot.id`) to the `change_reservation` RPC instead of just searching for the first slot on that date.
+- **Save Button Validation**: Restricted the save button to be active only when a valid slot is selected and is different from the original reservation slot.
+
 ## [Unreleased] - 2026-06-09T21:12:00+07:00
 ### Changed
 - **Booking Form**: Modified `BookingForm.tsx` to handle session selection using a glass-themed MUI `ToggleButtonGroup`.
