@@ -12,12 +12,13 @@ CREATE TABLE public.cohorts (
 
 CREATE TABLE public.slots (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    cohort_id UUID REFERENCES public.cohorts(id) ON DELETE CASCADE, -- Nullable in DB
+    cohort_id UUID REFERENCES public.cohorts(id) ON DELETE CASCADE,
     date DATE NOT NULL,
     quota INT NOT NULL CHECK (quota >= 0),
     count INT DEFAULT 0 CHECK (count >= 0),
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE (cohort_id, date)
+    session_name TEXT NOT NULL DEFAULT 'Sesi Utama',
+    UNIQUE (cohort_id, date, session_name)
 );
 
 CREATE TABLE public.reservations (

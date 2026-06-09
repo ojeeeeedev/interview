@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-06-09T21:05:00+07:00
+### Changed
+- **Database Schema**: Added `session_name` column to the `slots` table, dropped the old `cohort_id` + `date` unique constraint, and added a new unique constraint including `session_name` (`cohort_id`, `date`, `session_name`).
+- **Local Schema**: Updated `supabase/schema.sql` to match the new database schema.
+
 ## [Unreleased] - 2026-06-08T16:01:00+07:00
 ### Changed
 - **Global Memory Guidelines Updated**: Added a new instruction to `GEMINI.md` to enforce consulting superpower skills first before other specific skills, and spawning subagents/agents as needed for big, mission-critical problems.
