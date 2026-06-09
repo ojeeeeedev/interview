@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-06-09T21:09:00+07:00
+### Fixed
+- **Admin Slot Validation**: Enforce quota validation in `handleCreateSlot` and `handleUpdateSlot` to prevent adding or updating slots with empty/invalid quota (e.g. NaN or <= 0).
+
 ## [Unreleased] - 2026-06-09T21:06:53+07:00
 ### Changed
 - **Admin Slot UI**: Added `session_name` form input and table column in `SlotTab.tsx` to support the new optional session name field.

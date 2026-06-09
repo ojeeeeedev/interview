@@ -86,7 +86,13 @@ export default function SlotTab({
   };
 
   const handleCreateSlot = async () => {
-    if (!newSlot.cohort_id || !newSlot.date || !selectedKelompok) {
+    if (
+      !newSlot.cohort_id ||
+      !newSlot.date ||
+      !selectedKelompok ||
+      isNaN(newSlot.quota) ||
+      newSlot.quota <= 0
+    ) {
       setShowErrors(true);
       showToast("Mohon lengkapi semua field wajib", "error");
       return;
@@ -126,7 +132,9 @@ export default function SlotTab({
       !editingSlotId ||
       !newSlot.cohort_id ||
       !newSlot.date ||
-      !selectedKelompok
+      !selectedKelompok ||
+      isNaN(newSlot.quota) ||
+      newSlot.quota <= 0
     ) {
       setShowErrors(true);
       showToast("Mohon lengkapi semua field wajib", "error");
