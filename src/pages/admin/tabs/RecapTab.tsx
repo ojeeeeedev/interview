@@ -90,9 +90,11 @@ export default function RecapTab({
     doc.text(`${cohort.nama_kelompok} - ${cohort.title}`, 14, currentY);
     currentY += 10;
 
-    const sortedSlots = Object.values(cohortSlots).sort((a, b) =>
-      a.slot.date.localeCompare(b.slot.date),
-    );
+    const sortedSlots = Object.values(cohortSlots).sort((a, b) => {
+      const dateCompare = a.slot.date.localeCompare(b.slot.date);
+      if (dateCompare !== 0) return dateCompare;
+      return a.slot.session_name.localeCompare(b.slot.session_name);
+    });
     let hasAnyData = false;
 
     sortedSlots.forEach(({ slot, reservations: slotReservations }) => {
@@ -106,7 +108,10 @@ export default function RecapTab({
 
       doc.setFontSize(12);
       doc.setTextColor(0, 0, 0);
-      doc.text(`Tanggal: ${slot.date}`, 14, currentY);
+      const headerText = slot.session_name !== "Sesi Utama" 
+        ? `Tanggal: ${slot.date} (${slot.session_name})` 
+        : `Tanggal: ${slot.date}`;
+      doc.text(headerText, 14, currentY);
       currentY += 5;
 
       const tableRows = slotReservations
@@ -303,9 +308,11 @@ export default function RecapTab({
                     <Divider sx={{ mb: 2, opacity: 0.1 }} />
                     <Stack spacing={3}>
                       {Object.values(cohortSlots)
-                        .sort((a, b) =>
-                          a.slot.date.localeCompare(b.slot.date),
-                        )
+                        .sort((a, b) => {
+                          const dateCompare = a.slot.date.localeCompare(b.slot.date);
+                          if (dateCompare !== 0) return dateCompare;
+                          return a.slot.session_name.localeCompare(b.slot.session_name);
+                        })
                         .map(({ slot, reservations: slotReservations }) => (
                           <Box
                             key={slot.id}
@@ -337,6 +344,7 @@ export default function RecapTab({
                                     year: "numeric",
                                   },
                                 )}
+                                {slot.session_name !== "Sesi Utama" && ` - ${slot.session_name}`}
                               </Typography>
                               <Typography
                                 variant="caption"

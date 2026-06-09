@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-06-09T21:17:00+07:00
+### Changed
+- **Recap Tab Sorting**: Sorted slots by date first, then by session name alphabetically in the Recap accordion slots listing.
+- **Recap Tab Slot Headers**: Added the session name to the slot header title if the session name is not the default `"Sesi Utama"`.
+- **PDF Export Sorting & Headers**: Updated the PDF download function `downloadCohortPDF` to sort slots by date then session name, and display the session name in the section header text.
+
 ## [Unreleased] - 2026-06-09T21:15:00+07:00
 ### Changed
 - **Edit Booking**: Modified `EditBooking.tsx` to support session selection during rescheduling using an MUI `ToggleButtonGroup`.
