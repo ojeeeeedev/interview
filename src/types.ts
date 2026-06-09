@@ -28,6 +28,7 @@ export interface Slot {
     date: string; // ISO Date string (YYYY-MM-DD)
     quota: number; // Maximum allowed bookings
     count: number; // Current number of bookings
+    session_name: string; // The session label (e.g., 'Sesi Utama', 'Pagi', 'Sore')
     cohorts?: {
         title: string;
         nama_kelompok: string;
