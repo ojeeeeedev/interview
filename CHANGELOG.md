@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - **Database Schema**: Added `session_name` column to the `slots` table, dropped the old `cohort_id` + `date` unique constraint, and added a new unique constraint including `session_name` (`cohort_id`, `date`, `session_name`).
 - **Local Schema**: Updated `supabase/schema.sql` to match the new database schema.
+- **Types**: Added `session_name` property to the `Slot` interface.
 
 ## [Unreleased] - 2026-06-08T16:01:00+07:00
 ### Changed
