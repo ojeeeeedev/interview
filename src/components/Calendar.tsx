@@ -1,4 +1,4 @@
-import { Badge, Box, Paper, Typography } from '@mui/material';
+import { Badge, Box, Paper } from '@mui/material';
 import { StaticDatePicker, PickersDay } from '@mui/x-date-pickers';
 import type { PickersDayProps } from '@mui/x-date-pickers';
 import type { Slot } from '../types';
@@ -22,34 +22,36 @@ export default function Calendar({ slots, onSelect, selected }: Props) {
   }, [slots]);
 
   const slotMap = useMemo(() => {
-    const map = new Map<string, Slot>();
-    slots.forEach(s => map.set(s.date, s));
+    const map = new Map<string, Slot[]>();
+    slots.forEach(s => {
+      const existing = map.get(s.date) || [];
+      map.set(s.date, [...existing, s]);
+    });
     return map;
   }, [slots]);
-
-  const getStatusColor = (slot: Slot) => {
-    const ratio = slot.count / slot.quota;
-    if (slot.count === slot.quota) return "#e74c3c";
-    if (ratio >= 0.8) return "#f39c12";
-    return "#2ecc71";
-  };
-
-  const selectionInfo = useMemo(() => {
-    if (!selected) return null;
-    const dateStr = format(selected, "yyyy-MM-dd");
-    return slotMap.get(dateStr);
-  }, [selected, slotMap]);
 
   const renderDay = (props: PickersDayProps) => {
     const { day, ...other } = props;
     if (!day) return <PickersDay {...other} day={day} />;
 
     const dateStr = format(day, "yyyy-MM-dd");
-    const slot = slotMap.get(dateStr);
+    const daySlots = slotMap.get(dateStr) || [];
 
     let dotColor = "transparent";
-    if (slot) {
-      dotColor = getStatusColor(slot);
+    if (daySlots.length > 0) {
+      const allFull = daySlots.every(s => s.count === s.quota);
+      if (allFull) {
+        dotColor = "#e74c3c";
+      } else {
+        const totalCount = daySlots.reduce((sum, s) => sum + s.count, 0);
+        const totalQuota = daySlots.reduce((sum, s) => sum + s.quota, 0);
+        const ratio = totalQuota > 0 ? totalCount / totalQuota : 0;
+        if (ratio >= 0.8) {
+          dotColor = "#f39c12";
+        } else {
+          dotColor = "#2ecc71";
+        }
+      }
     }
 
     return (
@@ -57,7 +59,7 @@ export default function Calendar({ slots, onSelect, selected }: Props) {
         key={day.toString()}
         overlap="circular"
         badgeContent={
-          slot ? (
+          daySlots.length > 0 ? (
             <Box
               sx={{
                 width: 6,
@@ -98,8 +100,9 @@ export default function Calendar({ slots, onSelect, selected }: Props) {
 
   const shouldDisableDate = (day: Date) => {
     const dateStr = format(day, "yyyy-MM-dd");
-    const slot = slotMap.get(dateStr);
-    return !slot || slot.count >= slot.quota;
+    const daySlots = slotMap.get(dateStr) || [];
+    if (daySlots.length === 0) return true;
+    return daySlots.every(s => s.count >= s.quota);
   };
 
   return (
@@ -187,48 +190,7 @@ export default function Calendar({ slots, onSelect, selected }: Props) {
         />
       </Paper>
 
-      <Box sx={{ minHeight: "28px" }}>
-        {selectionInfo && (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1.2,
-              bgcolor: "rgba(212, 175, 55, 0.1)",
-              px: 2.5,
-              py: 0.75,
-              borderRadius: "50px",
-              border: `1px solid rgba(212, 175, 55, 0.3)`,
-              animation: "fadeIn 0.3s ease",
-              "@keyframes fadeIn": {
-                from: { opacity: 0, transform: "translateY(5px)" },
-                to: { opacity: 1, transform: "translateY(0)" },
-              },
-            }}
-          >
-            <Box
-              sx={{
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                bgcolor: getStatusColor(selectionInfo),
-                boxShadow: `0 0 8px ${getStatusColor(selectionInfo)}`,
-              }}
-            />
-            <Typography
-              variant="caption"
-              sx={{
-                color: "#ffffff",
-                fontWeight: 800,
-                letterSpacing: "0.5px",
-                textTransform: "uppercase",
-              }}
-            >
-              {selectionInfo.quota - selectionInfo.count} slot tersedia
-            </Typography>
-          </Box>
-        )}
-      </Box>
+      <Box sx={{ minHeight: "28px" }} />
     </Box>
   );
 }

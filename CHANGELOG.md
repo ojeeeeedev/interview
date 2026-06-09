@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-06-09T21:10:00+07:00
+### Changed
+- **Calendar Component**: Updated `Calendar.tsx` to support multiple slots on the same date by aggregating slot quotas and counts, and rendering aggregate status badge colors (red for all slots full, orange for >= 80% occupancy, green otherwise).
+- **Calendar UI Cleanup**: Removed the individual slots remaining status information at the bottom of the calendar to keep layout clean, since slot/session selection is handled by the parent booking form.
+
 ## [Unreleased] - 2026-06-09T21:09:00+07:00
 ### Fixed
 - **Admin Slot Validation**: Enforce quota validation in `handleCreateSlot` and `handleUpdateSlot` to prevent adding or updating slots with empty/invalid quota (e.g. NaN or <= 0).
